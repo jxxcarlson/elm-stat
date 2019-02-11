@@ -1,4 +1,4 @@
-![Image](image/dataviewer.png)
+![Image](./image/dataviewer.png)
 
 This package is for doing statistics and graphs for 2-column csv files.  
 The image above displays an analysis of time series data.
