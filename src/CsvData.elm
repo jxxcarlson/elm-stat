@@ -36,6 +36,8 @@ It returns a tuple `(Maybe Csv, Maybe String)`. If succesful, the return
 value is `(Just csv, Just header)`, where `csv : Csv` is good data and
 `header` is the header as discussed above. More details on this below.
 
+@docs get, getColumnAsFloats, getColumnAsStrings, getPointList, intelligentGet
+
 -}
 
 import Csv exposing (Csv)

@@ -1,26 +1,30 @@
 module Stat exposing (Data, Point, Statistics, average, filterData, maximum, minimum, statistics, stdev)
 
-{- \ The aim of this library is to copmute statistics for 2D data, of type
-   `Data = List Point`, where `Paint = { x : Float , y : Float }.  Thus, if
-   data is of type `Data`, you would calculate the aveerage of the x-values
-   as in `average .x data`.  To get the full packate of statisitcal information
-   on such a value, use `statistis data`.  The result is a value of type
-   `Statitiscs`, described in detail below. It is a record containting the
-   mean and standard deviation of the x and y values, the coefficeints
-   `m` and `b` (as in `y = mx + b` of the regression line, the `R^2` coefficient,
-   etc.
-   )
+{-| \\ The aim of this library is to copmute statistics for 2D data, of type
+`Data = List Point`, where `Paint = { x : Float , y : Float }.  Thus, if
+data is of type`Data`, you would calculate the aveerage of the x-values
+as in`average .x data`.  To get the full packate of statisitcal information
+on such a value, use`statistis data`.  The result is a value of type`Statitiscs`, described in detail below. It is a record containting the
+mean and standard deviation of the x and y values, the coefficeints`m`and`b`(as in`y = mx + b`of the regression line, the`R^2\` coefficient,
+etc.
+)
 
+@docs Data, Point, Statistics, average, filterData, maximum, minimum, statistics, stdev
 
 -}
 
 
+{-| A point in the Cartesian plane
+given by x and y coordinates
+-}
 type alias Point =
     { x : Float
     , y : Float
     }
 
 
+{-| The fundamental data structure: a list of points.
+-}
 type alias Data =
     List Point
 
@@ -203,6 +207,13 @@ statistics data =
                 }
 
 
+{-| Compute the average of a column in a list of data, e.g.,
+
+    ```average .x data```
+
+which computes the average of the x-values.
+
+-}
 average : (data -> Float) -> List data -> Maybe Float
 average selector dataList =
     let
@@ -223,6 +234,13 @@ average selector dataList =
             Nothing
 
 
+{-| Compute the standard deviation of a column in a list of data, e.g.,
+
+    ```stdev .x data```
+
+which computes the standard deviation of the x-values.
+
+-}
 stdev : (data -> Float) -> List data -> Maybe Float
 stdev selector dataList =
     let
@@ -247,11 +265,25 @@ stdev selector dataList =
             Just <| List.sum squaredDifferences / toFloat (n - 1)
 
 
+{-| Compute the minimum of a column in a list of data, e.g.,
+
+    ```minimum .x data```
+
+which computes the minimum of the x-values.
+
+-}
 minimum : (data -> Float) -> List data -> Maybe Float
 minimum selector dataList =
     List.minimum (List.map selector dataList)
 
 
+{-| Compute the maximum of a column in a list of data, e.g.,
+
+    ```maximum .x data```
+
+which computes the maximum of the x-values.
+
+-}
 maximum : (data -> Float) -> List data -> Maybe Float
 maximum selector dataList =
     List.maximum (List.map selector dataList)
