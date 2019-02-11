@@ -1,13 +1,6 @@
 module Stat exposing (Data, Point, Statistics, average, filterData, maximum, minimum, statistics, stdev)
 
-{-| \\ The aim of this library is to copmute statistics for 2D data, of type
-`Data = List Point`, where `Paint = { x : Float , y : Float }.  Thus, if
-data is of type`Data`, you would calculate the aveerage of the x-values
-as in`average .x data`.  To get the full packate of statisitcal information
-on such a value, use`statistis data`.  The result is a value of type`Statitiscs`, described in detail below. It is a record containting the
-mean and standard deviation of the x and y values, the coefficeints`m`and`b`(as in`y = mx + b`of the regression line, the`R^2\` coefficient,
-etc.
-)
+{-| The aim of this library is to compute statistics for 2D data.
 
 @docs Data, Point, Statistics, average, filterData, maximum, minimum, statistics, stdev
 
