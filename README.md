@@ -47,7 +47,9 @@ For this example, we extract the value by hand:
     : { headers : List String, records : List (List String) }
 ```
 
-With the csv data in hand, we convert it to a list of points:
+With the csv data in hand, we convert it to a list of points.  In the  
+case at hand, we extract columns 0 and 1.  The `getPointList` function
+allows one to work with multi-column data.
 
 ```
 > data  = CsvData.getPointList 0 1 csv
@@ -81,10 +83,10 @@ done in the demo app using `terezka/line-charts`.
   , yMean = -0.105, yStdev = 0.036968 }
 ```  
 
-## The Demo app
+## The Demo App
 
 Code for the demo app is in `./examples`.  There is an online version at
-[Data explorer](https://jxxcarlson.github.io/app/dataviewer.html)
+[Data explorer](https://jxxcarlson.github.io/app/dataviewer.html).
 
 The data used in the example in the file `data/temperature-anomalies.csv` in this repo. It is a list of global temperature anomalies for the period 1880-2017 from [www.climate.gov](http://www.climate.gov). The annual temperature anomaly is the difference between the global mean temperature and the long-term mean global temperature. For this data set, the long-term mean is computed for the period 1901-2000. Here is what the data looks like:
 
