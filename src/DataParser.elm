@@ -7,10 +7,13 @@ module DataParser
         , data
         , spectrum
         , spectrum2
+        , get
+        , get2
         )
 
 import Parser exposing (..)
 import List.Extra
+import Stat
 
 
 type alias Record =
@@ -75,6 +78,31 @@ field =
         |> map String.trim
 
 
+get : String -> Data
+get str =
+    case run data str of
+        Ok data_ ->
+            data_
+
+        Err _ ->
+            []
+
+
+get2 : String -> Data
+get2 str =
+    case get str of
+        [] ->
+            []
+
+        data_ ->
+            case (Stat.mode (spectrum2 data_)) of
+                Nothing ->
+                    []
+
+                Just ( numberOfFields, numberOfRecords ) ->
+                    data_ |> List.filter (\rec -> List.length rec == numberOfFields)
+
+
 {-| spectrum list = sorted list of the lengths of the
 the sublists in a value of type `Data = List (List String)`.
 A "good" list is one whose spectrum is of length one,
@@ -93,6 +121,18 @@ spectrum data_ =
         |> List.sort
 
 
+{-| dd = getData D.temperature
+
+> spectrum2 dd
+> [0,2,2,2,2,2,2,..,2,2,2,2,2,3,3,6]
+
+> mode sp
+> Just (2,140)
+
+So records of length 2 occur most frequenty and thererfore most likely
+represent good data.
+
+-}
 spectrum2 : Data -> List Int
 spectrum2 data_ =
     data_
@@ -101,6 +141,10 @@ spectrum2 data_ =
 
 
 
+--
+-- recordInfo : Data -> Maybe (comparable, Int)
+-- recordInfo data =
+--
 --
 -- IRRELEVANT EXPERIMENTS
 --
