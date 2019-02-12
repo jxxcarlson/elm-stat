@@ -1,6 +1,10 @@
-module DataParser exposing (data, field, record)
+module DataParser exposing
+    ( Data
+    , Record
+    , string
+    )
 
-import Parser as P exposing ((|.), (|=), Parser, chompUntil, chompWhile, getChompedString, run, spaces, succeed, symbol)
+import Parser exposing (..)
 import Parser.Extras exposing (many)
 
 
@@ -12,37 +16,14 @@ type alias Data =
     List Record
 
 
-{-| Parse strings, discarding preceding white space,
-and stopping at white space.
--}
-field : Parser String
-field =
-    (getChompedString <|
-        succeed ()
-            |. spaces
-            |. chompUntil " "
+string : Parser String
+string =
+    (succeed String.slice
+        |= getOffset
+        |. chompWhile (\c -> c == ' ')
+        |. chompWhile (\c -> c /= ' ' && c /= '\n')
+        |. chompWhile (\c -> c == ' ')
+        |= getOffset
+        |= getSource
     )
-        |> P.map String.trim
-
-
-adjoinLastField : Record -> Parser Record
-adjoinLastField items =
-    (getChompedString <|
-        succeed ()
-            |. chompWhile (\c -> c == ' ')
-            |. chompUntil "\n"
-            |. symbol "\n"
-    )
-        |> P.map (\str -> items ++ [ String.trim str ])
-
-
-record =
-    many field |> P.andThen (\records -> adjoinLastField records)
-
-
-data =
-    many record
-
-
-
--- |= lastField
+        |> map String.trim

@@ -1,1 +1,1 @@
-elm make example/Main.elm
+elm make Main.elm
