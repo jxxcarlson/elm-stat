@@ -60,16 +60,16 @@ type alias Data =
 {-| run data "1.2 -4.5\n5.6 7.9\n"
 Ok [["1.2","-4.5"],["5.6","7.9"]]
 -}
-data : Parser Data
-data =
-    loop [] dataGofer
+data : Parser Record -> Parser Data
+data recordParser =
+    loop [] (dataGofer recordParser)
 
 
-dataGofer : Data -> Parser (Step Data Data)
-dataGofer revFields =
+dataGofer : Parser Record -> Data -> Parser (Step Data Data)
+dataGofer recordParser revFields =
     oneOf
         [ succeed (\s -> Loop (s :: revFields))
-            |= record
+            |= recordParser
             |. symbol "\n"
         , succeed ()
             |> map (\_ -> Done (List.reverse revFields))
@@ -111,9 +111,9 @@ field =
         |> map String.trim
 
 
-get : String -> Data
-get str =
-    case run data str of
+get : Parser Record -> String -> Data
+get recordParser str =
+    case run (data recordParser) str of
         Ok data_ ->
             data_
 
@@ -134,8 +134,8 @@ leadingCharIsAlpha str =
         |> Maybe.map Char.isAlpha
 
 
-dataInfo str =
-    case get str of
+dataInfo recordParser str =
+    case (get recordParser) str of
         [] ->
             Nothing
 
@@ -143,8 +143,8 @@ dataInfo str =
             Stat.mode (spectrum2 data_)
 
 
-dataSpectrum2 str =
-    case get str of
+dataSpectrum2 recordParser str =
+    case (get recordParser) str of
         [] ->
             []
 
@@ -152,9 +152,9 @@ dataSpectrum2 str =
             spectrum2 data_
 
 
-get2 : String -> Data
-get2 str =
-    case get str of
+get2 : Parser Record -> String -> Data
+get2 recordParser str =
+    case (get recordParser) str of
         [] ->
             []
 
