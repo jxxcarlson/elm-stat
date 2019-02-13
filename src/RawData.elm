@@ -11,7 +11,6 @@ module RawData
         , get
         , get2
         , get3
-        , get4
         , dataInfo
         , dataSpectrum2
         , filterOutAlphaAt
@@ -27,13 +26,13 @@ module RawData
 
 {-| The RawData module provides utilitis for parsing raw data files
 (strings) in which records are separated by spaces, tabs, or commas.
-The main function, currently named `get4` operates as follows. Let
+The main function, currently named `get3` operates as follows. Let
 
     str == "This data describes a square\nx y\n0 0\n1 0\n1 1\n0 1\n"
 
 be some data. Then
 
-    get4 str ==
+    get3 str ==
       Just {
           columnHeaders = ["x","y"]
         , metadata = ["This data describes a square"]
@@ -46,7 +45,7 @@ actual data; (3) it found the column headers; (4) it extracted the
 data as a list of records, each of which is a list of strings of a
 fixed common size. The type is
 
-    get4 : Data -> DataPackage,
+    get3 : Data -> DataPackage,
 
 where
 
@@ -307,19 +306,32 @@ tne number of records of that shape. Finally,
 a filter is applied, allowing only records with
 `m` fields to pass through.
 -}
-get2 : Char -> String -> RawData
+get2 : Char -> String -> ( List String, RawData )
 get2 sepChar str =
     case get sepChar str of
         [] ->
-            []
+            ( [], [] )
 
         data_ ->
             case (Stat.mode (spectrum2 data_)) of
                 Nothing ->
-                    []
+                    ( [], [] )
 
                 Just ( numberOfFields, numberOfRecords ) ->
-                    data_ |> List.filter (\rec -> List.length rec == numberOfFields)
+                    let
+                        goodData =
+                            data_ |> List.filter (\rec -> List.length rec == numberOfFields)
+
+                        n =
+                            List.length data_
+
+                        k =
+                            List.length goodData
+
+                        headerData =
+                            List.take (n - k) data_ |> List.map (String.join " ")
+                    in
+                        ( headerData, goodData )
 
 
 {-| get3 makes intelligent guesses, If it is successful
@@ -328,32 +340,21 @@ get2 sepChar str =
 > Just (["x","y"],[["0","0"],["1","0"],["1","1"],["0","1"]])
 
 -}
-get3 : String -> Maybe ( Record, RawData )
+get3 : String -> Maybe DataPacket
 get3 str =
-    get2 (delimiter str) str |> getDataAndHeader
+    let
+        ( metadata, goodData ) =
+            get2 (delimiter str) str
+    in
+        case getDataAndHeader goodData of
+            Nothing ->
+                Nothing
 
-
-get4 : String -> Maybe DataPacket
-get4 str =
-    case get3 str of
-        Nothing ->
-            Nothing
-
-        Just ( headers, rawData_ ) ->
-            let
-                k =
-                    1 + List.length rawData_
-
-                allRecords =
-                    get (delimiter str) str
-
-                n =
-                    List.length allRecords
-            in
+            Just ( columnHeaders, clearData ) ->
                 Just
-                    { metadata = List.take (n - k) allRecords |> List.map (String.join " ")
-                    , columnHeaders = headers
-                    , rawData = rawData_
+                    { metadata = metadata
+                    , columnHeaders = columnHeaders
+                    , rawData = clearData
                     }
 
 
