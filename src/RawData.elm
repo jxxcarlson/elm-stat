@@ -10,17 +10,57 @@ module RawData
         , spectrum2
         , get
         , get2
+        , get3
+        , get4
         , dataInfo
         , dataSpectrum2
         , filterOutAlphaAt
-        , lastNonNumericalFieldAt
+        , indexOfLastNonNumericalFieldAt
+        , indexOfLastNonNumericalField
         , drop
         , getDataAndHeaderUsingColumn
+        , getDataAndHeader
+        , delimiterProfile
+        , delimiter
+        , dataType
         )
 
 {-| The RawData module provides utilitis for parsing raw data files
-(srings) in which records are separated by spaces or tabs, as in
-`RawDataSamples.sealevel`.
+(strings) in which records are separated by spaces, tabs, or commas.
+The main function, currently named `get4` operates as follows. Let
+
+    str == "This data describes a square\nx y\n0 0\n1 0\n1 1\n0 1\n"
+
+be some data. Then
+
+    get4 str ==
+      Just {
+          columnHeaders = ["x","y"]
+        , metadata = ["This data describes a square"]
+        , rawData = [["0","0"],["1","0"],["1","1"],["0","1"]]
+     }
+
+Note what happend: (1) the function computed the probable DataType, in
+this case SpaceDelmited; (2) It extracted the metadta preceding the
+actual data; (3) it found the column headers; (4) it extracted the
+data as a list of records, each of which is a list of strings of a
+fixed common size. The type is
+
+    get4 : Data -> DataPackage,
+
+where
+
+    type alias RawData = List Record,
+
+    type alias Record = List String,
+
+and
+
+    type alias DataPacket =
+        { metadata : List String
+        , columnHeaders : List String
+        , rawData : RawData
+        }
 
 Run
 
@@ -54,6 +94,14 @@ import Parser exposing (..)
 import List.Extra
 import Maybe.Extra
 import Stat
+import Csv
+
+
+type alias DataPacket =
+    { metadata : List String
+    , columnHeaders : List String
+    , rawData : RawData
+    }
 
 
 type alias RawData =
@@ -62,6 +110,54 @@ type alias RawData =
 
 type alias Record =
     List String
+
+
+type DataType
+    = SpaceDelimited
+    | TabDelimited
+    | CommaDelimited
+
+
+type alias DelimiterStatistics =
+    { spaces : Int
+    , commas : Int
+    , tabs : Int
+    }
+
+
+delimiter : String -> Char
+delimiter str =
+    case dataType str of
+        SpaceDelimited ->
+            ' '
+
+        TabDelimited ->
+            '\t'
+
+        CommaDelimited ->
+            ','
+
+
+dataType : String -> DataType
+dataType str =
+    let
+        p =
+            delimiterProfile str
+    in
+        if p.tabs > p.spaces && p.tabs > p.spaces then
+            TabDelimited
+        else if p.commas > p.spaces && p.commas > p.tabs then
+            CommaDelimited
+        else
+            SpaceDelimited
+
+
+delimiterProfile : String -> DelimiterStatistics
+delimiterProfile str =
+    { spaces = List.length <| String.indices " " str
+    , commas = List.length <| String.indices "," str
+    , tabs = List.length <| String.indices "\t" str
+    }
 
 
 {-| Test rawData:
@@ -144,12 +240,15 @@ field sepChar =
 -}
 get : Char -> String -> RawData
 get sepChar str =
-    case run (rawData (field sepChar)) str of
-        Ok data_ ->
-            data_
+    if sepChar == ',' then
+        Csv.parse str |> (\csv -> [ csv.headers ] ++ csv.records)
+    else
+        case run (rawData (field sepChar)) str of
+            Ok data_ ->
+                data_
 
-        Err _ ->
-            []
+            Err _ ->
+                []
 
 
 column : Int -> RawData -> Maybe (List String)
@@ -165,7 +264,8 @@ k is alphabetical.
 filterOutAlphaAt : Int -> RawData -> RawData
 filterOutAlphaAt k data_ =
     data_
-        |> List.filter (\rec -> (Maybe.andThen leadingCharIsAlpha (List.Extra.getAt k rec)) == Just False)
+        |> List.filter
+            (\rec -> (Maybe.andThen leadingCharIsAlpha (List.Extra.getAt k rec)) == Just False)
 
 
 leadingCharIsAlpha : String -> Maybe Bool
@@ -220,6 +320,41 @@ get2 sepChar str =
 
                 Just ( numberOfFields, numberOfRecords ) ->
                     data_ |> List.filter (\rec -> List.length rec == numberOfFields)
+
+
+{-| get3 makes intelligent guesses, If it is successful
+
+> get3 spaceTest
+> Just (["x","y"],[["0","0"],["1","0"],["1","1"],["0","1"]])
+
+-}
+get3 : String -> Maybe ( Record, RawData )
+get3 str =
+    get2 (delimiter str) str |> getDataAndHeader
+
+
+get4 : String -> Maybe DataPacket
+get4 str =
+    case get3 str of
+        Nothing ->
+            Nothing
+
+        Just ( headers, rawData_ ) ->
+            let
+                k =
+                    1 + List.length rawData_
+
+                allRecords =
+                    get (delimiter str) str
+
+                n =
+                    List.length allRecords
+            in
+                Just
+                    { metadata = List.take (n - k) allRecords |> List.map (String.join " ")
+                    , columnHeaders = headers
+                    , rawData = rawData_
+                    }
 
 
 {-| spectrum list = sorted list of the lengths of the
@@ -278,28 +413,28 @@ drop k rawData_ =
     List.drop k rawData_
 
 
-getDataAndHeaderUsingColumn : Int -> RawData -> Maybe ( Record, RawData )
-getDataAndHeaderUsingColumn j rawData_ =
-    case lastNonNumericalFieldAt j rawData_ of
+getDataAndHeader : RawData -> Maybe ( Record, RawData )
+getDataAndHeader rawData_ =
+    case indexOfLastNonNumericalField rawData_ of
         Nothing ->
             Nothing
 
         Just k ->
-            foo ( List.Extra.getAt k rawData_, Just (drop (k + 1) rawData_) )
+            combineMaybe ( List.Extra.getAt k rawData_, Just (drop (k + 1) rawData_) )
 
 
-{-| Use lastNonNumericalFieldAt to find where the good data starts.
+getDataAndHeaderUsingColumn : Int -> RawData -> Maybe ( Record, RawData )
+getDataAndHeaderUsingColumn j rawData_ =
+    case indexOfLastNonNumericalFieldAt j rawData_ of
+        Nothing ->
+            Nothing
 
-    dd = get2 ' ' D.temperature
-         [["January-December","1880-2016"],["Missing:","-999"],["Year","Value"]
-         ,["1880","-0.12"],["1881","-0.07"],["1882","-0.08"],["1883","-0.15"],...
+        Just k ->
+            combineMaybe ( List.Extra.getAt k rawData_, Just (drop (k + 1) rawData_) )
 
-    > lastNonNumericalFieldAt 0 dd
-      Just 2
 
--}
-lastNonNumericalFieldAt : Int -> RawData -> Maybe Int
-lastNonNumericalFieldAt k rawData_ =
+indexOfLastNonNumericalFieldAt : Int -> RawData -> Maybe Int
+indexOfLastNonNumericalFieldAt k rawData_ =
     column k rawData_
         |> Maybe.withDefault []
         |> List.indexedMap (\i s -> ( i, String.toFloat s ))
@@ -309,8 +444,22 @@ lastNonNumericalFieldAt k rawData_ =
         |> Maybe.map Tuple.first
 
 
-foo : ( Maybe a, Maybe b ) -> Maybe ( a, b )
-foo ( x, y ) =
+indexOfLastNonNumericalField : RawData -> Maybe Int
+indexOfLastNonNumericalField rawData_ =
+    case Maybe.map List.length (List.Extra.getAt 0 rawData_) of
+        Nothing ->
+            Nothing
+
+        Just numberOfFields ->
+            List.range 0 (numberOfFields - 1)
+                |> List.map (\k -> indexOfLastNonNumericalFieldAt k rawData_)
+                |> Maybe.Extra.combine
+                |> Maybe.map List.maximum
+                |> Maybe.Extra.join
+
+
+combineMaybe : ( Maybe a, Maybe b ) -> Maybe ( a, b )
+combineMaybe ( x, y ) =
     case ( x, y ) of
         ( Just a, Just b ) ->
             Just ( a, b )
