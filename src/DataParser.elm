@@ -9,7 +9,41 @@ module DataParser
         , spectrum2
         , get
         , get2
+        , dataInfo
+        , dataSpectrum2
+        , leadingCharIsAlpha
+        , filterOutAlphaAt
         )
+
+{-| The DataParser module provides utilitis for parsing data files
+in which records are separated by spaces, as in the sealevel rise
+data of `DataSamples.sealevel`from the NASA Goddard Space Flight Center
+Run
+
+    > dataInfo D.sealevel
+    Just (12,954) : Maybe ( Int, Int )
+
+on this data. The result tells you that the data proably consists of
+954 lines of twelve records each. Now Run
+
+    > get2 D.sealevel
+    [["HDR","For","information","on","how","the","data","were","generate","please",
+    "refer","to:"],["HDR","7","standard","deviation","of","GMSL","(GIA","not",
+    "applied)","variation","estimate","(mm)"],["0","11","1993.0115260","466462",
+    "337277.00","-37.24","92.66","-37.02","-37.24","92.66","-37.02","-37.52"],
+    ["0","12","1993.0386920","460889","334037.31","-40.35","95.39","-38.20",
+    "-40.34","95.39","-38.19","-38.05"], ...
+
+The `get2` function has done a pretty good job of separating data and metadata,
+but some spurions lines remain. They can be removed by the following technique:
+
+    get2 D.sealevel |> filterOutAlphaAt 10
+
+the `filterOutAlphaAt 10` function filters out (supresses) all records
+which have an alphabetical string in column 10. In this discussion,
+columns are numbered beginning with 0.
+
+-}
 
 import Parser exposing (..)
 import List.Extra
@@ -69,7 +103,7 @@ field =
     (succeed String.slice
         |= getOffset
         |. chompWhile (\c -> c == ' ')
-        |. chompIf (\c -> Char.isAlphaNum c || c == '-')
+        |. chompIf (\c -> c /= ' ' && c /= '\n')
         |. chompWhile (\c -> c /= ' ' && c /= '\n')
         |. chompWhile (\c -> c == ' ')
         |= getOffset
@@ -86,6 +120,37 @@ get str =
 
         Err _ ->
             []
+
+
+filterOutAlphaAt : Int -> Data -> Data
+filterOutAlphaAt k data_ =
+    data_
+        |> List.filter (\rec -> (Maybe.andThen leadingCharIsAlpha (List.Extra.getAt k rec)) == Just False)
+
+
+leadingCharIsAlpha : String -> Maybe Bool
+leadingCharIsAlpha str =
+    String.uncons str
+        |> Maybe.map Tuple.first
+        |> Maybe.map Char.isAlpha
+
+
+dataInfo str =
+    case get str of
+        [] ->
+            Nothing
+
+        data_ ->
+            Stat.mode (spectrum2 data_)
+
+
+dataSpectrum2 str =
+    case get str of
+        [] ->
+            []
+
+        data_ ->
+            spectrum2 data_
 
 
 get2 : String -> Data
