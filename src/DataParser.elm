@@ -3,7 +3,9 @@ module DataParser
         ( Data
         , Record
         , field
+        , tabbedField
         , record
+        , tabbedRecord
         , data
         , spectrum
         , spectrum2
@@ -57,7 +59,7 @@ type alias Data =
     List Record
 
 
-{-| run data "1.2 -4.5\n5.6 7.9\n"
+{-| run (data record) "1.2 -4.5\n5.6 7.9\n"
 Ok [["1.2","-4.5"],["5.6","7.9"]]
 -}
 data : Parser Record -> Parser Data
@@ -109,6 +111,54 @@ field =
         |= getSource
     )
         |> map String.trim
+
+
+{-| run record "1.2 -4.5"
+Ok ["1.2","-4.5"] : Result (List DeadEnd) Record
+-}
+tabbedRecord : Parser Record
+tabbedRecord =
+    loop [] tabbedGofer
+
+
+tabbedGofer : Record -> Parser (Step Record Record)
+tabbedGofer revFields =
+    oneOf
+        [ succeed (\s -> Loop (s :: revFields))
+            |= tabbedField
+        , succeed (\s -> Loop (s :: revFields))
+            |= lastTabbedField
+        , succeed ()
+            |> map (\_ -> Done (List.reverse revFields))
+        ]
+
+
+{-| A field as defined here begins with an alphanumeric
+character or '-' and is surrounded by spaces.
+-}
+tabbedField : Parser String
+tabbedField =
+    (succeed String.slice
+        |= getOffset
+        |. chompIf (\c -> c /= '\t' && c /= '\n')
+        |. chompWhile (\c -> c /= '\t' && c /= '\n')
+        |. chompIf (\c -> c == '\t')
+        |= getOffset
+        |= getSource
+    )
+        |> map String.trim
+
+
+lastTabbedField : Parser String
+lastTabbedField =
+    (succeed String.slice
+        |= getOffset
+        |. chompIf (\c -> c /= '\t' && c /= '\n')
+        |. chompWhile (\c -> c /= '\t' && c /= '\n')
+        -- |. chompIf (\c -> c == '\n')
+        |= getOffset
+        |= getSource
+    )
 
 
 get : Parser Record -> String -> Data
