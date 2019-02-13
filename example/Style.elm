@@ -5,7 +5,6 @@ import Element.Background as Background
 import Element.Font as Font
 
 
-
 --
 -- STYLE
 --
@@ -33,6 +32,7 @@ footer =
     , paddingXY 20 5
     , height (px 30)
     , width fill
+    , spacing 18
     ]
 
 

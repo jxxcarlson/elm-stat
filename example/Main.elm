@@ -54,7 +54,8 @@ main =
 
 
 type alias Model =
-    { filename : String
+    { filename : Maybe String
+    , fileSize : Maybe Int
     , csvText : Maybe String
     , csvData : Maybe Csv
     , data : Data
@@ -77,9 +78,9 @@ type Msg
     | InputYLabel String
     | InputXMin String
     | InputXMax String
-    | CsvRequested
-    | CsvSelected File
-    | CsvLoaded String
+    | FileRequested
+    | FileSelected File
+    | FileLoaded String
     | Recompute
     | Reset
 
@@ -90,7 +91,8 @@ type alias Flags =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    ( { filename = "no file yet"
+    ( { filename = Nothing
+      , fileSize = Nothing
       , csvText = Nothing
       , csvData = Nothing
       , data = []
@@ -131,14 +133,17 @@ update msg model =
         InputXMax str ->
             ( { model | xMax = String.toFloat str }, Cmd.none )
 
-        CsvRequested ->
+        FileRequested ->
             ( model
-            , Select.file [ "text/csvText" ] CsvSelected
+            , Select.file [ "text/*" ] FileSelected
             )
 
-        CsvSelected file ->
-            ( model
-            , Task.perform CsvLoaded (File.toString file)
+        FileSelected file ->
+            ( { model
+                | filename = Just <| File.name file
+                , fileSize = Just <| File.size file
+              }
+            , Task.perform FileLoaded (File.toString file)
             )
 
         Reset ->
@@ -149,16 +154,16 @@ update msg model =
                 ( numericalData, statistics ) =
                     recompute nextModel
             in
-            ( { nextModel | data = numericalData, statistics = statistics }, Cmd.none )
+                ( { nextModel | data = numericalData, statistics = statistics }, Cmd.none )
 
         Recompute ->
             let
                 ( numericalData, statistics ) =
                     recompute model
             in
-            ( { model | data = numericalData, statistics = statistics }, Cmd.none )
+                ( { model | data = numericalData, statistics = statistics }, Cmd.none )
 
-        CsvLoaded content ->
+        FileLoaded content ->
             let
                 ( csvData, header ) =
                     CsvData.intelligentGet "," content
@@ -195,21 +200,21 @@ update msg model =
                         dataList ->
                             Stat.statistics dataList
             in
-            ( { model
-                | csvText = Just content
-                , csvData = csvData
-                , data = numericalData
-                , header = header
-                , xLabel = xLabel
-                , yLabel = yLabel
-                , xMin = Maybe.map .xMin statistics
-                , xMax = Maybe.map .xMax statistics
-                , xMinOriginal = Maybe.map .xMin statistics
-                , xMaxOriginal = Maybe.map .xMax statistics
-                , statistics = statistics
-              }
-            , Cmd.none
-            )
+                ( { model
+                    | csvText = Just content
+                    , csvData = csvData
+                    , data = numericalData
+                    , header = header
+                    , xLabel = xLabel
+                    , yLabel = yLabel
+                    , xMin = Maybe.map .xMin statistics
+                    , xMax = Maybe.map .xMax statistics
+                    , xMinOriginal = Maybe.map .xMin statistics
+                    , xMaxOriginal = Maybe.map .xMax statistics
+                    , statistics = statistics
+                  }
+                , Cmd.none
+                )
 
 
 recompute : Model -> ( Data, Maybe Statistics )
@@ -232,7 +237,7 @@ recompute model =
                 dataList ->
                     Stat.statistics dataList
     in
-    ( numericalData, statistics )
+        ( numericalData, statistics )
 
 
 
@@ -295,7 +300,19 @@ dataColumn model =
 footer : Model -> Element Msg
 footer model =
     row Style.footer
-        [ downloadSampleCsvFile ]
+        [ downloadSampleCsvFile
+        , el [] (text <| "File: " ++ (Display.label "-" model.filename))
+        , el [] (text <| fileSizeString model.fileSize)
+        ]
+
+
+fileSizeString : Maybe Int -> String
+fileSizeString k =
+    let
+        maybeSize =
+            Maybe.map2 (++) (Maybe.map String.fromInt k) (Just " bytes")
+    in
+        "Size: " ++ Display.label "-" maybeSize
 
 
 downloadSampleCsvFile : Element Msg
@@ -501,12 +518,12 @@ inputXLabel model =
                 Just str ->
                     str
     in
-    Input.text [ height (px 18), Font.size 12, paddingXY 8 0 ]
-        { onChange = InputXLabel
-        , text = labelText
-        , placeholder = Nothing
-        , label = Input.labelLeft [ moveDown 4 ] <| el [] (text "X:")
-        }
+        Input.text [ height (px 18), Font.size 12, paddingXY 8 0 ]
+            { onChange = InputXLabel
+            , text = labelText
+            , placeholder = Nothing
+            , label = Input.labelLeft [ moveDown 4 ] <| el [] (text "X:")
+            }
 
 
 inputYLabel : Model -> Element Msg
@@ -520,12 +537,12 @@ inputYLabel model =
                 Just str ->
                     str
     in
-    Input.text [ height (px 18), Font.size 12, paddingXY 8 0, width (px 185) ]
-        { onChange = InputYLabel
-        , text = labelText
-        , placeholder = Nothing
-        , label = Input.labelLeft [] <| el [ moveDown 4 ] (text "Y:")
-        }
+        Input.text [ height (px 18), Font.size 12, paddingXY 8 0, width (px 185) ]
+            { onChange = InputYLabel
+            , text = labelText
+            , placeholder = Nothing
+            , label = Input.labelLeft [] <| el [ moveDown 4 ] (text "Y:")
+            }
 
 
 
@@ -538,8 +555,8 @@ openFileButton : Element Msg
 openFileButton =
     row [ centerX ]
         [ Input.button Style.button
-            { onPress = Just CsvRequested
-            , label = el [] (text "Open CSV file")
+            { onPress = Just FileRequested
+            , label = el [] (text "Open data file")
             }
         ]
 

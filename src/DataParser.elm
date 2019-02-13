@@ -11,7 +11,6 @@ module DataParser
         , get2
         , dataInfo
         , dataSpectrum2
-        , leadingCharIsAlpha
         , filterOutAlphaAt
         )
 
