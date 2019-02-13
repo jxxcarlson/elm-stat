@@ -18,18 +18,20 @@ module RawData
         , getDataAndHeaderUsingColumn
         )
 
-{-| The RawDataParser module provides utilitis for parsing rawData files
-in which records are separated by spaces, as in the sealevel rise
-rawData of `RawDataSamples.sealevel`from the NASA Goddard Space Flight Center
+{-| The RawData module provides utilitis for parsing raw data files
+(srings) in which records are separated by spaces or tabs, as in
+`RawDataSamples.sealevel`.
+
 Run
 
-    > dataInfo D.sealevel
+    > dataInfo ' ' D.sealevel
     Just (12,954) : Maybe ( Int, Int )
 
-on this rawData. The result tells you that the rawData proably consists of
-954 lines of twelve records each. Now Run
+on this data. The first argument of `dataInfo` is the charecter
+which separates fields. The result tells you that the rawData
+proably consists of 954 lines of twelve records each. Now Run
 
-    > get2 D.sealevel
+    > get2 ' ' D.sealevel
     [["HDR","For","information","on","how","the","rawData","were","generate","please",
     "refer","to:"],["HDR","7","standard","deviation","of","GMSL","(GIA","not",
     "applied)","variation","estimate","(mm)"],["0","11","1993.0115260","466462",
@@ -40,7 +42,7 @@ on this rawData. The result tells you that the rawData proably consists of
 The `get2` function has done a pretty good job of separating rawData and metadata,
 but some spurions lines remain. They can be removed by the following technique:
 
-    get2 D.sealevel |> filterOutAlphaAt 10
+    get2 ' ' D.sealevel |> filterOutAlphaAt 10
 
 the `filterOutAlphaAt 10` function filters out (supresses) all records
 which have an alphabetical string in column 10. In this discussion,
@@ -157,6 +159,9 @@ column k rawData_ =
         |> Maybe.Extra.combine
 
 
+{-| Remove all records in the data where the field in column
+k is alphabetical.
+-}
 filterOutAlphaAt : Int -> RawData -> RawData
 filterOutAlphaAt k data_ =
     data_
@@ -170,6 +175,8 @@ leadingCharIsAlpha str =
         |> Maybe.map Char.isAlpha
 
 
+{-| See the introductory comments.
+-}
 dataInfo recordParser str =
     case (get recordParser) str of
         [] ->
