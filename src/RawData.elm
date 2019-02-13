@@ -8,9 +8,9 @@ module RawData
         , column
         , spectrum
         , spectrum2
-        , get
+        , get1
         , get2
-        , get3
+        , get
         , dataInfo
         , dataSpectrum2
         , filterOutAlphaAt
@@ -24,36 +24,11 @@ module RawData
         , dataType
         )
 
-{-| The RawData module provides utilitis for parsing raw data files
-(strings) in which records are separated by spaces, tabs, or commas.
-The main function, currently named `get3` operates as follows. Let
+{-| The main function in the RawData module is
 
-    str == "This data describes a square\nx y\n0 0\n1 0\n1 1\n0 1\n"
-
-be some data. Then
-
-    get3 str ==
-      Just {
-          columnHeaders = ["x","y"]
-        , metadata = ["This data describes a square"]
-        , rawData = [["0","0"],["1","0"],["1","1"],["0","1"]]
-     }
-
-Note what happend: (1) the function computed the probable DataType, in
-this case SpaceDelmited; (2) It extracted the metadta preceding the
-actual data; (3) it found the column headers; (4) it extracted the
-data as a list of records, each of which is a list of strings of a
-fixed common size. The type is
-
-    get3 : Data -> DataPackage,
+    get : String -> DataPacket,
 
 where
-
-    type alias RawData = List Record,
-
-    type alias Record = List String,
-
-and
 
     type alias DataPacket =
         { metadata : List String
@@ -61,31 +36,17 @@ and
         , rawData : RawData
         }
 
-Run
+is a record holding metadata (whatever the author wrote),
+the names of column headers of the data, and the acrual
+data as columns of strings. Here is an example:
 
-    > dataInfo ' ' D.sealevel
-    Just (12,954) : Maybe ( Int, Int )
-
-on this data. The first argument of `dataInfo` is the charecter
-which separates fields. The result tells you that the rawData
-proably consists of 954 lines of twelve records each. Now Run
-
-    > get2 ' ' D.sealevel
-    [["HDR","For","information","on","how","the","rawData","were","generate","please",
-    "refer","to:"],["HDR","7","standard","deviation","of","GMSL","(GIA","not",
-    "applied)","variation","estimate","(mm)"],["0","11","1993.0115260","466462",
-    "337277.00","-37.24","92.66","-37.02","-37.24","92.66","-37.02","-37.52"],
-    ["0","12","1993.0386920","460889","334037.31","-40.35","95.39","-38.20",
-    "-40.34","95.39","-38.19","-38.05"], ...
-
-The `get2` function has done a pretty good job of separating rawData and metadata,
-but some spurions lines remain. They can be removed by the following technique:
-
-    get2 ' ' D.sealevel |> filterOutAlphaAt 10
-
-the `filterOutAlphaAt 10` function filters out (supresses) all records
-which have an alphabetical string in column 10. In this discussion,
-columns are numbered beginning with 0.
+    > get DataSamples.temperature
+         Just { columnHeaders = ["Year","Value"]
+           , metadata = ["Global Land and Ocean Temperature Anomalies"
+                         ,"January-December 1880-2016"
+                         ,"Units: Degrees Celsius"
+                        ]
+           , rawData = [["1880","-0.12"],["1881","-0.07"],["1882","-0.08"],["1883","-0.15"],
 
 -}
 
@@ -234,11 +195,11 @@ field sepChar =
 {-| Try these:
 
     dd =
-        get ' ' DataSamples.temperature
+        get1 ' ' DataSamples.temperature
 
 -}
-get : Char -> String -> RawData
-get sepChar str =
+get1 : Char -> String -> RawData
+get1 sepChar str =
     if sepChar == ',' then
         Csv.parse str |> (\csv -> [ csv.headers ] ++ csv.records)
     else
@@ -277,7 +238,7 @@ leadingCharIsAlpha str =
 {-| See the introductory comments.
 -}
 dataInfo recordParser str =
-    case (get recordParser) str of
+    case (get1 recordParser) str of
         [] ->
             Nothing
 
@@ -286,7 +247,7 @@ dataInfo recordParser str =
 
 
 dataSpectrum2 recordParser str =
-    case (get recordParser) str of
+    case (get1 recordParser) str of
         [] ->
             []
 
@@ -298,7 +259,7 @@ dataSpectrum2 recordParser str =
 from the input string. By well-formed, we mean
 that each record has the same number of fields.
 To do this, one first finds the raw data using
-`get`. Then the `Stat.mode (spectrum2 rawdata)`
+`get1`. Then the `Stat.mode (spectrum2 rawdata)`
 is computed. If succesulf, we obtain
 `Just (m, n)`, where `m` is the number of fields
 in the most commonly occuring record and `n` is
@@ -308,7 +269,7 @@ a filter is applied, allowing only records with
 -}
 get2 : Char -> String -> ( List String, RawData )
 get2 sepChar str =
-    case get sepChar str of
+    case get1 sepChar str of
         [] ->
             ( [], [] )
 
@@ -334,14 +295,14 @@ get2 sepChar str =
                         ( headerData, goodData )
 
 
-{-| get3 makes intelligent guesses, If it is successful
+{-| get makes intelligent guesses, If it is successful
 
-> get3 spaceTest
+> get spaceTest
 > Just (["x","y"],[["0","0"],["1","0"],["1","1"],["0","1"]])
 
 -}
-get3 : String -> Maybe DataPacket
-get3 str =
+get : String -> Maybe DataPacket
+get str =
     let
         ( metadata, goodData ) =
             get2 (delimiter str) str
@@ -369,7 +330,7 @@ spectrum [["1.2","-4.5"],["5.6"]] == [1,2]
 
 An example of data that needs cleanig before use:
 
-> dd = get ' ' D.temperature
+> dd = get1 ' ' D.temperature
 > spectrum dd
 > [0,2,3,6]
 
