@@ -1,44 +1,31 @@
 module RawData
     exposing
         ( RawData
+        , Table
         , Record
-        , rawData
-        , record
-        , field
-        , column
-        , spectrum
-        , spectrum2
-        , get1
-        , get2
         , get
-        , dataInfo
-        , dataSpectrum2
-        , filterOutAlphaAt
-        , indexOfLastNonNumericalFieldAt
-        , indexOfLastNonNumericalField
-        , drop
-        , getDataAndHeaderUsingColumn
-        , getDataAndHeader
-        , delimiterProfile
-        , delimiter
-        , dataType
+        , columnAsFloats
+        , getData
         )
 
-{-| The main function in the RawData module is
+{-| The purpose of the RawData module is to provide
+a way to transform strings representing data to
+RawData values, where
 
-    get : String -> DataPacket,
-
-where
-
-    type alias DataPacket =
+    type alias RawData =
         { metadata : List String
         , columnHeaders : List String
-        , rawData : RawData
+        , data : Table
         }
 
-is a record holding metadata (whatever the author wrote),
-the names of column headers of the data, and the acrual
-data as columns of strings. Here is an example:
+is a record holding metadata (whatever the author wrote)
+that precedes the data, the names of column headers of
+the data, and the actual data which can be thought of
+as a table with with m rows and n columns: a list of
+m records (the rows), where each record is a list of
+n strings.
+
+Here is an example:
 
     > get DataSamples.temperature
          Just { columnHeaders = ["Year","Value"]
@@ -48,23 +35,54 @@ data as columns of strings. Here is an example:
                         ]
            , rawData = [["1880","-0.12"],["1881","-0.07"],["1882","-0.08"],["1883","-0.15"],
 
+In addition, there are provisions for transforming RawData into Data,
+where a Data value is a list of Points and a Point is a record
+`{x : Float, y: Float}`. In the example below, columns 0 and 1
+of the Maybe RawData value `get D.temperature` are extracted
+to a value of type `Maybe Data`
+
+    > get D.temperature |> Maybe.andThen (dataFromRawData 0 1)
+
+The function `get` accomplishes its work as follows. (1) it inspects the
+data and makes a guess about is format:
+
+    type DataFormat
+        = SpaceDelimited
+        | TabDelimited
+        | CommaDelimited
+
+Here CommaDelimited means Csv. (2) With this guess in hand the string
+is parsed into a Table value, i.e., a list of records. As is, it is
+usually in an unsatisfactory state. (3) Another informed guess is made
+about the the number of fields in the actual data, i.e., the number of
+columns of data. (4) The Table is filtered, removing rows that have
+too few or too many fields. (5) It is assumed that the real data is numerical,
+and that it starts on row k. An informed guess is made about the value of k,
+and the rows 1 through k - 1 are discarded. The actual data is now in hand,
+albeit as a table of strings. There is also enough information hand to extract
+the column headers -- the row of non-data just before the data starts, and
+the other metadata, the rows before the column headers .
+
+The process just described is not fail-safe, but is it works quite frequently.
+One sometimes has to fix the data with a text editor.
+
 -}
 
 import Parser exposing (..)
 import List.Extra
 import Maybe.Extra
-import Stat
+import Stat exposing (Point, Data)
 import Csv
 
 
-type alias DataPacket =
+type alias RawData =
     { metadata : List String
     , columnHeaders : List String
-    , rawData : RawData
+    , data : Table
     }
 
 
-type alias RawData =
+type alias Table =
     List Record
 
 
@@ -72,7 +90,7 @@ type alias Record =
     List String
 
 
-type DataType
+type DataFormat
     = SpaceDelimited
     | TabDelimited
     | CommaDelimited
@@ -83,6 +101,60 @@ type alias DelimiterStatistics =
     , commas : Int
     , tabs : Int
     }
+
+
+{-| get makes intelligent guesses, If it is successful
+
+> get spaceTest
+> Just (["x","y"],[["0","0"],["1","0"],["1","1"],["0","1"]])
+
+-}
+get : String -> Maybe RawData
+get str =
+    let
+        ( metadata, goodData ) =
+            get2 (delimiter str) str
+    in
+        case getDataAndHeader goodData of
+            Nothing ->
+                Nothing
+
+            Just ( columnHeaders, clearData ) ->
+                Just
+                    { metadata = metadata
+                    , columnHeaders = columnHeaders
+                    , data = clearData
+                    }
+
+
+getData : Int -> Int -> RawData -> Maybe Data
+getData i j rawData_ =
+    let
+        xs =
+            rawData_.data |> columnAsFloats i
+
+        ys =
+            rawData_.data |> columnAsFloats j
+    in
+        case ( xs, ys ) of
+            ( Just xss, Just yss ) ->
+                Just (List.map2 Point xss yss)
+
+            ( _, _ ) ->
+                Nothing
+
+
+columnAsFloats : Int -> Table -> Maybe (List Float)
+columnAsFloats k rawData_ =
+    rawData_
+        |> List.map (List.Extra.getAt k)
+        |> List.map (Maybe.andThen String.toFloat)
+        |> Maybe.Extra.combine
+
+
+
+-- |> Maybe.Extra.values
+-- |> Maybe.map String.toFloat
 
 
 delimiter : String -> Char
@@ -98,7 +170,7 @@ delimiter str =
             ','
 
 
-dataType : String -> DataType
+dataType : String -> DataFormat
 dataType str =
     let
         p =
@@ -132,12 +204,12 @@ d2 = "a\tb\tc\nd\t\t\te\tf\n"
 > Ok [["a","b","c"],["d","e","f"]]
 
 -}
-rawData : Parser String -> Parser RawData
+rawData : Parser String -> Parser Table
 rawData fieldParser =
     loop [] (rawDataGofer fieldParser)
 
 
-rawDataGofer : Parser String -> RawData -> Parser (Step RawData RawData)
+rawDataGofer : Parser String -> Table -> Parser (Step Table Table)
 rawDataGofer fieldParser revFields =
     oneOf
         [ succeed (\s -> Loop (s :: revFields))
@@ -198,7 +270,7 @@ field sepChar =
         get1 ' ' DataSamples.temperature
 
 -}
-get1 : Char -> String -> RawData
+get1 : Char -> String -> Table
 get1 sepChar str =
     if sepChar == ',' then
         Csv.parse str |> (\csv -> [ csv.headers ] ++ csv.records)
@@ -211,7 +283,7 @@ get1 sepChar str =
                 []
 
 
-column : Int -> RawData -> Maybe (List String)
+column : Int -> Table -> Maybe (List String)
 column k rawData_ =
     rawData_
         |> List.map (\rec -> List.Extra.getAt k rec)
@@ -221,7 +293,7 @@ column k rawData_ =
 {-| Remove all records in the data where the field in column
 k is alphabetical.
 -}
-filterOutAlphaAt : Int -> RawData -> RawData
+filterOutAlphaAt : Int -> Table -> Table
 filterOutAlphaAt k data_ =
     data_
         |> List.filter
@@ -267,7 +339,7 @@ tne number of records of that shape. Finally,
 a filter is applied, allowing only records with
 `m` fields to pass through.
 -}
-get2 : Char -> String -> ( List String, RawData )
+get2 : Char -> String -> ( List String, Table )
 get2 sepChar str =
     case get1 sepChar str of
         [] ->
@@ -295,32 +367,8 @@ get2 sepChar str =
                         ( headerData, goodData )
 
 
-{-| get makes intelligent guesses, If it is successful
-
-> get spaceTest
-> Just (["x","y"],[["0","0"],["1","0"],["1","1"],["0","1"]])
-
--}
-get : String -> Maybe DataPacket
-get str =
-    let
-        ( metadata, goodData ) =
-            get2 (delimiter str) str
-    in
-        case getDataAndHeader goodData of
-            Nothing ->
-                Nothing
-
-            Just ( columnHeaders, clearData ) ->
-                Just
-                    { metadata = metadata
-                    , columnHeaders = columnHeaders
-                    , rawData = clearData
-                    }
-
-
 {-| spectrum list = sorted list of the lengths of the
-the sublists in a value of type `RawData = List (List String)`.
+the sublists in a value of type `Table = List (List String)`.
 A "good" list is one whose spectrum is of length one,
 e.g., `[n]`. In that case it is an n-column list:
 every rwo consists of n elements.
@@ -341,7 +389,7 @@ see that there are many more 2-field records,
 so the data must be of this shape.
 
 -}
-spectrum : RawData -> List Int
+spectrum : Table -> List Int
 spectrum data_ =
     data_
         |> List.map List.length
@@ -361,7 +409,7 @@ So records of length 2 occur most frequenty and thererfore most likely
 represent good rawData.
 
 -}
-spectrum2 : RawData -> List Int
+spectrum2 : Table -> List Int
 spectrum2 data_ =
     data_
         |> List.map List.length
@@ -370,12 +418,12 @@ spectrum2 data_ =
 
 {-| Drop the first k rows of the raw data
 -}
-drop : Int -> RawData -> RawData
+drop : Int -> Table -> Table
 drop k rawData_ =
     List.drop k rawData_
 
 
-getDataAndHeader : RawData -> Maybe ( Record, RawData )
+getDataAndHeader : Table -> Maybe ( Record, Table )
 getDataAndHeader rawData_ =
     case indexOfLastNonNumericalField rawData_ of
         Nothing ->
@@ -385,7 +433,7 @@ getDataAndHeader rawData_ =
             combineMaybe ( List.Extra.getAt k rawData_, Just (drop (k + 1) rawData_) )
 
 
-getDataAndHeaderUsingColumn : Int -> RawData -> Maybe ( Record, RawData )
+getDataAndHeaderUsingColumn : Int -> Table -> Maybe ( Record, Table )
 getDataAndHeaderUsingColumn j rawData_ =
     case indexOfLastNonNumericalFieldAt j rawData_ of
         Nothing ->
@@ -395,7 +443,7 @@ getDataAndHeaderUsingColumn j rawData_ =
             combineMaybe ( List.Extra.getAt k rawData_, Just (drop (k + 1) rawData_) )
 
 
-indexOfLastNonNumericalFieldAt : Int -> RawData -> Maybe Int
+indexOfLastNonNumericalFieldAt : Int -> Table -> Maybe Int
 indexOfLastNonNumericalFieldAt k rawData_ =
     column k rawData_
         |> Maybe.withDefault []
@@ -406,7 +454,7 @@ indexOfLastNonNumericalFieldAt k rawData_ =
         |> Maybe.map Tuple.first
 
 
-indexOfLastNonNumericalField : RawData -> Maybe Int
+indexOfLastNonNumericalField : Table -> Maybe Int
 indexOfLastNonNumericalField rawData_ =
     case Maybe.map List.length (List.Extra.getAt 0 rawData_) of
         Nothing ->
