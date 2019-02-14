@@ -2,12 +2,17 @@
 
 ![Image](./image/dataviewer.png)
 
-This package is for doing statistics and graphs for 2-column csv files.  
-The image above displays an analysis of time series data.
-It is computed by the app in the `examples` folder using this `elm-stat` library.  See
+![Image](./image/dataviewer-sealevel.png)
+
+This package is for doing statistics and graphs for n-column data files.
+The first image above displays an analysis of time series data in Csv file.
+The second example uses the new API in the `RawData` module, not yet published
+to package repo.  (Coming soon.)
+
+Both graphs is computed by the app in the `examples` folder using this `elm-stat` library.  See
 the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html) to try the app out on line.
 
-## The API  
+## The API
 
 There are two modules, `Stat`, for computing statistics of 2-D data, and `CsvData`, for extracting Csv data from a text string and for extracting 2-D data from Csv. The `Stat` module has functions for computing statistical measures such as the mean and standard deviation of the x or y values, coefficients for the linear regression line, etc.
 
@@ -47,7 +52,7 @@ For this example, we extract the value by hand:
     : { headers : List String, records : List (List String) }
 ```
 
-With the csv data in hand, we convert it to a list of points.  In the  
+With the csv data in hand, we convert it to a list of points.  In the
 case at hand, we extract columns 0 and 1.  The `getPointList` function
 allows one to work with multi-column data.
 
@@ -81,7 +86,7 @@ done in the demo app using `terezka/line-charts`.
   , rightRegressionPoint = { x = 1883, y = -0.1200 }
   , xMax = 1883, xMean = 1881.5, xMin = 1880, xStdev = 1.29099
   , yMean = -0.105, yStdev = 0.036968 }
-```  
+```
 
 ## The Demo App
 
