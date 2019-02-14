@@ -8,9 +8,22 @@ module RawData
         , getData
         )
 
-{-| The purpose of the RawData module is to provide
-a way to transform strings representing data to
-RawData values, where
+{-| The main functions of the RawData module are
+
+    get : String -> Maybe RawData
+
+and
+
+getData : Int -> Int -> RawData -> Maybe Data
+
+The first intelligently extracts a data table,
+column headers, and metadata from a string
+representing data in one of several formats --
+csv, tab-delimited, or space-delimited. With
+the second, one can extract a list of Points
+in the xy plane from a data table.
+
+A RawData value is a record of the following form:
 
     type alias RawData =
         { metadata : List String
@@ -18,28 +31,19 @@ RawData values, where
         , data : Table
         }
 
-is a record holding metadata (whatever the author wrote)
-that precedes the data, the names of column headers of
-the data, and the actual data which can be thought of
-as a table with with m rows and n columns: a list of
-m records (the rows), where each record is a list of
-n strings.
-
-Here is an example:
+Here is how one can construct such a record from actual deta:
 
     > get DataSamples.temperature
-         Just { columnHeaders = ["Year","Value"]
+         Just {
+             columnHeaders = ["Year","Value"]
            , metadata = ["Global Land and Ocean Temperature Anomalies"
                          ,"January-December 1880-2016"
                          ,"Units: Degrees Celsius"
                         ]
-           , rawData = [["1880","-0.12"],["1881","-0.07"],["1882","-0.08"],["1883","-0.15"],
+           , rawData = [["1880","-0.12"],["1881","-0.07"],["1882","-0.08"]
+                        ["1883","-0.15"], ...
 
-In addition, there are provisions for transforming RawData into Data,
-where a Data value is a list of Points and a Point is a record
-`{x : Float, y: Float}`. In the example below, columns 0 and 1
-of the Maybe RawData value `get D.temperature` are extracted
-to a value of type `Maybe Data`
+To extrat a list of points from the raw data, one proceeds as in the next example:
 
     > get D.temperature |> Maybe.andThen (dataFromRawData 0 1)
 
