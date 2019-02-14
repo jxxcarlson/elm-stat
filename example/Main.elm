@@ -37,6 +37,7 @@ import Stat exposing (Data, Point, Statistics, statistics)
 import Style
 import Svg exposing (Svg)
 import Task
+import RawData exposing (RawData)
 
 
 type PlotType
@@ -56,12 +57,14 @@ main =
 type alias Model =
     { filename : Maybe String
     , fileSize : Maybe Int
-    , csvText : Maybe String
-    , csvData : Maybe Csv
+    , dataText : Maybe String
+    , rawData : Maybe RawData
     , data : Data
     , header : Maybe String
     , xMinOriginal : Maybe Float
     , xMaxOriginal : Maybe Float
+    , xColumn : Maybe Int
+    , yColumn : Maybe Int
     , xMin : Maybe Float
     , xMax : Maybe Float
     , statistics : Maybe Statistics
@@ -78,6 +81,8 @@ type Msg
     | InputYLabel String
     | InputXMin String
     | InputXMax String
+    | InputI String
+    | InputJ String
     | FileRequested
     | FileSelected File
     | FileLoaded String
@@ -93,11 +98,13 @@ init : Flags -> ( Model, Cmd Msg )
 init flags =
     ( { filename = Nothing
       , fileSize = Nothing
-      , csvText = Nothing
-      , csvData = Nothing
+      , dataText = Nothing
+      , rawData = Nothing
       , data = []
       , xMinOriginal = Nothing
       , xMaxOriginal = Nothing
+      , xColumn = Just 0
+      , yColumn = Just 1
       , xMax = Nothing
       , xMin = Nothing
       , header = Nothing
@@ -133,6 +140,12 @@ update msg model =
         InputXMax str ->
             ( { model | xMax = String.toFloat str }, Cmd.none )
 
+        InputI str ->
+            ( { model | xColumn = String.toInt str }, Cmd.none )
+
+        InputJ str ->
+            ( { model | yColumn = String.toInt str }, Cmd.none )
+
         FileRequested ->
             ( model
             , Select.file [ "text/*" ] FileSelected
@@ -165,32 +178,32 @@ update msg model =
 
         FileLoaded content ->
             let
-                ( csvData, header ) =
-                    CsvData.intelligentGet "," content
+                rawData =
+                    RawData.get content
 
                 xLabel =
-                    case csvData of
+                    case rawData of
                         Nothing ->
                             Nothing
 
                         Just data ->
-                            List.Extra.getAt 0 data.headers
+                            List.Extra.getAt 0 data.columnHeaders
 
                 yLabel =
-                    case csvData of
+                    case rawData of
                         Nothing ->
                             Nothing
 
                         Just data ->
-                            List.Extra.getAt 1 data.headers
+                            List.Extra.getAt 1 data.columnHeaders
 
                 numericalData =
-                    case csvData of
+                    case rawData of
                         Nothing ->
                             []
 
-                        Just data ->
-                            CsvData.getPointList 0 1 data
+                        Just rawData_ ->
+                            (RawData.getData 0 1 rawData_) |> Maybe.withDefault []
 
                 statistics =
                     case numericalData of
@@ -201,10 +214,10 @@ update msg model =
                             Stat.statistics dataList
             in
                 ( { model
-                    | csvText = Just content
-                    , csvData = csvData
+                    | dataText = Just content
+                    , rawData = rawData
                     , data = numericalData
-                    , header = header
+                    , header = Maybe.map .metadata rawData |> Maybe.map (List.take 5) |> Maybe.map (String.join "\n")
                     , xLabel = xLabel
                     , yLabel = yLabel
                     , xMin = Maybe.map .xMin statistics
@@ -220,24 +233,33 @@ update msg model =
 recompute : Model -> ( Data, Maybe Statistics )
 recompute model =
     let
-        numericalData =
-            case model.csvData of
-                Nothing ->
-                    []
+        data =
+            Debug.log "FINAL DATA" <|
+                case model.rawData of
+                    Nothing ->
+                        []
 
-                Just data ->
-                    CsvData.getPointList 0 1 data
-                        |> Stat.filterData { xMin = model.xMin, xMax = model.xMax }
+                    Just rawData ->
+                        let
+                            i =
+                                model.xColumn |> Maybe.withDefault 0
+
+                            j =
+                                model.yColumn |> Maybe.withDefault 1
+                        in
+                            Debug.log "DATA" (RawData.getData i j rawData)
+                                |> Maybe.withDefault []
+                                |> Stat.filterData { xMin = model.xMin, xMax = model.xMax }
 
         statistics =
-            case numericalData of
+            case data of
                 [] ->
                     Nothing
 
                 dataList ->
                     Stat.statistics dataList
     in
-        ( numericalData, statistics )
+        ( data, statistics )
 
 
 
@@ -386,16 +408,17 @@ statisticsPanel model =
         , moveDown 25
         ]
         [ el []
-            (text <| numberOfRecordsString model.csvData)
+            (text <| numberOfRecordsString model.data)
         , el []
             (text <| plotTypeAsString model.plotType)
-        , showIfNot (model.csvData == Nothing) <| xInfoDisplay model
-        , showIfNot (model.csvData == Nothing) <| Display.info "y" model.yLabel .y model.data
-        , showIfNot (model.csvData == Nothing) <| Display.correlationInfo model.data
-        , showIfNot (model.csvData == Nothing) <| inputXMin model
-        , showIfNot (model.csvData == Nothing) <| inputXMax model
-        , showIfNot (model.csvData == Nothing) <| recomputeButton
-        , showIfNot (model.csvData == Nothing) <| resetButton
+        , showIfNot (model.rawData == Nothing) <| xInfoDisplay model
+        , showIfNot (model.rawData == Nothing) <| Display.info "y" model.yLabel .y model.data
+        , showIfNot (model.rawData == Nothing) <| Display.correlationInfo model.data
+        , showIfNot (model.rawData == Nothing) <| inputXMin model
+        , showIfNot (model.rawData == Nothing) <| inputXMax model
+        , showIfNot (model.rawData == Nothing) <| row [ spacing 12 ] [ el [ Font.bold ] (text <| "Column"), inputI model, inputJ model ]
+        , showIfNot (model.rawData == Nothing) <| recomputeButton
+        , showIfNot (model.rawData == Nothing) <| resetButton
         ]
 
 
@@ -445,14 +468,9 @@ plotTypeAsString plotType =
 --
 
 
-numberOfRecordsString : Maybe Csv -> String
-numberOfRecordsString maybeCsvData =
-    case maybeCsvData of
-        Nothing ->
-            "No records yet"
-
-        Just data ->
-            "Records: " ++ String.fromInt (List.length data.records)
+numberOfRecordsString : Data -> String
+numberOfRecordsString data =
+    "Records: " ++ String.fromInt (List.length data)
 
 
 title : String -> Element msg
@@ -485,6 +503,26 @@ rawDataDisplay model =
 --
 -- INPUT FIELDS
 --
+
+
+inputI : Model -> Element Msg
+inputI model =
+    Input.text [ width (px 36), height (px 18), Font.size 12, paddingXY 8 0 ]
+        { onChange = InputI
+        , text = Display.label "column i" (Maybe.map String.fromInt model.xColumn)
+        , placeholder = Nothing
+        , label = Input.labelLeft [ moveDown 4 ] <| el [] (text "i:")
+        }
+
+
+inputJ : Model -> Element Msg
+inputJ model =
+    Input.text [ width (px 36), height (px 18), Font.size 12, paddingXY 8 0 ]
+        { onChange = InputJ
+        , text = Display.label "column j" (Maybe.map String.fromInt model.yColumn)
+        , placeholder = Nothing
+        , label = Input.labelLeft [ moveDown 4 ] <| el [] (text "j:")
+        }
 
 
 inputXMin : Model -> Element Msg
