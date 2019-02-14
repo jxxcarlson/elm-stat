@@ -141,10 +141,10 @@ update msg model =
             ( { model | xMax = String.toFloat str }, Cmd.none )
 
         InputI str ->
-            ( { model | xColumn = String.toInt str }, Cmd.none )
+            ( { model | xColumn = (String.toInt str) |> Maybe.map (\x -> x - 1) }, Cmd.none )
 
         InputJ str ->
-            ( { model | yColumn = String.toInt str }, Cmd.none )
+            ( { model | yColumn = (String.toInt str) |> Maybe.map (\x -> x - 1) }, Cmd.none )
 
         FileRequested ->
             ( model
@@ -217,7 +217,7 @@ update msg model =
                     | dataText = Just content
                     , rawData = rawData
                     , data = numericalData
-                    , header = Maybe.map .metadata rawData |> Maybe.map (List.take 5) |> Maybe.map (String.join "\n")
+                    , header = Maybe.map .metadata rawData |> Maybe.map (String.join "\n")
                     , xLabel = xLabel
                     , yLabel = yLabel
                     , xMin = Maybe.map .xMin statistics
@@ -292,7 +292,23 @@ rightColumn : Model -> Element Msg
 rightColumn model =
     column [ spacing 8 ]
         [ visualDataDisplay model
-        , el [ Font.size 11, moveRight 50, moveUp 70 ] (text <| headerString model)
+        , column
+            [ spacing 8
+            , Font.size 11
+            , moveRight 50
+            , moveUp 70
+            ]
+            [ el [ Font.bold, Font.size 13 ] (text "Header")
+            , el
+                [ scrollbarY
+                , scrollbarX
+                , height (px 100)
+                , width (px 600)
+                , padding 8
+                , Background.color (rgb255 200 200 200)
+                ]
+                (text <| headerString model)
+            ]
         ]
 
 
@@ -405,7 +421,7 @@ statisticsPanel model =
         , width (px 200)
         , height (px 515)
         , paddingXY 8 12
-        , moveDown 25
+        , moveUp 5
         ]
         [ el []
             (text <| numberOfRecordsString model.data)
@@ -414,6 +430,7 @@ statisticsPanel model =
         , showIfNot (model.rawData == Nothing) <| xInfoDisplay model
         , showIfNot (model.rawData == Nothing) <| Display.info "y" model.yLabel .y model.data
         , showIfNot (model.rawData == Nothing) <| Display.correlationInfo model.data
+        , showIfNot (model.rawData == Nothing) <| el [ Font.bold, paddingXY 0 5 ] (text <| "TOOLS")
         , showIfNot (model.rawData == Nothing) <| inputXMin model
         , showIfNot (model.rawData == Nothing) <| inputXMax model
         , showIfNot (model.rawData == Nothing) <| row [ spacing 12 ] [ el [ Font.bold ] (text <| "Column"), inputI model, inputJ model ]
@@ -509,9 +526,11 @@ inputI : Model -> Element Msg
 inputI model =
     Input.text [ width (px 36), height (px 18), Font.size 12, paddingXY 8 0 ]
         { onChange = InputI
-        , text = Display.label "column i" (Maybe.map String.fromInt model.xColumn)
+        , text =
+            Display.label "column i"
+                (Maybe.map String.fromInt (Maybe.map (\n -> n + 1) model.xColumn))
         , placeholder = Nothing
-        , label = Input.labelLeft [ moveDown 4 ] <| el [] (text "i:")
+        , label = Input.labelLeft [ moveDown 4 ] <| el [] (text "x:")
         }
 
 
@@ -519,9 +538,11 @@ inputJ : Model -> Element Msg
 inputJ model =
     Input.text [ width (px 36), height (px 18), Font.size 12, paddingXY 8 0 ]
         { onChange = InputJ
-        , text = Display.label "column j" (Maybe.map String.fromInt model.yColumn)
+        , text =
+            Display.label "column j"
+                (Maybe.map String.fromInt (Maybe.map (\n -> n + 1) model.yColumn))
         , placeholder = Nothing
-        , label = Input.labelLeft [ moveDown 4 ] <| el [] (text "j:")
+        , label = Input.labelLeft [ moveDown 4 ] <| el [] (text "y:")
         }
 
 

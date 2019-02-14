@@ -1,5 +1,12 @@
-Source: https://climate.nasa.gov/vital-signs/sea-level/
-HDR Global Mean Sea Level Data
+Global Mean Sea Level Data
+NOTES:
+1. Put x min = 1990, x max = 2010 to manually select range of x
+2. Put Column x: 3, y: 12 to select columns of data to use for x and y
+3. Press RECOMPUTE
+4. Play around with the above parameters
+HDR
+HDR
+HDR Source: https://climate.nasa.gov/vital-signs/sea-level/
 HDR
 HDR This file contains Global Mean Sea Level (GMSL) variations computed at the NASA Goddard Space Flight Center under the
 HDR auspices of the NASA MEaSUREs program. The GMSL was generated using the Integrated Multi-Mission Ocean Altimeter Data for
@@ -49,6 +56,7 @@ HDR
 HDR* TOPEX/Jason 20 year collinear mean reference is derived from cycles 121 to 858, years 1996-2016.
 HDR
 HDR Header_End---------------------------------------
+Sealevel data
    0  11  1993.0115260    466462 337277.00    -37.24     92.66    -37.02    -37.24     92.66    -37.02    -37.52
    0  12  1993.0386920    460889 334037.31    -40.35     95.39    -38.20    -40.34     95.39    -38.19    -38.05
    0  13  1993.0658580    472123 342416.09    -40.17     92.29    -38.28    -40.16     92.29    -38.27    -37.61
