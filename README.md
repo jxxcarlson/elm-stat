@@ -66,7 +66,7 @@ allows one to work with multi-column data.
 From a `Data = List Point` value, one can compute statistics:
 
 ```
-> Stat.average .y data
+> Stat.mean .y data
   Just -0.105 : Maybe Float
 > Stat.stdev .y data
   Just 0.0013666 : Maybe Float

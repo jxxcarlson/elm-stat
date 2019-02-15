@@ -100,12 +100,12 @@ displayMaximum selector data =
 
 displayAverage : (Point -> Float) -> Data -> String
 displayAverage selector data =
-    case Stat.average selector data of
+    case Stat.mean selector data of
         Nothing ->
-            "average: ?"
+            "mean: ?"
 
         Just value ->
-            "average: " ++ stringOfFloat value
+            "mean: " ++ stringOfFloat value
 
 
 displayStdev : (Point -> Float) -> Data -> String

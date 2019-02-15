@@ -8,10 +8,6 @@ module Main exposing (main)
 
 import Browser
 import Csv exposing (Csv)
-
-
--- import CsvData
-
 import Display
 import Element exposing (..)
 import Element.Background as Background
@@ -252,7 +248,7 @@ recompute model =
                         in
                             Debug.log "DATA" (RawData.getData i j rawData)
                                 |> Maybe.withDefault []
-                                |> Stat.filterData { xMin = model.xMin, xMax = model.xMax }
+                                |> Stat.filter { xMin = model.xMin, xMax = model.xMax }
 
         statistics =
             case data of
