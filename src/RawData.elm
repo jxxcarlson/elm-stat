@@ -31,7 +31,7 @@ A RawData value is a record of the following form:
 
 Here is how one can construct such a record from actual deta:
 
-    > get DataSamples.temperature
+    > get SampleData.temperature
          Just {
              columnHeaders = ["Year","Value"]
            , metadata = ["Global Land and Ocean Temperature Anomalies"
@@ -41,32 +41,11 @@ Here is how one can construct such a record from actual deta:
            , rawData = [["1880","-0.12"],["1881","-0.07"],["1882","-0.08"]
                         ["1883","-0.15"], ...
 
-To extrat a list of points from the raw data, one proceeds as in the next example:
+To extract a list of points from the raw data, one proceeds as in the next example:
 
     > get D.temperature |> Maybe.andThen (dataFromRawData 0 1)
 
-The function `get` accomplishes its work as follows. (1) it inspects the
-data and makes a guess about is format:
-
-    type DataFormat
-        = SpaceDelimited
-        | TabDelimited
-        | CommaDelimited
-
-Here CommaDelimited means Csv. (2) With this guess in hand the string
-is parsed into a Table value, i.e., a list of records. As is, it is
-usually in an unsatisfactory state. (3) Another informed guess is made
-about the the number of fields in the actual data, i.e., the number of
-columns of data. (4) The Table is filtered, removing rows that have
-too few or too many fields. (5) It is assumed that the real data is numerical,
-and that it starts on row k. An informed guess is made about the value of k,
-and the rows 1 through k - 1 are discarded. The actual data is now in hand,
-albeit as a table of strings. There is also enough information hand to extract
-the column headers -- the row of non-data just before the data starts, and
-the other metadata, the rows before the column headers .
-
-The process just described is not fail-safe, but is it works quite frequently.
-One sometimes has to fix the data with a text editor.
+@docs RawData, get, getData, getColumn
 
 -}
 
@@ -77,6 +56,11 @@ import Stat exposing (Point, Data)
 import Csv
 
 
+{-| A RawData value consists of metadata, columnHeaders,
+and data. The first two are lists of strings, while the
+last is a list of records, where a record is a lest of
+strings.
+-}
 type alias RawData =
     { metadata : List String
     , columnHeaders : List String
@@ -110,6 +94,29 @@ type alias DelimiterStatistics =
 > get spaceTest
 > Just (["x","y"],[["0","0"],["1","0"],["1","1"],["0","1"]])
 
+The function `get` accomplishes its work as follows. (1) it inspects the
+data and makes a guess about is format:
+
+    type DataFormat
+        = SpaceDelimited
+        | TabDelimited
+        | CommaDelimited
+
+Here CommaDelimited means Csv. (2) With this guess in hand the string
+is parsed into a Table value, i.e., a list of records. As is, it is
+usually in an unsatisfactory state. (3) Another informed guess is made
+about the the number of fields in the actual data, i.e., the number of
+columns of data. (4) The Table is filtered, removing rows that have
+too few or too many fields. (5) It is assumed that the real data is numerical,
+and that it starts on row k. An informed guess is made about the value of k,
+and the rows 1 through k - 1 are discarded. The actual data is now in hand,
+albeit as a table of strings. There is also enough information hand to extract
+the column headers -- the row of non-data just before the data starts, and
+the other metadata, the rows before the column headers .
+
+The process just described is not fail-safe, but is it works quite frequently.
+One sometimes has to fix the data with a text editor.
+
 -}
 get : String -> Maybe RawData
 get str =
@@ -129,6 +136,12 @@ get str =
                     }
 
 
+{-| getData i j rawData_ extracts Data from
+RawData by extracting columns i and j of the
+RawData, trasforming these to lists of floats,
+and using these as the x and y coordinates of
+a list of Points.
+-}
 getData : Int -> Int -> RawData -> Maybe Data
 getData i j rawData_ =
     let
@@ -146,17 +159,16 @@ getData i j rawData_ =
                 Nothing
 
 
+{-| getColumn i table extracts a list of Floats from
+a table (List of Records) by extracting column i of the
+Table, transforming the result to lists of floats.
+-}
 getColumn : Int -> Table -> Maybe (List Float)
 getColumn k rawData_ =
     rawData_
         |> List.map (List.Extra.getAt k)
         |> List.map (Maybe.andThen String.toFloat)
         |> Maybe.Extra.combine
-
-
-
--- |> Maybe.Extra.values
--- |> Maybe.map String.toFloat
 
 
 delimiter : String -> Char
@@ -172,11 +184,14 @@ delimiter str =
             ','
 
 
+{-| Examine the input string to see what is the
+data format.
+-}
 dataType : String -> DataFormat
-dataType str =
+dataType dataString =
     let
         p =
-            delimiterProfile str
+            delimiterProfile dataString
     in
         if p.tabs > p.spaces && p.tabs > p.spaces then
             TabDelimited
@@ -186,12 +201,150 @@ dataType str =
             SpaceDelimited
 
 
+{-| Return a record giving the numbeor of times the
+characters ' ', ',', and '\t' appear in the file.
+-}
 delimiterProfile : String -> DelimiterStatistics
-delimiterProfile str =
-    { spaces = List.length <| String.indices " " str
-    , commas = List.length <| String.indices "," str
-    , tabs = List.length <| String.indices "\t" str
+delimiterProfile dataString =
+    { spaces = List.length <| String.indices " " dataString
+    , commas = List.length <| String.indices "," dataString
+    , tabs = List.length <| String.indices "\t" dataString
     }
+
+
+{-| get1 is the lowest level function called by `get`.
+
+To test:
+
+    dd =
+        get1 ' ' SampleData.temperature
+
+-}
+get1 : Char -> String -> Table
+get1 sepChar str =
+    if sepChar == ',' then
+        Csv.parse str |> (\csv -> [ csv.headers ] ++ csv.records)
+    else
+        case run (rawData (field sepChar)) str of
+            Ok data_ ->
+                data_
+
+            Err _ ->
+                []
+
+
+column : Int -> Table -> Maybe (List String)
+column k rawData_ =
+    rawData_
+        |> List.map (\rec -> List.Extra.getAt k rec)
+        |> Maybe.Extra.combine
+
+
+{-| get2 attempts to extract well-formed data
+from the input string. By well-formed, we mean
+that each record has the same number of fields.
+To do this, one first finds the raw data using
+`get1`. Then the `Stat.mode (spectrum2 rawdata)`
+is computed. If succesulf, we obtain
+`Just (m, n)`, where `m` is the number of fields
+in the most commonly occuring record and `n` is
+tne number of records of that shape. Finally,
+a filter is applied, allowing only records with
+`m` fields to pass through.
+-}
+get2 : Char -> String -> ( List String, Table )
+get2 sepChar str =
+    case get1 sepChar str of
+        [] ->
+            ( [], [] )
+
+        data_ ->
+            case (Stat.mode (spectrum2 data_)) of
+                Nothing ->
+                    ( [], [] )
+
+                Just ( numberOfFields, numberOfRecords ) ->
+                    let
+                        goodData =
+                            data_ |> List.filter (\rec -> List.length rec == numberOfFields)
+
+                        n =
+                            List.length data_
+
+                        k =
+                            List.length goodData
+
+                        headerData =
+                            List.take (n - k) data_ |> List.map (String.join " ")
+                    in
+                        ( headerData, goodData )
+
+
+{-| dd = getRawData D.temperature
+
+> spectrum2 dd
+> [0,2,2,2,2,2,2,..,2,2,2,2,2,3,3,6]
+
+> mode sp
+> Just (2,140)
+
+So records of length 2 occur most frequenty and thererfore most likely
+represent good rawData.
+
+-}
+spectrum2 : Table -> List Int
+spectrum2 data_ =
+    data_
+        |> List.map List.length
+        |> List.sort
+
+
+{-| Drop the first k rows of the raw data
+-}
+drop : Int -> Table -> Table
+drop k rawData_ =
+    List.drop k rawData_
+
+
+getDataAndHeader : Table -> Maybe ( Record, Table )
+getDataAndHeader rawData_ =
+    case indexOfLastNonNumericalField rawData_ of
+        Nothing ->
+            Nothing
+
+        Just k ->
+            combineMaybe ( List.Extra.getAt k rawData_, Just (drop (k + 1) rawData_) )
+
+
+indexOfLastNonNumericalField : Table -> Maybe Int
+indexOfLastNonNumericalField rawData_ =
+    case Maybe.map List.length (List.Extra.getAt 0 rawData_) of
+        Nothing ->
+            Nothing
+
+        Just numberOfFields ->
+            List.range 0 (numberOfFields - 1)
+                |> List.map (\k -> indexOfLastNonNumericalFieldAt k rawData_)
+                |> Maybe.Extra.combine
+                |> Maybe.map List.maximum
+                |> Maybe.Extra.join
+
+
+indexOfLastNonNumericalFieldAt : Int -> Table -> Maybe Int
+indexOfLastNonNumericalFieldAt k rawData_ =
+    column k rawData_
+        |> Maybe.withDefault []
+        |> List.indexedMap (\i s -> ( i, String.toFloat s ))
+        |> List.filter (\( x, y ) -> y == Nothing)
+        |> List.reverse
+        |> List.head
+        |> Maybe.map Tuple.first
+
+
+
+--
+-- Parsers
+--
 
 
 {-| Test rawData:
@@ -266,208 +419,10 @@ field sepChar =
         |> map String.trim
 
 
-{-| Try these:
 
-    dd =
-        get1 ' ' DataSamples.temperature
-
--}
-get1 : Char -> String -> Table
-get1 sepChar str =
-    if sepChar == ',' then
-        Csv.parse str |> (\csv -> [ csv.headers ] ++ csv.records)
-    else
-        case run (rawData (field sepChar)) str of
-            Ok data_ ->
-                data_
-
-            Err _ ->
-                []
-
-
-column : Int -> Table -> Maybe (List String)
-column k rawData_ =
-    rawData_
-        |> List.map (\rec -> List.Extra.getAt k rec)
-        |> Maybe.Extra.combine
-
-
-{-| Remove all records in the data where the field in column
-k is alphabetical.
--}
-filterOutAlphaAt : Int -> Table -> Table
-filterOutAlphaAt k data_ =
-    data_
-        |> List.filter
-            (\rec -> (Maybe.andThen leadingCharIsAlpha (List.Extra.getAt k rec)) == Just False)
-
-
-leadingCharIsAlpha : String -> Maybe Bool
-leadingCharIsAlpha str =
-    String.uncons str
-        |> Maybe.map Tuple.first
-        |> Maybe.map Char.isAlpha
-
-
-{-| See the introductory comments.
--}
-dataInfo recordParser str =
-    case (get1 recordParser) str of
-        [] ->
-            Nothing
-
-        data_ ->
-            Stat.mode (spectrum2 data_)
-
-
-dataSpectrum2 recordParser str =
-    case (get1 recordParser) str of
-        [] ->
-            []
-
-        data_ ->
-            spectrum2 data_
-
-
-{-| get2 attempts to extract well-formed data
-from the input string. By well-formed, we mean
-that each record has the same number of fields.
-To do this, one first finds the raw data using
-`get1`. Then the `Stat.mode (spectrum2 rawdata)`
-is computed. If succesulf, we obtain
-`Just (m, n)`, where `m` is the number of fields
-in the most commonly occuring record and `n` is
-tne number of records of that shape. Finally,
-a filter is applied, allowing only records with
-`m` fields to pass through.
--}
-get2 : Char -> String -> ( List String, Table )
-get2 sepChar str =
-    case get1 sepChar str of
-        [] ->
-            ( [], [] )
-
-        data_ ->
-            case (Stat.mode (spectrum2 data_)) of
-                Nothing ->
-                    ( [], [] )
-
-                Just ( numberOfFields, numberOfRecords ) ->
-                    let
-                        goodData =
-                            data_ |> List.filter (\rec -> List.length rec == numberOfFields)
-
-                        n =
-                            List.length data_
-
-                        k =
-                            List.length goodData
-
-                        headerData =
-                            List.take (n - k) data_ |> List.map (String.join " ")
-                    in
-                        ( headerData, goodData )
-
-
-{-| spectrum list = sorted list of the lengths of the
-the sublists in a value of type `Table = List (List String)`.
-A "good" list is one whose spectrum is of length one,
-e.g., `[n]`. In that case it is an n-column list:
-every rwo consists of n elements.
-
-spectrum [["1.2","-4.5"],["5.6","7.9"]] == [2]
-spectrum [["1.2","-4.5"],["5.6"]] == [1,2]
-
-An example of data that needs cleanig before use:
-
-> dd = get1 ' ' D.temperature
-> spectrum dd
-> [0,2,3,6]
-
-The fact that the spectum consiste of more than
-one elemen tis the tipoff: there are records with
-0, 2, e, and 6 fields. Applyibg `spectrum2`, we
-see that there are many more 2-field records,
-so the data must be of this shape.
-
--}
-spectrum : Table -> List Int
-spectrum data_ =
-    data_
-        |> List.map List.length
-        |> List.Extra.unique
-        |> List.sort
-
-
-{-| dd = getRawData D.temperature
-
-> spectrum2 dd
-> [0,2,2,2,2,2,2,..,2,2,2,2,2,3,3,6]
-
-> mode sp
-> Just (2,140)
-
-So records of length 2 occur most frequenty and thererfore most likely
-represent good rawData.
-
--}
-spectrum2 : Table -> List Int
-spectrum2 data_ =
-    data_
-        |> List.map List.length
-        |> List.sort
-
-
-{-| Drop the first k rows of the raw data
--}
-drop : Int -> Table -> Table
-drop k rawData_ =
-    List.drop k rawData_
-
-
-getDataAndHeader : Table -> Maybe ( Record, Table )
-getDataAndHeader rawData_ =
-    case indexOfLastNonNumericalField rawData_ of
-        Nothing ->
-            Nothing
-
-        Just k ->
-            combineMaybe ( List.Extra.getAt k rawData_, Just (drop (k + 1) rawData_) )
-
-
-getDataAndHeaderUsingColumn : Int -> Table -> Maybe ( Record, Table )
-getDataAndHeaderUsingColumn j rawData_ =
-    case indexOfLastNonNumericalFieldAt j rawData_ of
-        Nothing ->
-            Nothing
-
-        Just k ->
-            combineMaybe ( List.Extra.getAt k rawData_, Just (drop (k + 1) rawData_) )
-
-
-indexOfLastNonNumericalFieldAt : Int -> Table -> Maybe Int
-indexOfLastNonNumericalFieldAt k rawData_ =
-    column k rawData_
-        |> Maybe.withDefault []
-        |> List.indexedMap (\i s -> ( i, String.toFloat s ))
-        |> List.filter (\( x, y ) -> y == Nothing)
-        |> List.reverse
-        |> List.head
-        |> Maybe.map Tuple.first
-
-
-indexOfLastNonNumericalField : Table -> Maybe Int
-indexOfLastNonNumericalField rawData_ =
-    case Maybe.map List.length (List.Extra.getAt 0 rawData_) of
-        Nothing ->
-            Nothing
-
-        Just numberOfFields ->
-            List.range 0 (numberOfFields - 1)
-                |> List.map (\k -> indexOfLastNonNumericalFieldAt k rawData_)
-                |> Maybe.Extra.combine
-                |> Maybe.map List.maximum
-                |> Maybe.Extra.join
+--
+-- General helpers
+--
 
 
 combineMaybe : ( Maybe a, Maybe b ) -> Maybe ( a, b )

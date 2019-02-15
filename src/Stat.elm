@@ -14,7 +14,7 @@ module Stat
 
 {-| The aim of this library is to compute statistics for 2D data.
 
-@docs Data, Point, Statistics, mean, filter, maximum, minimum, statistics, stdev
+@docs Data, Point, Statistics, mean, mode, filter, maximum, minimum, statistics, stdev
 
 -}
 
@@ -318,6 +318,18 @@ buildTable list =
     list |> List.foldl (\item dict -> addToTable item dict) Dict.empty
 
 
+{-| Compute the mode of the data:
+
+> data = [1, 5, 2, 2, 2, 2, 5, 3, 1][1,5,2,2,2,2,5,3,1]
+
+> mode data
+> Just (2,4) : Maybe ( number, Int )
+> data = ["red", "green", "red", "blue", "blue", "red"]["red","green","red","blue","blue","red"]
+
+> mode data
+> Just ("red",3) : Maybe ( String, Int )
+
+-}
 mode : List comparable -> Maybe ( comparable, Int )
 mode list =
     let
@@ -345,21 +357,3 @@ combineTuple ( aa, bb ) =
 
         ( _, _ ) ->
             Nothing
-
-
-inverseTable : Dict k comparable -> Dict comparable k
-inverseTable dict =
-    dict
-        |> Dict.toList
-        |> List.map (\( a, b ) -> ( b, a ))
-        |> Dict.fromList
-
-
-
--- mode : List comparable -> comparable
--- mode list =
---   let
---     frequencyTable = buildTable list
---     maxValue = List.maximum <| Dict.values frequencyTable
---   in
---
