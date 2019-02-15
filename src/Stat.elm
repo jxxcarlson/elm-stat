@@ -3,8 +3,8 @@ module Stat
         ( Data
         , Point
         , Statistics
-        , average
-        , filterData
+        , mean
+        , filter
         , maximum
         , minimum
         , mode
@@ -14,7 +14,7 @@ module Stat
 
 {-| The aim of this library is to compute statistics for 2D data.
 
-@docs Data, Point, Statistics, average, filterData, maximum, minimum, statistics, stdev
+@docs Data, Point, Statistics, mean, filter, maximum, minimum, statistics, stdev
 
 -}
 
@@ -79,10 +79,10 @@ with different architectue if we have
 may filters -- best to avoid too many
 repeated list traversals.
 -}
-filterData : Filter -> Data -> Data
-filterData filter data =
+filter : Filter -> Data -> Data
+filter filter_ data =
     data
-        |> restrictXRange filter
+        |> restrictXRange filter_
 
 
 {-| Reststrict the range of x-values.
@@ -90,8 +90,8 @@ Note that the filter is the identity map
 if either of xMin or yMin has value Nothing.
 -}
 restrictXRange : Filter -> Data -> Data
-restrictXRange filter data =
-    case ( filter.xMin, filter.xMax ) of
+restrictXRange filter_ data =
+    case ( filter_.xMin, filter_.xMax ) of
         ( Just xMin, Just xMax ) ->
             List.filter (\point -> point.x >= xMin && point.x <= xMax) data
 
@@ -215,15 +215,15 @@ statistics data =
                         }
 
 
-{-| Compute the average of a column in a list of data, e.g.,
+{-| Compute the mean of a column in a list of data, e.g.,
 
-    ```average .x data```
+    ```mean .x data```
 
-which computes the average of the x-values.
+which computes the mean of the x-values.
 
 -}
-average : (data -> Float) -> List data -> Maybe Float
-average selector dataList =
+mean : (data -> Float) -> List data -> Maybe Float
+mean selector dataList =
     let
         values =
             List.map selector dataList
@@ -261,14 +261,14 @@ stdev selector dataList =
 
             True ->
                 let
-                    mean =
-                        average selector dataList |> Maybe.withDefault 0
+                    mean_ =
+                        mean selector dataList |> Maybe.withDefault 0
 
                     square x =
                         x * x
 
                     squaredDifferences =
-                        List.map (\x -> square (x - mean)) (List.map selector dataList)
+                        List.map (\x -> square (x - mean_)) (List.map selector dataList)
                 in
                     Just <| List.sum squaredDifferences / toFloat (n - 1)
 
