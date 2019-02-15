@@ -3,6 +3,7 @@ module RawData
         ( RawData
         , get
         , getData
+        , getColumn
         )
 
 {-| The RawData module exposes two functions
@@ -132,10 +133,10 @@ getData : Int -> Int -> RawData -> Maybe Data
 getData i j rawData_ =
     let
         xs =
-            rawData_.data |> columnAsFloats i
+            rawData_.data |> getColumn i
 
         ys =
-            rawData_.data |> columnAsFloats j
+            rawData_.data |> getColumn j
     in
         case ( xs, ys ) of
             ( Just xss, Just yss ) ->
@@ -145,8 +146,8 @@ getData i j rawData_ =
                 Nothing
 
 
-columnAsFloats : Int -> Table -> Maybe (List Float)
-columnAsFloats k rawData_ =
+getColumn : Int -> Table -> Maybe (List Float)
+getColumn k rawData_ =
     rawData_
         |> List.map (List.Extra.getAt k)
         |> List.map (Maybe.andThen String.toFloat)
