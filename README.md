@@ -4,35 +4,52 @@
 
 ![Image](./image/dataviewer-sealevel.png)
 
-This package is for doing statistics and graphs for n-column data files. The first image above displays an analysis of time series data in Csv file. The second example uses the new API in the `RawData` module.
+This package is for doing statistics and graphs for n-column data files. The first image above displays an analysis of time series data in a Csv file (temperature anomaly data versus time). The second example is time series data from a 100K space delimited file (sealevel rise data from NASA).
 
-Both graphs is computed by the app in the `examples` folder using this library. See
-the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html) to try the app out on line.
+See the online version of the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html).  The code for it is in `./examples` of this repo.
 
 ## The API
 
-There are two modules, `Stat`, for computing statistics of 2-D data, and `RawData`, for `RawData` from a text string and for extracting 2-D data from the resulting `RawData` value. The `Stat` module has functions for computing statistical measures such as the mean and standard deviation of the x or y values, coefficients for the linear regression line, etc.
+There are two modules, `Stat`, for computing statistics of 2-D data, and `RawData`, for extracting data from a text string or file. The `Stat` module has functions for computing statistical measures such as the mean and standard deviation of the x or y values, coefficients for the linear regression line, etc.
 
 Let's import both modules to see how they work.
 
 ```
 > import Stat exposing(..)
 > import RawData exposing(..)
+> import SampleData
 ```
 
-Here is an extract of the data in `data/temperature-anomalies.csv`:
+Here is some test data:
 
 ```
-> rawdata = "year,value\n1880,-0.12\n1881,-0.07\n1882,-0.08\n1883,-0.15\n"
-"year,value\n1880,-0.12\n1881,-0.07\n1882,-0.08\n1883,-0.15\n"
-    : String
+> SampleData.temperature
+  """
+  Global Land and Ocean Temperature Anomalies
+  January-December 1880-2016
+  Units: Degrees Celsius
+  Base Period: 1901-2000
+  Missing: -999
+    Year   Value
+    1880   -0.12
+    1881   -0.07
+    1882   -0.08
+    1883   -0.15
+    ...
 ```
 
-Next, transform it to a RawData value using `RawData.get`.  This function automatically detects the type data in the string: space-delimited, tab-delimited, or comma-delimited (csv).
+We transform it to a RawData value using `RawData.get`.  This function automatically detects the type data in the string: space-delimited, tab-delimited, or comma-delimited (csv).
 
 ```
 > get SampleData.temperature
-  Just { columnHeaders = ["Year","Value"], data = [["1880","-0.12"],["1881","-0.07"],["1882","-0.08"], ...
+  Just {
+    columnHeaders = ["Year","Value"]
+  , data = [["1880","-0.12"],["1881","-0.07"],["1882","-0.08"], ...
+  , metadata = [
+     "Global Land and Ocean Temperature Anomalies"
+     ,"January-December 1880-2016"
+     ,"Units: Degrees Celsius"
+    ]
 ```
 
 Piping this computation into `getData 0 1`, we extract a list of points:
