@@ -4,23 +4,20 @@
 
 ![Image](./image/dataviewer-sealevel.png)
 
-This package is for doing statistics and graphs for n-column data files.
-The first image above displays an analysis of time series data in Csv file.
-The second example uses the new API in the `RawData` module, not yet published
-to package repo.  (Coming soon.)
+This package is for doing statistics and graphs for n-column data files. The first image above displays an analysis of time series data in Csv file. The second example uses the new API in the `RawData` module.
 
-Both graphs is computed by the app in the `examples` folder using this `elm-stat` library.  See
+Both graphs is computed by the app in the `examples` folder using this library. See
 the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html) to try the app out on line.
 
 ## The API
 
-There are two modules, `Stat`, for computing statistics of 2-D data, and `CsvData`, for extracting Csv data from a text string and for extracting 2-D data from Csv. The `Stat` module has functions for computing statistical measures such as the mean and standard deviation of the x or y values, coefficients for the linear regression line, etc.
+There are two modules, `Stat`, for computing statistics of 2-D data, and `RawData`, for `RawData` from a text string and for extracting 2-D data from the resulting `RawData` value. The `Stat` module has functions for computing statistical measures such as the mean and standard deviation of the x or y values, coefficients for the linear regression line, etc.
 
 Let's import both modules to see how they work.
 
 ```
 > import Stat exposing(..)
-> import CsvData exposing(..)
+> import RawData exposing(..)
 ```
 
 Here is an extract of the data in `data/temperature-anomalies.csv`:
@@ -31,61 +28,44 @@ Here is an extract of the data in `data/temperature-anomalies.csv`:
     : String
 ```
 
-Next, transform it to csv using `CsvData.get`.  This function is
-`\str ->  Just <| Csv.parse <| filter str`, where `Csv` is from
-`zgohr/elm-csv`.  The function `CsvData.intelligentGet`
-does additional checking and manipulation, e.g., it
-tries to return the text header that many data files have.
+Next, transform it to a RawData value using `RawData.get`.  This function automatically detects the type data in the string: space-delimited, tab-delimited, or comma-delimited (csv).
 
 ```
-> maybeCsv = CsvData.get rawdata
-    Just { headers = ["year","value"], records = [["1880","-0.12"]
-          ,["1881","-0.07"],["1882","-0.08"],["1883","-0.15"]] }
-    : Maybe Csv.Csv
+> get SampleData.temperature
+  Just { columnHeaders = ["Year","Value"], data = [["1880","-0.12"],["1881","-0.07"],["1882","-0.08"], ...
 ```
 
-For this example, we extract the value by hand:
+Piping this computation into `getData 0 1`, we extract a list of points:
 
 ```
-> csv = { headers = ["year","value"], records = [["1880","-0.12"],
-         ["1881","-0.07"],["1882","-0.08"],["1883","-0.15"]] }
-    : { headers : List String, records : List (List String) }
+> get SampleData.temperature |> Maybe.andThen (getData 0 1) |> Maybe.map (List.take 2)
+  Just [{ x = 1880, y = -0.12 },{ x = 1881, y = -0.07 }]
+    : Maybe (List Point)
 ```
 
-With the csv data in hand, we convert it to a list of points.  In the
-case at hand, we extract columns 0 and 1.  The `getPointList` function
-allows one to work with multi-column data.
-
-```
-> data  = CsvData.getPointList 0 1 csv
-    [{ x = 1880, y = -0.12 },{ x = 1881, y = -0.07 },{ x = 1882, y = -0.08 }
-    ,{ x = 1883, y = -0.15 }]
-    : Data
-```
 
 From a `Data = List Point` value, one can compute statistics:
 
 ```
+> > data = get D.temperature |> Maybe.andThen (getData 0 1)  |> Maybe.withDefault []
+
+> Stat.mean .x data
+  Just 1948 : Maybe Float
 > Stat.mean .y data
-  Just -0.105 : Maybe Float
-> Stat.stdev .y data
-  Just 0.0013666 : Maybe Float
+  Just 0.04875912408759121 : Maybe Float
 ```
 
-The `statistics` function computes a package of statistical measures, including
-left and right endpoints for the regression line for the data.  These can be
-used to superimpose the regression line on the plot of the data.  This is
-done in the demo app using `terezka/line-charts`.
+The `statistics` function computes a package of statistical measures, including left and right endpoints for the regression line for the data.  These can be used to superimpose the regression line on the plot of the data.  This is done in the demo app using `terezka/line-charts`.
 
 ```
 > Stat.statistics data
-  Just { b = 18.7099, leftDataPoint = { x = 1880, y = -0.12 }
-  , leftRegressionPoint = { x = 1880, y = -0.09 }
-  , m = -0.009999, n = 4, r2 = 0.12195
-  , rightDataPoint = { x = 1883, y = -0.15 }
-  , rightRegressionPoint = { x = 1883, y = -0.1200 }
-  , xMax = 1883, xMean = 1881.5, xMin = 1880, xStdev = 1.29099
-  , yMean = -0.105, yStdev = 0.036968 }
+Just { b = -13.276, leftDataPoint = { x = 1880, y = -0.12 }
+     , leftRegressionPoint = { x = 1880, y = -0.416 }, m = 0.0068
+     , n = 137, r2 = 0.7458, rightDataPoint = { x = 2016, y = 0.95 }
+     , rightRegressionPoint = { x = 2016, y = 0.514  }, xMax = 2016
+     , xMean = 1948, xMin = 1880, xStdev = 39.693, yMean = 0.0488
+     , yStdev = 0.314 }
+    : Maybe Statistics
 ```
 
 ## The Demo App
@@ -106,3 +86,5 @@ Year,Value
 2015,0.91
 2016,0.95
 ```
+
+One can now read data files in any one of three formats: delimited comma, tab, or space(s).

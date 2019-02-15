@@ -1,4 +1,4 @@
-module DataSamples exposing (..)
+module SampleData exposing (..)
 
 {-| This is a file of sample data.
 -}
