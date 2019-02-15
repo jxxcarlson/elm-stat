@@ -1,20 +1,17 @@
 module RawData
     exposing
         ( RawData
-        , Table
-        , Record
         , get
-        , columnAsFloats
         , getData
         )
 
-{-| The main functions of the RawData module are
+{-| The RawData module exposes two functions
 
     get : String -> Maybe RawData
 
 and
 
-getData : Int -> Int -> RawData -> Maybe Data
+    getData : Int -> Int -> RawData -> Maybe Data
 
 The first intelligently extracts a data table,
 column headers, and metadata from a string

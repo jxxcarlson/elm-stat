@@ -3,7 +3,6 @@ module Stat
         ( Data
         , Point
         , Statistics
-        , FrequencyTable
         , average
         , filterData
         , maximum
@@ -11,8 +10,6 @@ module Stat
         , mode
         , statistics
         , stdev
-        , buildTable
-        , inverseTable
         )
 
 {-| The aim of this library is to compute statistics for 2D data.

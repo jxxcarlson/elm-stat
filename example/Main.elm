@@ -8,7 +8,10 @@ module Main exposing (main)
 
 import Browser
 import Csv exposing (Csv)
-import CsvData
+
+
+-- import CsvData
+
 import Display
 import Element exposing (..)
 import Element.Background as Background
