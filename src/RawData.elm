@@ -50,8 +50,7 @@ To extract a list of points from the raw data, one proceeds as in the next examp
 -}
 
 import Parser exposing (..)
-import List.Extra
-import Maybe.Extra
+import Utility
 import Stat exposing (Point, Data)
 import Csv
 
@@ -166,9 +165,9 @@ Table, transforming the result to lists of floats.
 getColumn : Int -> Table -> Maybe (List Float)
 getColumn k rawData_ =
     rawData_
-        |> List.map (List.Extra.getAt k)
+        |> List.map (Utility.listGetAt k)
         |> List.map (Maybe.andThen String.toFloat)
-        |> Maybe.Extra.combine
+        |> Utility.maybeCombine
 
 
 delimiter : String -> Char
@@ -236,8 +235,8 @@ get1 sepChar str =
 column : Int -> Table -> Maybe (List String)
 column k rawData_ =
     rawData_
-        |> List.map (\rec -> List.Extra.getAt k rec)
-        |> Maybe.Extra.combine
+        |> List.map (\rec -> Utility.listGetAt k rec)
+        |> Utility.maybeCombine
 
 
 {-| get2 attempts to extract well-formed data
@@ -313,21 +312,21 @@ getDataAndHeader rawData_ =
             Nothing
 
         Just k ->
-            combineMaybe ( List.Extra.getAt k rawData_, Just (drop (k + 1) rawData_) )
+            combineMaybe ( Utility.listGetAt k rawData_, Just (drop (k + 1) rawData_) )
 
 
 indexOfLastNonNumericalField : Table -> Maybe Int
 indexOfLastNonNumericalField rawData_ =
-    case Maybe.map List.length (List.Extra.getAt 0 rawData_) of
+    case Maybe.map List.length (Utility.listGetAt 0 rawData_) of
         Nothing ->
             Nothing
 
         Just numberOfFields ->
             List.range 0 (numberOfFields - 1)
                 |> List.map (\k -> indexOfLastNonNumericalFieldAt k rawData_)
-                |> Maybe.Extra.combine
+                |> Utility.maybeCombine
                 |> Maybe.map List.maximum
-                |> Maybe.Extra.join
+                |> Utility.maybeJoin
 
 
 indexOfLastNonNumericalFieldAt : Int -> Table -> Maybe Int

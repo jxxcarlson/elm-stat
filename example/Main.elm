@@ -30,8 +30,8 @@ import LineChart.Interpolation as Interpolation
 import LineChart.Junk as Junk
 import LineChart.Legends as Legends
 import LineChart.Line as Line
-import List.Extra
-import Maybe.Extra
+import Utility
+
 import Stat exposing (Data, Point, Statistics, statistics)
 import Style
 import Svg exposing (Svg)
@@ -186,7 +186,7 @@ update msg model =
                             Nothing
 
                         Just data ->
-                            List.Extra.getAt 0 data.columnHeaders
+                            Utility.listGetAt 0 data.columnHeaders
 
                 yLabel =
                     case rawData of
@@ -194,7 +194,7 @@ update msg model =
                             Nothing
 
                         Just data ->
-                            List.Extra.getAt 1 data.columnHeaders
+                            Utility.listGetAt 1 data.columnHeaders
 
                 numericalData =
                     case rawData of

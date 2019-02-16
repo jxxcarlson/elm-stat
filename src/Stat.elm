@@ -19,7 +19,6 @@ module Stat
 -}
 
 import Dict exposing (Dict)
-import Maybe.Extra
 
 
 {-| A point in the Cartesian plane
