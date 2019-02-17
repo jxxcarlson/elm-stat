@@ -9,10 +9,6 @@ module RawData
 
     get : String -> Maybe RawData
 
-and
-
-    getData : Int -> Int -> RawData -> Maybe Data
-
 The first intelligently extracts a data table,
 column headers, and metadata from a string
 representing data in one of several formats --
@@ -30,7 +26,7 @@ A RawData value is a record of the following form:
 
 Here is how one can construct such a record from actual deta:
 
-    > get SampleData.temperature
+    > RawData.get SampleData.temperature
          Just {
              columnHeaders = ["Year","Value"]
            , metadata = ["Global Land and Ocean Temperature Anomalies"
@@ -42,9 +38,9 @@ Here is how one can construct such a record from actual deta:
 
 To extract a list of points from the raw data, one proceeds as in the next example:
 
-    > get D.temperature |> Maybe.andThen (dataFromRawData 0 1)
+    > RawData.get SampleData.temperature |> Maybe.andThen (Data.get 0 1)
 
-@docs RawData, get, getData, getColumn
+@docs RawData, get, getColumn
 
 -}
 

@@ -203,7 +203,7 @@ update msg model =
                             []
 
                         Just rawData_ ->
-                            (Data.getData 0 1 rawData_)
+                            (Data.get 0 1 rawData_)
                                 |> Maybe.withDefault []
 
                 statistics =
@@ -248,7 +248,7 @@ recompute model =
                             j =
                                 model.yColumn |> Maybe.withDefault 1
                         in
-                            Debug.log "DATA" (Data.getData i j rawData)
+                            Debug.log "DATA" (Data.get i j rawData)
                                 |> Maybe.withDefault []
                                 |> Stat.filter { xMin = model.xMin, xMax = model.xMax }
 

@@ -1,6 +1,6 @@
-module Data exposing (getData, fromString)
+module Data exposing (get, fromString)
 
-{-| getData i j rawData_ extracts Data from
+{-| get i j rawData_ extracts Data from
 RawData by extracting columns i and j of the
 RawData, trasforming these to lists of floats,
 and using these as the x and y coordinates of
@@ -11,8 +11,8 @@ import Types exposing (Point, Data)
 import RawData exposing (RawData)
 
 
-getData : Int -> Int -> RawData -> Maybe Data
-getData i j rawData_ =
+get : Int -> Int -> RawData -> Maybe Data
+get i j rawData_ =
     let
         xs =
             rawData_.data |> RawData.getColumn i
@@ -32,5 +32,5 @@ fromString : Int -> Int -> String -> Data
 fromString i j str =
     str
         |> RawData.get
-        |> Maybe.andThen (getData i j)
+        |> Maybe.andThen (get i j)
         |> Maybe.withDefault []

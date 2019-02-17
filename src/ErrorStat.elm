@@ -20,7 +20,9 @@ type alias MaybeErrorStats =
 
 {-|
 
-> Data.fromString 0 1 SampleData.eb2 |> ErrorStat.get
+    > Data.fromString 0 1 SampleData.eb2 |> ErrorStat.get
+       [ { max = Just 1.1, mean = Just 1, min = Just 0.9, stdev = Just 0.0066666666666666706 }
+       ,{ max = Just 2.2, mean = Just 2, min = Just 1.8, stdev = Just 0.04000000000000002 }
 -}
 get : Data -> List MaybeErrorStats
 get data =
