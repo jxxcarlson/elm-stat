@@ -1,4 +1,4 @@
-module Data exposing (getData, getDataFromString)
+module Data exposing (getData, fromString)
 
 {-| getData i j rawData_ extracts Data from
 RawData by extracting columns i and j of the
@@ -28,8 +28,8 @@ getData i j rawData_ =
                 Nothing
 
 
-getDataFromString : Int -> Int -> String -> Data
-getDataFromString i j str =
+fromString : Int -> Int -> String -> Data
+fromString i j str =
     str
         |> RawData.get
         |> Maybe.andThen (getData i j)

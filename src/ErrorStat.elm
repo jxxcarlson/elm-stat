@@ -1,4 +1,4 @@
-module ErrorStat exposing (get, getErrorData2)
+module ErrorStat exposing (ErrorDatum, get)
 
 import Types exposing (Point, Data)
 import Dict exposing (Dict)
@@ -20,7 +20,7 @@ type alias MaybeErrorStats =
 
 {-|
 
-> RawData.getDataFromString 0 1 SampleData.eb2 |> ErrorStat.get
+> Data.fromString 0 1 SampleData.eb2 |> ErrorStat.get
 -}
 get : Data -> List MaybeErrorStats
 get data =
@@ -90,8 +90,9 @@ insertInErrorDict point errorDict =
 
 {-|
 
-> dd = getDataFromString 0 1 SD.eb2
+> dd = fromString 0 1 SD.eb2
 -}
+getErrorData2 : Data -> List ErrorDatum
 getErrorData2 data =
     data
         |> List.foldl (\p dict -> insertInErrorDict p dict) emptyErrorDictionary
