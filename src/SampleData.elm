@@ -4,6 +4,19 @@ module SampleData exposing (..)
 -}
 
 
+eb2 =
+    """
+x,y
+0,1.0
+0,0.9
+1,1.8
+0,1.0
+1,2.0
+1,2.2
+0,1.1
+"""
+
+
 csvTest =
     "x,y\n0,0\n1,0\n1,1\n0,1\n"
 
@@ -14,6 +27,10 @@ csvTest2 =
 
 csvTest32 =
     "x, y\n  0, 0 \n1,0\n1,1\n0,1\n"
+
+
+csvTestEB =
+    "x,y\n0,0.9\n0,1.0\n0,1.1\n1,1.9\n1,2.0,\n1,2.1\n"
 
 
 {-| RawData.get3 '\t' tabTest

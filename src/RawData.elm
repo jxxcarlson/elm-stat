@@ -2,7 +2,6 @@ module RawData
     exposing
         ( RawData
         , get
-        , getData
         , getColumn
         )
 
@@ -51,8 +50,9 @@ To extract a list of points from the raw data, one proceeds as in the next examp
 
 import Parser exposing (..)
 import Utility
-import Stat exposing (Point, Data)
+import Types exposing (Point, Data)
 import Csv
+import Stat
 
 
 {-| A RawData value consists of metadata, columnHeaders,
@@ -133,29 +133,6 @@ get str =
                     , columnHeaders = columnHeaders
                     , data = clearData
                     }
-
-
-{-| getData i j rawData_ extracts Data from
-RawData by extracting columns i and j of the
-RawData, trasforming these to lists of floats,
-and using these as the x and y coordinates of
-a list of Points.
--}
-getData : Int -> Int -> RawData -> Maybe Data
-getData i j rawData_ =
-    let
-        xs =
-            rawData_.data |> getColumn i
-
-        ys =
-            rawData_.data |> getColumn j
-    in
-        case ( xs, ys ) of
-            ( Just xss, Just yss ) ->
-                Just (List.map2 Point xss yss)
-
-            ( _, _ ) ->
-                Nothing
 
 
 {-| getColumn i table extracts a list of Floats from

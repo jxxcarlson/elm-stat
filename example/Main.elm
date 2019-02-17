@@ -31,12 +31,13 @@ import LineChart.Junk as Junk
 import LineChart.Legends as Legends
 import LineChart.Line as Line
 import Utility
-
-import Stat exposing (Data, Point, Statistics, statistics)
+import Types exposing (Point, Data)
+import Stat exposing (Statistics, statistics)
 import Style
 import Svg exposing (Svg)
 import Task
 import RawData exposing (RawData)
+import Data
 
 
 type PlotType
@@ -202,7 +203,8 @@ update msg model =
                             []
 
                         Just rawData_ ->
-                            (RawData.getData 0 1 rawData_) |> Maybe.withDefault []
+                            (Data.getData 0 1 rawData_)
+                                |> Maybe.withDefault []
 
                 statistics =
                     case numericalData of
@@ -246,7 +248,7 @@ recompute model =
                             j =
                                 model.yColumn |> Maybe.withDefault 1
                         in
-                            Debug.log "DATA" (RawData.getData i j rawData)
+                            Debug.log "DATA" (Data.getData i j rawData)
                                 |> Maybe.withDefault []
                                 |> Stat.filter { xMin = model.xMin, xMax = model.xMax }
 

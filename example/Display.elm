@@ -2,7 +2,8 @@ module Display exposing (correlationInfo, info, label, smallInfo, stringOfFloat)
 
 import Element exposing (..)
 import Element.Font as Font
-import Stat exposing (Data, Point)
+import Types exposing (Data, Point)
+import Stat
 
 
 info : String -> Maybe String -> (Point -> Float) -> Data -> Element msg
@@ -37,20 +38,20 @@ correlationInfo data =
         statistics =
             Stat.statistics data
     in
-    case statistics of
-        Nothing ->
-            Element.none
+        case statistics of
+            Nothing ->
+                Element.none
 
-        Just stats ->
-            column [ spacing 5 ]
-                [ el [ Font.bold ] (text <| "Correlation info (y = mx + b)")
-                , el []
-                    (text <| "m: " ++ stringOfFloat stats.m)
-                , el []
-                    (text <| "b: " ++ stringOfFloat stats.b)
-                , el []
-                    (text <| "R2: " ++ stringOfFloat stats.r2)
-                ]
+            Just stats ->
+                column [ spacing 5 ]
+                    [ el [ Font.bold ] (text <| "Correlation info (y = mx + b)")
+                    , el []
+                        (text <| "m: " ++ stringOfFloat stats.m)
+                    , el []
+                        (text <| "b: " ++ stringOfFloat stats.b)
+                    , el []
+                        (text <| "R2: " ++ stringOfFloat stats.r2)
+                    ]
 
 
 
@@ -73,7 +74,6 @@ label defaultLabel maybeLabel =
         Just str ->
             if str == "" then
                 defaultLabel
-
             else
                 str
 

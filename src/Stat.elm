@@ -1,8 +1,6 @@
 module Stat
     exposing
-        ( Data
-        , Point
-        , Statistics
+        ( Statistics
         , mean
         , filter
         , maximum
@@ -18,22 +16,8 @@ module Stat
 
 -}
 
+import Types exposing (Point, Data)
 import Dict exposing (Dict)
-
-
-{-| A point in the Cartesian plane
-given by x and y coordinates
--}
-type alias Point =
-    { x : Float
-    , y : Float
-    }
-
-
-{-| The fundamental data structure: a list of points.
--}
-type alias Data =
-    List Point
 
 
 {-| A `Statistics` value holds information like
