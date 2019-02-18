@@ -13,7 +13,7 @@ The `elm-stat` package provides tools for statistics and visualiztion of n-colum
 The `elm-stat` package consists of are four modules,
 
 - `RawData`, for extracting raw data from a text string or file: metadata such as comments about the data, column headings, and an *mxn* table of strings representing the actual data.
-- `Data`, defined the `Point` and `Data = List Point` types
+- `Data`, defines the `Point` and `Data = List Point` types
 - `Stat`,  for computing statistics of 1-D and 2-D data, e.g. means and regression lines
 - `ErrorBar`, for computing and displaying error bars
 
