@@ -5,13 +5,13 @@ module RawData
         , getColumn
         )
 
-{-| The RawData module exposes two functions
+{-| The RawData module exposes the function
 
     get : String -> Maybe RawData
 
-The first intelligently extracts a data table,
+It intelligently extracts a data table,
 column headers, and metadata from a string
-representing data in one of several formats --
+representing data in one of several formats —
 csv, tab-delimited, or space-delimited. With
 the second, one can extract a list of Points
 in the xy plane from a data table.
@@ -36,9 +36,10 @@ Here is how one can construct such a record from actual deta:
            , rawData = [["1880","-0.12"],["1881","-0.07"],["1882","-0.08"]
                         ["1883","-0.15"], ...
 
-To extract a list of points from the raw data, one proceeds as in the next example:
+To extract a list of points from the raw data, use `Data.get`:
 
-    > RawData.get SampleData.temperature |> Maybe.andThen (Data.get 0 1)
+    > RawData.get SampleData.temperature
+       |> Maybe.andThen (Data.get 0 1)
 
 @docs RawData, get, getColumn
 
@@ -84,7 +85,7 @@ type alias DelimiterStatistics =
     }
 
 
-{-| get makes intelligent guesses, If it is successful
+{-| `RawData.get` get makes intelligent guesses, If it is successful
 
 > get spaceTest
 > Just (["x","y"],[["0","0"],["1","0"],["1","1"],["0","1"]])

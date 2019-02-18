@@ -1,16 +1,26 @@
 module Data exposing (get, fromString)
 
-{-| get i j rawData_ extracts Data from
-RawData by extracting columns i and j of the
-RawData, trasforming these to lists of floats,
-and using these as the x and y coordinates of
-a list of Points.
+{-| This module provides functions for
+extracting `Data` both from strings and
+`RawData` values.
+
+@docs fromString, get
+
 -}
 
 import Types exposing (Point, Data)
 import RawData exposing (RawData)
 
 
+{-| Examples:
+
+    > SampleData.eb2 |> RawData.get
+      Just { columnHeaders = ["x","y"]
+          , data = [["0","1.0"],["0","0.9"],["1","1.8"],["0","1.0"],["1","2.0"]
+                   ,["1","2.2"],["0","1.1"]]
+          , metadata = [] }
+
+-}
 get : Int -> Int -> RawData -> Maybe Data
 get i j rawData_ =
     let
@@ -28,6 +38,14 @@ get i j rawData_ =
                 Nothing
 
 
+{-| Example:
+
+    > SampleData.eb2 |> Data.fromString 0 1
+      [{ x = 0, y = 1 },{ x = 0, y = 0.9 },{ x = 1, y = 1.8 }
+      ,{ x = 0, y = 1 },{ x = 1, y = 2 },{ x = 1, y = 2.2 }
+      ,{ x = 0, y = 1.1 }]
+
+-}
 fromString : Int -> Int -> String -> Data
 fromString i j str =
     str

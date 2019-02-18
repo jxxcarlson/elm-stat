@@ -1,4 +1,30 @@
-module ErrorBars exposing (ErrorDatum, ErrorStats, mean, normal, maxmin)
+module ErrorBars exposing (ErrorBar, mean, normal, maxmin)
+
+{-| The `ErrorBars` module provides functions for
+drawing graphs with errors bars. Suppose that
+we have dome data:
+
+    > data = SampleData.eb2 |> Data.fromString 0 1
+
+Then
+
+    > ErrorBars.mean data
+
+produces a list of ponts that pass through the
+mean valjues of data points with given x value.
+For error bars with extreme ponts one standard
+deviatoin from the mean, use
+
+    > ErrorBars.normal 1.0 data
+
+For error bars with endpoints at the maximumn
+and minimum of the data with given x value, use
+
+    > ErrorBars.maxmin data
+
+@docs ErrorBar, mean, normal, maxmin
+
+-}
 
 import Types exposing (Point, Data)
 import Dict exposing (Dict)
@@ -20,10 +46,14 @@ type alias ErrorStats =
     }
 
 
+{-| The type of an error bar containing
+(x,y) with extreme points (x,top) and
+(x,bottom)
+-}
 type alias ErrorBar =
     { x : Float
+    , y : Float
     , top : Float
-    , mid : Float
     , bottom : Float
     }
 
@@ -34,64 +64,6 @@ type alias ErrorData =
 
 type alias ErrorDictionary =
     Dict Float (List Float)
-
-
-errorBar : Float -> ErrorStats -> Maybe ErrorBar
-errorBar p es =
-    case ( es.mean, es.stdev ) of
-        ( Just m, Just s ) ->
-            Just
-                { x = es.x
-                , top = m + p * s
-                , mid = m
-                , bottom = m - p * s
-                }
-
-        ( _, _ ) ->
-            Nothing
-
-
-maxminBar : ErrorStats -> Maybe ErrorBar
-maxminBar es =
-    case ( es.mean, es.min, es.max ) of
-        ( Just m, Just a, Just b ) ->
-            Just
-                { x = es.x
-                , top = b
-                , mid = m
-                , bottom = a
-                }
-
-        ( _, _, _ ) ->
-            Nothing
-
-
-{-| Use to ompute error bars, as in this example:
-
-    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.normal 0.5
-      [{ bottom = 0.99667, mid = 1, top = 1.003333, x = 0 }
-      ,{ bottom = 1.98, mid = 2, top = 2.02, x = 1 }]
-
--}
-normal : Float -> Data -> List ErrorBar
-normal p data =
-    data
-        |> rawStats
-        |> List.map (errorBar p)
-        |> Utility.maybeValues
-
-
-{-|
-
-    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.maxmin
-      [{ bottom = 0.9, mid = 1, top = 1.1, x = 0 },{ bottom = 1.8, mid = 2, top = 2.2, x = 1 }]
--}
-maxmin : Data -> List ErrorBar
-maxmin data =
-    data
-        |> rawStats
-        |> List.map maxminBar
-        |> Utility.maybeValues
 
 
 {-| Use to ompute the y-centroids of the data, as in this example:
@@ -106,6 +78,65 @@ mean data =
         |> rawStats
         |> List.map meanValue
         |> Utility.maybeValues
+
+
+{-| Use to ompute error bars, as in this example:
+
+    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.normal 0.5
+      [{ bottom = 0.99667, y = 1, top = 1.003333, x = 0 }
+      ,{ bottom = 1.98, y = 2, top = 2.02, x = 1 }]
+
+-}
+normal : Float -> Data -> List ErrorBar
+normal p data =
+    data
+        |> rawStats
+        |> List.map (errorBar p)
+        |> Utility.maybeValues
+
+
+{-|
+
+    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.maxmin
+      [{ bottom = 0.9, y = 1, top = 1.1, x = 0 }
+       ,{ bottom = 1.8, y = 2, top = 2.2, x = 1 }]
+-}
+maxmin : Data -> List ErrorBar
+maxmin data =
+    data
+        |> rawStats
+        |> List.map maxminBar
+        |> Utility.maybeValues
+
+
+errorBar : Float -> ErrorStats -> Maybe ErrorBar
+errorBar p es =
+    case ( es.mean, es.stdev ) of
+        ( Just m, Just s ) ->
+            Just
+                { x = es.x
+                , top = m + p * s
+                , y = m
+                , bottom = m - p * s
+                }
+
+        ( _, _ ) ->
+            Nothing
+
+
+maxminBar : ErrorStats -> Maybe ErrorBar
+maxminBar es =
+    case ( es.mean, es.min, es.max ) of
+        ( Just m, Just a, Just b ) ->
+            Just
+                { x = es.x
+                , top = b
+                , y = m
+                , bottom = a
+                }
+
+        ( _, _, _ ) ->
+            Nothing
 
 
 meanValue : ErrorStats -> Maybe Point

@@ -12,7 +12,7 @@ module Stat
 
 {-| The aim of this library is to compute statistics for 2D data.
 
-@docs Data, Point, Statistics, mean, mode, filter, maximum, minimum, statistics, stdev
+@docs Statistics, mean, mode, filter, maximum, minimum, statistics, stdev
 
 -}
 
@@ -200,7 +200,7 @@ statistics data =
 
 {-| Compute the mean of a column in a list of data, e.g.,
 
-    ```mean .x data```
+    mean .x data
 
 which computes the mean of the x-values.
 
@@ -227,7 +227,7 @@ mean selector dataList =
 
 {-| Compute the standard deviation of a column in a list of data, e.g.,
 
-    ```stdev .x data```
+    stdev .x data
 
 which computes the standard deviation of the x-values.
 
@@ -258,7 +258,7 @@ stdev selector dataList =
 
 {-| Compute the minimum of a column in a list of data, e.g.,
 
-    ```minimum .x data```
+    minimum .x data
 
 which computes the minimum of the x-values.
 
@@ -270,7 +270,7 @@ minimum selector dataList =
 
 {-| Compute the maximum of a column in a list of data, e.g.,
 
-    ```maximum .x data```
+    maximum .x data
 
 which computes the maximum of the x-values.
 
@@ -303,14 +303,13 @@ buildTable list =
 
 {-| Compute the mode of the data:
 
-> data = [1, 5, 2, 2, 2, 2, 5, 3, 1][1,5,2,2,2,2,5,3,1]
+    > data = [1, 5, 2, 2, 2, 2, 5, 3, 1]
+    > mode data
+      Just (2,4) : Maybe ( number, Int )
 
-> mode data
-> Just (2,4) : Maybe ( number, Int )
-> data = ["red", "green", "red", "blue", "blue", "red"]["red","green","red","blue","blue","red"]
-
-> mode data
-> Just ("red",3) : Maybe ( String, Int )
+    > data = ["red", "green", "red", "blue", "blue", "red"]
+    > mode data
+      Just ("red",3) : Maybe ( String, Int )
 
 -}
 mode : List comparable -> Maybe ( comparable, Int )
