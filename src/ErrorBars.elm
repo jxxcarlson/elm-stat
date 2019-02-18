@@ -1,4 +1,4 @@
-module ErrorStat exposing (ErrorDatum, ErrorStats, get, mean, errorBars)
+module ErrorBars exposing (ErrorDatum, ErrorStats, mean, normal, maxmin)
 
 import Types exposing (Point, Data)
 import Dict exposing (Dict)
@@ -51,28 +51,59 @@ errorBar p es =
             Nothing
 
 
+maxminBar : ErrorStats -> Maybe ErrorBar
+maxminBar es =
+    case ( es.mean, es.min, es.max ) of
+        ( Just m, Just a, Just b ) ->
+            Just
+                { x = es.x
+                , top = b
+                , mid = m
+                , bottom = a
+                }
+
+        ( _, _, _ ) ->
+            Nothing
+
+
 {-| Use to ompute error bars, as in this example:
 
-    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorStat.get |> ErrorStat.errorBars 0.5
+    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.normal 0.5
       [{ bottom = 0.99667, mid = 1, top = 1.003333, x = 0 }
       ,{ bottom = 1.98, mid = 2, top = 2.02, x = 1 }]
 
 -}
-errorBars : Float -> List ErrorStats -> List ErrorBar
-errorBars p ess =
-    List.map (errorBar p) ess
+normal : Float -> Data -> List ErrorBar
+normal p data =
+    data
+        |> rawStats
+        |> List.map (errorBar p)
+        |> Utility.maybeValues
+
+
+{-|
+
+    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.maxmin
+      [{ bottom = 0.9, mid = 1, top = 1.1, x = 0 },{ bottom = 1.8, mid = 2, top = 2.2, x = 1 }]
+-}
+maxmin : Data -> List ErrorBar
+maxmin data =
+    data
+        |> rawStats
+        |> List.map maxminBar
         |> Utility.maybeValues
 
 
 {-| Use to ompute the y-centroids of the data, as in this example:
 
-> SampleData.eb2 |> Data.fromString 0 1 |> ErrorStat.get |> ErrorStat.mean
-> [{ x = 0, y = 1 },{ x = 1, y = 2 }]
+    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.mean
+    [{ x = 0, y = 1 },{ x = 1, y = 2 }]
 
 -}
-mean : List ErrorStats -> Data
-mean ess =
-    ess
+mean : Data -> Data
+mean data =
+    data
+        |> rawStats
         |> List.map meanValue
         |> Utility.maybeValues
 
@@ -89,12 +120,12 @@ meanValue es =
 
 {-|
 
-    > Data.fromString 0 1 SampleData.eb2 |> ErrorStat.get
+    > Data.fromString 0 1 SampleData.eb2 |> ErrorStat.rawStats
        [ { max = Just 1.1, mean = Just 1, min = Just 0.9, stdev = Just 0.0066666666666666706 }
        ,{ max = Just 2.2, mean = Just 2, min = Just 1.8, stdev = Just 0.04000000000000002 }
 -}
-get : Data -> List ErrorStats
-get data =
+rawStats : Data -> List ErrorStats
+rawStats data =
     data
         |> getErrorData2
         |> List.map errorStatsFromErrorDatum
