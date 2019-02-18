@@ -16,7 +16,7 @@ module Stat
 
 -}
 
-import Types exposing (Point, Data)
+import Data exposing (Point, Data)
 import Dict exposing (Dict)
 
 

@@ -17,7 +17,9 @@ The `elm-stat` package consists of are four modules,
 - `Stat`,  for computing statistics of 1-D and 2-D data, e.g. means and regression lines
 - `ErrorBar`, for computing and displaying error bars
 
-There is also a module `SampleData` with some test data. Let's import the above modules to see how some of this works.  First, some test data:
+There is also a module `SampleData` with some test data. Let's import the above modules to see how some of this works.  For more details, see the documentation for the individual modules.
+
+First, some test data:
 
 ```
 > SampleData.temperature
@@ -35,7 +37,7 @@ There is also a module `SampleData` with some test data. Let's import the above 
     ...
 ```
 
-We transform it to a RawData value using `RawData.get`.  This function automatically detects the type of data in the string: space-delimited, tab-delimited, or comma-delimited (csv).
+Transform this text to a RawData value using `RawData.get`, a function which automatically detects the type of data represented by the text: space-delimited, tab-delimited, or comma-delimited (csv).
 
 ```
 > RawData.get SampleData.temperature
@@ -49,7 +51,7 @@ We transform it to a RawData value using `RawData.get`.  This function automatic
     ]
 ```
 
-Piping this computation into `getData 0 1`, we extract a list of points:
+Pipe this computation into `getData 0 1` to extract a list of points:
 
 ```
 > RawData.get SampleData.temperature |> Maybe.andThen (Data.get 0 1) |> Maybe.map (List.take 2)
@@ -58,13 +60,16 @@ Piping this computation into `getData 0 1`, we extract a list of points:
 ```
 
 
-From a `Data = List Point` value, one can compute statistics:
+Statistics can be computed rom a `Data = List Point` value:
 
 ```
-> data = get SampleData.temperature |> Maybe.andThen (getData 0 1)  |> Maybe.withDefault []
+> data = get SampleData.temperature
+  |> Maybe.andThen (getData 0 1)
+  |> Maybe.withDefault []
 
 > Stat.mean .x data
   Just 1948 : Maybe Float
+
 > Stat.mean .y data
   Just 0.04875912408759121 : Maybe Float
 ```
@@ -84,9 +89,6 @@ The `statistics` function computes a package of statistical measures, including 
 
 ## The Demo App
 
-Code for the demo app is in `./examples`.  There is an online version at
-[Data explorer](https://jxxcarlson.github.io/app/dataviewer.html).
+Code for the demo app is in `./examples`.  There is an online version at [Data explorer](https://jxxcarlson.github.io/app/dataviewer.html).
 
 The data used in the example in the file `data/temperature-anomalies.csv` in this repo. It is a list of global temperature anomalies for the period 1880-2017 from [www.climate.gov](http://www.climate.gov). The annual temperature anomaly is the difference between the global mean temperature and the long-term mean global temperature. For this data set, the long-term mean is computed for the period 1901-2000.
-
-One can now read data files in any one of three formats: delimited comma, tab, or space(s).

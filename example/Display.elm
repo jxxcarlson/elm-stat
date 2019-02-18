@@ -2,7 +2,7 @@ module Display exposing (correlationInfo, info, label, smallInfo, stringOfFloat)
 
 import Element exposing (..)
 import Element.Font as Font
-import Types exposing (Data, Point)
+import Data exposing (Data, Point)
 import Stat
 
 

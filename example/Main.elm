@@ -31,7 +31,7 @@ import LineChart.Junk as Junk
 import LineChart.Legends as Legends
 import LineChart.Line as Line
 import Utility
-import Types exposing (Point, Data)
+import Data exposing (Point, Data)
 import Stat exposing (Statistics, statistics)
 import Style
 import Svg exposing (Svg)
@@ -203,7 +203,7 @@ update msg model =
                             []
 
                         Just rawData_ ->
-                            (Data.get 0 1 rawData_)
+                            (RawData.toData 0 1 rawData_)
                                 |> Maybe.withDefault []
 
                 statistics =
@@ -248,7 +248,7 @@ recompute model =
                             j =
                                 model.yColumn |> Maybe.withDefault 1
                         in
-                            Debug.log "DATA" (Data.get i j rawData)
+                            Debug.log "DATA" (RawData.toData i j rawData)
                                 |> Maybe.withDefault []
                                 |> Stat.filter { xMin = model.xMin, xMax = model.xMax }
 

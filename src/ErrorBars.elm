@@ -26,7 +26,7 @@ and minimum of the data with given x value, use
 
 -}
 
-import Types exposing (Point, Data)
+import Data exposing (Point, Data)
 import Dict exposing (Dict)
 import Utility
 
