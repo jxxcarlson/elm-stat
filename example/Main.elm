@@ -25,7 +25,6 @@ import Style
 import Svg exposing (Svg)
 import Task
 import RawData exposing (RawData)
-import Data
 import SampleData
 
 
@@ -364,29 +363,28 @@ visualDataDisplay model =
         , width (px 800)
         , height (px 600)
         ]
-        [ Element.html (LineChart.view sampleChart) ]
-
-
-bb =
-    { xMin = 0, xMax = 5, yMin = 0, yMax = 5 }
-
-
-sampleChart =
-    { boundingBox = bb
-    , data = [ sampleGraph ]
-    }
-
-
-sampleGraph =
-    { boundingBox = bb
-    , r = 1
-    , g = 0
-    , b = 0
-    , data = SampleData.simpleData
-    }
+        [ Element.html (LineChart.view <| LineChart.chart <| LineChart.graph 1 0 0 model.data) ]
 
 
 
+--
+-- bb =
+--     { xMin = 0, xMax = 5, yMin = 0, yMax = 5 }
+--
+--
+-- sampleChart =
+--     { boundingBox = bb
+--     , data = [ sampleGraph ]
+--     }
+--
+--
+-- sampleGraph =
+--     { boundingBox = bb
+--     , r = 1
+--     , g = 0
+--     , b = 0
+--     , data = LineChart.chart (graph 1 0 0 model.data)
+--     }
 -- chart : Model -> Svg msg
 -- chart model =
 --     case model.statistics of

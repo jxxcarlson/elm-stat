@@ -1,4 +1,4 @@
-module Data exposing (Point, Data)
+module Data exposing (Point, Data, BarePoint, BareData, toBarePoint, toBareData)
 
 {-| This module provides functions for
 extracting `Data` both from strings and
@@ -21,3 +21,21 @@ type alias Point =
 -}
 type alias Data =
     List Point
+
+
+type alias BarePoint =
+    ( Float, Float )
+
+
+type alias BareData =
+    List BarePoint
+
+
+toBarePoint : Point -> BarePoint
+toBarePoint p =
+    ( p.x, p.y )
+
+
+toBareData : Data -> BareData
+toBareData data =
+    List.map toBarePoint data
