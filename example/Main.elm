@@ -18,18 +18,6 @@ import File.Select as Select
 import Html exposing (Html)
 import Html.Attributes as HA
 import LineChart
-import LineChart.Area as Area
-import LineChart.Axis as Axis
-import LineChart.Axis.Intersection as Intersection
-import LineChart.Colors as Colors
-import LineChart.Container as Container
-import LineChart.Dots as Dots
-import LineChart.Events as Events
-import LineChart.Grid as Grid
-import LineChart.Interpolation as Interpolation
-import LineChart.Junk as Junk
-import LineChart.Legends as Legends
-import LineChart.Line as Line
 import Utility
 import Data exposing (Point, Data)
 import Stat exposing (Statistics, statistics)
@@ -38,6 +26,7 @@ import Svg exposing (Svg)
 import Task
 import RawData exposing (RawData)
 import Data
+import SampleData
 
 
 type PlotType
@@ -375,39 +364,54 @@ visualDataDisplay model =
         , width (px 800)
         , height (px 600)
         ]
-        [ Element.html (chart model) ]
+        [ Element.html (LineChart.view sampleChart) ]
 
 
-chart : Model -> Svg msg
-chart model =
-    case model.statistics of
-        Nothing ->
-            LineChart.view .x .y [ LineChart.line Colors.red Dots.none "Data" model.data ]
-
-        Just stats ->
-            LineChart.viewCustom (defaults (Display.label "x" model.xLabel) (Display.label "y" model.yLabel))
-                [ LineChart.line Colors.red Dots.none "Data" model.data
-                , LineChart.line Colors.blue Dots.none "Regression" [ stats.leftRegressionPoint, stats.rightRegressionPoint ]
-                ]
+bb =
+    { xMin = 0, xMax = 5, yMin = 0, yMax = 5 }
 
 
-defaults xLabel_ yLabel_ =
-    { x = Axis.default 700 xLabel_ .x
-    , y = Axis.default 400 yLabel_ .y
-    , container = Container.default "line-chart-1"
-    , interpolation = Interpolation.default
-    , intersection = Intersection.default
-    , legends = Legends.default
-    , events = Events.default
-    , junk = Junk.default
-    , grid = Grid.default
-    , area = Area.default
-    , line = Line.wider 1.875
-    , dots = Dots.default
+sampleChart =
+    { boundingBox = bb
+    , data = [ sampleGraph ]
+    }
+
+
+sampleGraph =
+    { boundingBox = bb
+    , r = 1
+    , g = 0
+    , b = 0
+    , data = SampleData.simpleData
     }
 
 
 
+-- chart : Model -> Svg msg
+-- chart model =
+--     case model.statistics of
+--         Nothing ->
+--             LineChart.view .x .y [ LineChart.line Colors.red Dots.none "Data" model.data ]
+--
+--         Just stats ->
+--             LineChart.viewCustom (defaults (Display.label "x" model.xLabel) (Display.label "y" model.yLabel))
+--                 [ LineChart.line Colors.red Dots.none "Data" model.data
+--                 , LineChart.line Colors.blue Dots.none "Regression" [ stats.leftRegressionPoint, stats.rightRegressionPoint ]
+--                 ]
+-- defaults xLabel_ yLabel_ =
+--     { x = Axis.default 700 xLabel_ .x
+--     , y = Axis.default 400 yLabel_ .y
+--     , container = Container.default "line-chart-1"
+--     , interpolation = Interpolation.default
+--     , intersection = Intersection.default
+--     , legends = Legends.default
+--     , events = Events.default
+--     , junk = Junk.default
+--     , grid = Grid.default
+--     , area = Area.default
+--     , line = Line.wider 1.875
+--     , dots = Dots.default
+--     }
 --
 -- STATISTICS
 --

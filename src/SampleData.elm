@@ -4,6 +4,17 @@ module SampleData exposing (..)
 -}
 
 
+simpleData : List ( Float, Float )
+simpleData =
+    [ ( 0, 0 )
+    , ( 1, 0.5 )
+    , ( 2, 1 )
+    , ( 3, 2 )
+    , ( 4, 5 )
+    , ( 5, 0 )
+    ]
+
+
 eb2 =
     """
 x,y
