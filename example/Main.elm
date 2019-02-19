@@ -17,7 +17,7 @@ import File exposing (File)
 import File.Select as Select
 import Html exposing (Html)
 import Html.Attributes as HA
-import LineChart
+import Chart
 import Utility
 import Data exposing (Point, Data)
 import Stat exposing (Statistics, statistics)
@@ -363,7 +363,7 @@ visualDataDisplay model =
         , width (px 800)
         , height (px 600)
         ]
-        [ Element.html (LineChart.view <| LineChart.chart <| LineChart.graph 1 0 0 model.data) ]
+        [ Element.html (Chart.view <| Chart.chart <| Chart.graph Chart.Line 1 0 0 model.data) ]
 
 
 

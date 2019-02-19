@@ -1,4 +1,4 @@
-module LineChart exposing (Chart, Graph, graph, addGraph, chart, view)
+module Chart exposing (Chart, Graph, GraphType(..), graph, addGraph, chart, view)
 
 {-| This module shows how to build a simple line and area chart using some of
 the primitives provided in this library.
@@ -25,6 +25,11 @@ type alias Chart =
     }
 
 
+type GraphType
+    = Line
+    | Scatter
+
+
 type alias BoundingBox =
     { xMin : Float
     , xMax : Float
@@ -42,9 +47,10 @@ boundingBox data =
     }
 
 
-graph : Float -> Float -> Float -> Data.Data -> Graph
-graph r g b data =
-    { r = r
+graph : GraphType -> Float -> Float -> Float -> Data.Data -> Graph
+graph graphType r g b data =
+    { graphType = graphType
+    , r = r
     , g = g
     , b = b
     , boundingBox = boundingBox data
@@ -69,7 +75,8 @@ addGraph newGraph c =
 
 
 type alias Graph =
-    { r : Float
+    { graphType : GraphType
+    , r : Float
     , g : Float
     , b : Float
     , boundingBox : BoundingBox
@@ -122,14 +129,19 @@ transformToLineData bb ( x, y ) =
 
 
 line : Graph -> Path
-line gd =
-    List.map (transformToLineData gd.boundingBox) gd.data
+line g =
+    List.map (transformToLineData g.boundingBox) g.data
         |> Shape.line Shape.monotoneInXCurve
 
 
 viewGraph : Graph -> Svg msg
-viewGraph gd =
-    Path.element (line gd) [ stroke (Color.rgb gd.r gd.g gd.b), strokeWidth 1, fill FillNone ]
+viewGraph g =
+    case g.graphType of
+        Line ->
+            Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1, fill FillNone ]
+
+        Scatter ->
+            Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1, fill FillNone ]
 
 
 view : Chart -> Svg msg
