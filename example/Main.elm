@@ -28,9 +28,9 @@ import RawData exposing (RawData)
 import SampleData
 
 
-type PlotType
-    = TimeSeries
-    | ScatterPlot
+type PlotOption
+    = Normal
+    | WithRegression
 
 
 main =
@@ -58,7 +58,8 @@ type alias Model =
     , statistics : Maybe Statistics
     , xLabel : Maybe String
     , yLabel : Maybe String
-    , plotType : PlotType
+    , plotType : Chart.GraphType
+    , plotOption : PlotOption
     , output : String
     }
 
@@ -97,7 +98,8 @@ init flags =
       , xMin = Nothing
       , header = Nothing
       , statistics = Nothing
-      , plotType = TimeSeries
+      , plotType = Chart.Line
+      , plotOption = WithRegression
       , xLabel = Nothing
       , yLabel = Nothing
       , output = "Ready!"
@@ -287,14 +289,15 @@ rightColumn model =
             , moveRight 50
             , moveUp 70
             ]
-            [ el [ Font.bold, Font.size 13 ] (text "Header")
-            , el
+            [ el
                 [ scrollbarY
                 , scrollbarX
                 , height (px 100)
-                , width (px 600)
+                , width (px 800)
                 , padding 8
-                , Background.color (rgb255 200 200 200)
+                , Background.color (rgb255 255 255 255)
+                , moveDown 170
+                , moveLeft 50
                 ]
                 (text <| headerString model)
             ]
@@ -358,12 +361,37 @@ downloadSampleCsvFile =
 
 visualDataDisplay : Model -> Element msg
 visualDataDisplay model =
-    row
-        [ Font.size 12
-        , width (px 800)
-        , height (px 600)
-        ]
-        [ Element.html (Chart.view <| Chart.chart <| Chart.graph Chart.Line 1 0 0 model.data) ]
+    let
+        regressionGraph =
+            case ( model.statistics, model.plotOption ) of
+                ( Just stats, WithRegression ) ->
+                    Just <|
+                        Chart.graph model.plotType 0 0 1 <|
+                            [ stats.leftRegressionPoint, stats.rightRegressionPoint ]
+
+                ( _, _ ) ->
+                    Nothing
+
+        chart1 =
+            Chart.chart <| Chart.graph model.plotType 1 0 0 model.data
+
+        chart2 =
+            case regressionGraph of
+                Nothing ->
+                    chart1
+
+                Just rg ->
+                    Chart.addGraph rg chart1
+    in
+        row
+            [ Font.size 12
+            , width (px 800)
+            , height (px 515)
+            , Background.color <| rgb255 255 255 255
+            , padding 30
+            , moveDown 95
+            ]
+            [ Element.html (Chart.view <| chart2) ]
 
 
 
@@ -381,7 +409,7 @@ statisticsPanel model =
         , width (px 200)
         , height (px 515)
         , paddingXY 8 12
-        , moveUp 5
+        , moveDown 40
         ]
         [ el []
             (text <| numberOfRecordsString model.data)
@@ -422,20 +450,20 @@ showIfNot condition element =
 xInfoDisplay : Model -> Element msg
 xInfoDisplay model =
     case model.plotType of
-        TimeSeries ->
+        Chart.Line ->
             Display.smallInfo "x" model.xLabel .x model.data
 
-        ScatterPlot ->
+        Chart.Scatter ->
             Display.info "x" model.xLabel .x model.data
 
 
-plotTypeAsString : PlotType -> String
-plotTypeAsString plotType =
-    case plotType of
-        TimeSeries ->
-            "Plot: time series"
+plotTypeAsString : Chart.GraphType -> String
+plotTypeAsString graphType =
+    case graphType of
+        Chart.Line ->
+            "Plot: line"
 
-        ScatterPlot ->
+        Chart.Scatter ->
             "Plot: scatter"
 
 

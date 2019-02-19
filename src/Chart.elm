@@ -138,10 +138,10 @@ viewGraph : Graph -> Svg msg
 viewGraph g =
     case g.graphType of
         Line ->
-            Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1, fill FillNone ]
+            Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1.5, fill FillNone ]
 
         Scatter ->
-            Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1, fill FillNone ]
+            Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1.5, fill FillNone ]
 
 
 view : Chart -> Svg msg

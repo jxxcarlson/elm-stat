@@ -4,7 +4,7 @@ module Data exposing (Point, Data, BarePoint, BareData, toBarePoint, toBareData)
 extracting `Data` both from strings and
 `RawData` values.
 
-@docs Point, Data
+@docs Point, Data, BarePoint, BareData, toBarePoint, toBareData
 
 -}
 
@@ -23,19 +23,27 @@ type alias Data =
     List Point
 
 
+{-| Data structure used by elm-visualization
+-}
 type alias BarePoint =
     ( Float, Float )
 
 
+{-| Data structure used by elm-visualization
+-}
 type alias BareData =
     List BarePoint
 
 
+{-| Conversion function
+-}
 toBarePoint : Point -> BarePoint
 toBarePoint p =
     ( p.x, p.y )
 
 
+{-| Conversion function
+-}
 toBareData : Data -> BareData
 toBareData data =
     List.map toBarePoint data

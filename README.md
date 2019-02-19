@@ -4,7 +4,7 @@
 
 ![Image](./image/dataviewer-sealevel.png)
 
-The `elm-stat` package provides tools for statistics and visualization of n-column data files.  Some features of the package are  exposed in the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html),  the code for which is in `./examples` of this repo.  The package is intended to be a long-term research and development effort which will gradually add features over time.  I'd be very interested in finding collaborators with some background in mathematics and/or statistics.  The API has been evolving rapidly and will probably continue to do so for a while as I gain experience with it. 
+The `elm-stat` package provides tools for statistics and visualization of n-column data files.  Some features of the package are  exposed in the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html),  the code for which is in `./examples` of this repo.  The package is intended to be a long-term research and development effort which will gradually add features over time.  I'd be very interested in finding collaborators with some background in mathematics and/or statistics.  The API has been evolving rapidly and will probably continue to do so for a while as I gain experience with it.
 
 
 
@@ -76,7 +76,7 @@ Statistics can be computed rom a `Data = List Point` value:
   Just 0.04875912408759121 : Maybe Float
 ```
 
-The `statistics` function computes a package of statistical measures, including left and right endpoints for the regression line for the data.  These can be used to superimpose the regression line on the plot of the data.  This is done in the demo app using `terezka/line-charts`.
+The `statistics` function computes a package of statistical measures, including left and right endpoints for the regression line for the data.  These can be used to superimpose the regression line on the plot of the data.  
 
 ```
 > Stat.statistics data
