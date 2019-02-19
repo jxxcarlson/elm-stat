@@ -4,7 +4,9 @@
 
 ![Image](./image/dataviewer-sealevel.png)
 
-The `elm-stat` package provides tools for statistics and visualiztion of n-column data files.  Some features of the package are  exposed in the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html),  he code for which is in `./examples` of this repo.
+The `elm-stat` package provides tools for statistics and visualization of n-column data files.  Some features of the package are  exposed in the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html),  the code for which is in `./examples` of this repo.  The package is intended to be a long-term research and development effort which will gradually add features over time.  I'd be very interested in finding collaborators with some background in mathematics and/or statistics.  The API has been evolving rapidly and will probably continue to do so for a while as I gain experience with it. 
+
+
 
 **Images.** The first image above displays an analysis of time series data from a csv file (temperature anomaly data versus time). The second displays time series data from a 100K space delimited file (sealevel rise data from NASA).
 
@@ -15,7 +17,7 @@ The `elm-stat` package consists of are four modules,
 - `RawData`, for extracting raw data from a text string or file: metadata such as comments about the data, column headings, and an *mxn* table of strings representing the actual data.
 - `Data`, defines the `Point` and `Data = List Point` types
 - `Stat`,  for computing statistics of 1-D and 2-D data, e.g. means and regression lines
-- `ErrorBar`, for computing and displaying error bars
+- `ErrorBar`, for computing error bars
 
 There is also a module `SampleData` with some test data. Let's import the above modules to see how some of this works.  For more details, see the documentation for the individual modules.
 
