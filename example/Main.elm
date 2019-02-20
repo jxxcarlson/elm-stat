@@ -75,6 +75,9 @@ type Msg
     | FileRequested
     | FileSelected File
     | FileLoaded String
+    | SelectLinePlot
+    | SelectScatterPlot
+    | ToggleRegression
     | Recompute
     | Reset
 
@@ -99,7 +102,7 @@ init flags =
       , header = Nothing
       , statistics = Nothing
       , plotType = Chart.Line
-      , plotOption = WithRegression
+      , plotOption = Normal
       , xLabel = Nothing
       , yLabel = Nothing
       , output = "Ready!"
@@ -148,6 +151,20 @@ update msg model =
               }
             , Task.perform FileLoaded (File.toString file)
             )
+
+        SelectLinePlot ->
+            ( { model | plotType = Chart.Line }, Cmd.none )
+
+        SelectScatterPlot ->
+            ( { model | plotType = Chart.Scatter }, Cmd.none )
+
+        ToggleRegression ->
+            case model.plotOption of
+                Normal ->
+                    ( { model | plotOption = WithRegression }, Cmd.none )
+
+                WithRegression ->
+                    ( { model | plotOption = Normal }, Cmd.none )
 
         Reset ->
             let
@@ -281,22 +298,26 @@ mainRow model =
 
 rightColumn : Model -> Element Msg
 rightColumn model =
-    column [ spacing 8 ]
+    column [ spacing 8, moveUp 90 ]
         [ visualDataDisplay model
+        , row [ moveDown 100, spacing 24 ]
+            [ row [ spacing 12 ] [ linePlotButton model, scatterPlotButton model ]
+            , toggleRegressionButton model
+            ]
         , column
             [ spacing 8
             , Font.size 11
             , moveRight 50
-            , moveUp 70
+            , moveUp 105
             ]
             [ el
                 [ scrollbarY
                 , scrollbarX
-                , height (px 100)
+                , height (px 95)
                 , width (px 800)
                 , padding 8
                 , Background.color (rgb255 255 255 255)
-                , moveDown 170
+                , moveDown 220
                 , moveLeft 50
                 ]
                 (text <| headerString model)
@@ -407,9 +428,9 @@ statisticsPanel model =
         , Font.size 12
         , Background.color (rgb255 245 245 245)
         , width (px 200)
-        , height (px 515)
+        , height (px 675)
         , paddingXY 8 12
-        , moveDown 40
+        , moveDown 15
         ]
         [ el []
             (text <| numberOfRecordsString model.data)
@@ -604,6 +625,46 @@ openFileButton =
         [ Input.button Style.button
             { onPress = Just FileRequested
             , label = el [] (text "Open data file")
+            }
+        ]
+
+
+activeBackground : Bool -> Attr decorative msg
+activeBackground flag =
+    case flag of
+        True ->
+            Style.buttonActiveBackground
+
+        False ->
+            Style.buttonBackground
+
+
+toggleRegressionButton : Model -> Element Msg
+toggleRegressionButton model =
+    row [ centerX ]
+        [ Input.button (Style.plainButton ++ [ activeBackground (model.plotOption == WithRegression) ])
+            { onPress = Just ToggleRegression
+            , label = el [] (text "Regression line")
+            }
+        ]
+
+
+linePlotButton : Model -> Element Msg
+linePlotButton model =
+    row [ centerX ]
+        [ Input.button (Style.plainButton ++ [ activeBackground (model.plotType == Chart.Line) ])
+            { onPress = Just SelectLinePlot
+            , label = el [] (text "Line")
+            }
+        ]
+
+
+scatterPlotButton : Model -> Element Msg
+scatterPlotButton model =
+    row [ centerX ]
+        [ Input.button (Style.plainButton ++ [ activeBackground (model.plotType == Chart.Scatter) ])
+            { onPress = Just SelectScatterPlot
+            , label = el [] (text "Scatter")
             }
         ]
 

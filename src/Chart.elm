@@ -1,4 +1,4 @@
-module Chart exposing (Chart, Graph, GraphType(..), graph, addGraph, chart, view)
+module Chart exposing (Chart, Graph, GraphType(..), graph, addGraph, chart, scatter, view)
 
 {-| This module shows how to build a simple line and area chart using some of
 the primitives provided in this library.
@@ -10,13 +10,14 @@ import Path exposing (Path)
 import SampleData exposing (simpleData)
 import Scale exposing (ContinuousScale)
 import Shape
-import TypedSvg exposing (g, svg)
+import TypedSvg exposing (g, svg, circle)
 import TypedSvg.Attributes exposing (class, fill, stroke, transform, viewBox)
-import TypedSvg.Attributes.InPx exposing (strokeWidth)
+import TypedSvg.Attributes.InPx exposing (strokeWidth, cx, cy, r)
 import TypedSvg.Core exposing (Svg)
 import TypedSvg.Types exposing (Fill(..), Transform(..))
 import Data
 import Stat
+import Utility
 
 
 type alias Chart =
@@ -123,15 +124,24 @@ yAxis bb =
     Axis.left [ Axis.tickCount 5 ] (yScale bb.yMin bb.yMax)
 
 
-transformToLineData : BoundingBox -> ( Float, Float ) -> Maybe ( Float, Float )
-transformToLineData bb ( x, y ) =
+transformScale : BoundingBox -> ( Float, Float ) -> Maybe ( Float, Float )
+transformScale bb ( x, y ) =
     Just ( Scale.convert (xScale bb.xMin bb.xMax) x, Scale.convert (yScale bb.yMin bb.yMax) y )
 
 
 line : Graph -> Path
 line g =
-    List.map (transformToLineData g.boundingBox) g.data
+    List.map (transformScale g.boundingBox) g.data
         |> Shape.line Shape.monotoneInXCurve
+
+
+scatter : Graph -> Svg msg
+scatter gr =
+    gr.data
+        |> List.map (transformScale gr.boundingBox)
+        |> Utility.maybeValues
+        |> List.map (\( x, y ) -> circle [ cx x, cy y, r 2.5, fill (Fill (Color.rgb gr.r gr.g gr.b)) ] [])
+        |> g []
 
 
 viewGraph : Graph -> Svg msg
@@ -141,7 +151,7 @@ viewGraph g =
             Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1.5, fill FillNone ]
 
         Scatter ->
-            Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1.5, fill FillNone ]
+            scatter g
 
 
 view : Chart -> Svg msg

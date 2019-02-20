@@ -1,4 +1,4 @@
-module Style exposing (button, footer, link, mainColumn, outer, table)
+module Style exposing (..)
 
 import Element exposing (..)
 import Element.Background as Background
@@ -42,7 +42,7 @@ link =
 
 
 button =
-    [ Background.color (rgb255 100 100 100)
+    [ buttonBackground
     , Font.color (rgb255 255 255 255)
     , paddingXY 15 8
     , Font.size 14
@@ -50,10 +50,26 @@ button =
     ]
 
 
+plainButton =
+    [ Font.color (rgb255 255 255 255)
+    , paddingXY 15 8
+    , Font.size 14
+    , centerX
+    ]
+
+
+buttonBackground =
+    Background.color (rgb255 100 100 100)
+
+
+buttonActiveBackground =
+    Background.color (rgb255 20 20 130)
+
+
 table =
     [ Background.color (rgb255 245 245 245)
     , width <| px 200
-    , height <| px 450
+    , height <| px 560
     , scrollbarY
     , Font.size 12
     , paddingXY 8 12
