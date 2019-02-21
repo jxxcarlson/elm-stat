@@ -19,7 +19,7 @@ import Html exposing (Html)
 import Html.Attributes as HA
 import Chart
 import Utility
-import Data exposing (Point, Data)
+import Data exposing (Point, Data, xCoord, yCoord)
 import Stat exposing (Statistics, statistics)
 import Style
 import Svg exposing (Svg)
@@ -437,7 +437,7 @@ statisticsPanel model =
         , el []
             (text <| plotTypeAsString model.plotType)
         , showIfNot (model.rawData == Nothing) <| xInfoDisplay model
-        , showIfNot (model.rawData == Nothing) <| Display.info "y" model.yLabel .y model.data
+        , showIfNot (model.rawData == Nothing) <| Display.info "y" model.yLabel yCoord model.data
         , showIfNot (model.rawData == Nothing) <| Display.correlationInfo model.data
         , showIfNot (model.rawData == Nothing) <| el [ Font.bold, paddingXY 0 5 ] (text <| "TOOLS")
         , showIfNot (model.rawData == Nothing) <| inputXMin model
@@ -472,10 +472,10 @@ xInfoDisplay : Model -> Element msg
 xInfoDisplay model =
     case model.plotType of
         Chart.Line ->
-            Display.smallInfo "x" model.xLabel .x model.data
+            Display.smallInfo "x" model.xLabel xCoord model.data
 
         Chart.Scatter ->
-            Display.info "x" model.xLabel .x model.data
+            Display.info "x" model.xLabel xCoord model.data
 
 
 plotTypeAsString : Chart.GraphType -> String
@@ -513,13 +513,13 @@ rawDataDisplay model =
               , width = fill
               , view =
                     \point ->
-                        Element.text <| Display.stringOfFloat point.x
+                        Element.text <| Display.stringOfFloat (xCoord point)
               }
             , { header = Element.text (Display.label "y" model.yLabel)
               , width = fill
               , view =
                     \point ->
-                        Element.text <| Display.stringOfFloat point.y
+                        Element.text <| Display.stringOfFloat (yCoord point)
               }
             ]
         }

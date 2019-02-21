@@ -16,7 +16,7 @@ module Stat
 
 -}
 
-import Data exposing (Point, Data)
+import Data exposing (Point, Data, xCoord, yCoord)
 import Dict exposing (Dict)
 
 
@@ -76,7 +76,7 @@ restrictXRange : Filter -> Data -> Data
 restrictXRange filter_ data =
     case ( filter_.xMin, filter_.xMax ) of
         ( Just xMin, Just xMax ) ->
-            List.filter (\point -> point.x >= xMin && point.x <= xMax) data
+            List.filter (\point -> xCoord point >= xMin && xCoord point <= xMax) data
 
         ( _, _ ) ->
             data
@@ -100,25 +100,25 @@ statistics data =
                         toFloat nn
 
                     xs =
-                        List.map .x data
+                        List.map xCoord data
 
                     ys =
-                        List.map .y data
+                        List.map yCoord data
 
                     xMin =
-                        minimum .x data |> Maybe.withDefault 0
+                        minimum xCoord data |> Maybe.withDefault 0
 
                     xMax =
-                        maximum .x data |> Maybe.withDefault 0
+                        maximum xCoord data |> Maybe.withDefault 0
 
                     origin =
-                        Point 0 0
+                        ( 0, 0 )
 
                     leftDataPoint =
-                        data |> List.filter (\point -> .x point == xMin) |> List.head |> Maybe.withDefault origin
+                        data |> List.filter (\point -> xCoord point == xMin) |> List.head |> Maybe.withDefault origin
 
                     rightDataPoint =
-                        data |> List.filter (\point -> .x point == xMax) |> List.head |> Maybe.withDefault origin
+                        data |> List.filter (\point -> xCoord point == xMax) |> List.head |> Maybe.withDefault origin
 
                     xSum =
                         List.sum xs
@@ -175,10 +175,10 @@ statistics data =
                         1 - ssRes / ssTot
 
                     leftRegressionPoint =
-                        { x = leftDataPoint.x, y = m * leftDataPoint.x + b }
+                        ( xCoord leftDataPoint, m * (xCoord leftDataPoint) + b )
 
                     rightRegressionPoint =
-                        { x = rightDataPoint.x, y = m * rightDataPoint.x + b }
+                        ( xCoord rightDataPoint, m * (xCoord rightDataPoint) + b )
                 in
                     Just
                         { n = nn
@@ -200,7 +200,7 @@ statistics data =
 
 {-| Compute the mean of a column in a list of data, e.g.,
 
-    mean .x data
+    mean xCoord data
 
 which computes the mean of the x-values.
 
@@ -227,7 +227,7 @@ mean selector dataList =
 
 {-| Compute the standard deviation of a column in a list of data, e.g.,
 
-    stdev .x data
+    stdev xCoord data
 
 which computes the standard deviation of the x-values.
 
@@ -258,7 +258,7 @@ stdev selector dataList =
 
 {-| Compute the minimum of a column in a list of data, e.g.,
 
-    minimum .x data
+    minimum xCoord data
 
 which computes the minimum of the x-values.
 
@@ -270,7 +270,7 @@ minimum selector dataList =
 
 {-| Compute the maximum of a column in a list of data, e.g.,
 
-    maximum .x data
+    maximum xCoord data
 
 which computes the maximum of the x-values.
 

@@ -103,7 +103,7 @@ toData i j rawData_ =
     in
         case ( xs, ys ) of
             ( Just xss, Just yss ) ->
-                Just (List.map2 Point xss yss)
+                Just (List.map2 Data.makePoint xss yss)
 
             ( _, _ ) ->
                 Nothing

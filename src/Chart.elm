@@ -15,7 +15,7 @@ import TypedSvg.Attributes exposing (class, fill, stroke, transform, viewBox)
 import TypedSvg.Attributes.InPx exposing (strokeWidth, cx, cy, r)
 import TypedSvg.Core exposing (Svg)
 import TypedSvg.Types exposing (Fill(..), Transform(..))
-import Data
+import Data exposing (xCoord, yCoord)
 import Stat
 import Utility
 
@@ -41,10 +41,10 @@ type alias BoundingBox =
 
 boundingBox : Data.Data -> BoundingBox
 boundingBox data =
-    { xMin = Stat.minimum .x data |> Maybe.withDefault 0
-    , xMax = Stat.maximum .x data |> Maybe.withDefault 1
-    , yMin = Stat.minimum .y data |> Maybe.withDefault 0
-    , yMax = Stat.maximum .y data |> Maybe.withDefault 1
+    { xMin = Stat.minimum xCoord data |> Maybe.withDefault 0
+    , xMax = Stat.maximum xCoord data |> Maybe.withDefault 1
+    , yMin = Stat.minimum yCoord data |> Maybe.withDefault 0
+    , yMax = Stat.maximum yCoord data |> Maybe.withDefault 1
     }
 
 
@@ -55,7 +55,7 @@ graph graphType r g b data =
     , g = g
     , b = b
     , boundingBox = boundingBox data
-    , data = Data.toBareData data
+    , data = data
     }
 
 
