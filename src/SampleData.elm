@@ -1220,3 +1220,66 @@ HDR Header_End---------------------------------------
    0 962  2018.8300990    468421 342562.91     53.79    106.18     51.06     60.83    109.99     58.09     52.83
    0 963  2018.8572650    473587 344800.19     50.47    105.22     51.12     57.50    108.93     58.15     53.31
 """
+
+
+historicSpeedOfLightCSV =
+    """
+NO.,DATE,OBSERVER,METHOD,VALUE OF C (Km/s), UNCERTAINTY
+1,1740,Bradley,Aberration,300650,0
+2,1783,Lindenau,Aberration,300460,170
+3,1843,Struve,Aberration,300020,160
+4,1861,Glasenapp,Jupiter Satellite,300050,
+5,1874.8,Cornu (Helmert),Toothed Wheel,299990,200
+6,1874.8,Cornu (Dorsey),Toothed Wheel,299900,200
+7,1876.5,Harvard Observat.,Jupiter Satellite,299921,13
+8,1879.5,Michelson,Rotating Mirror,299910,50
+9,1882.7,Newcomb,Rotating Mirror,299860,30
+10,1882.8,Michelson,Rotating Mirror,299853,60
+11,1883,Nyren,Aberration,299850,90
+12,1900.4,Perrotin,Toothed Wheel,299900,80
+13,1902.4,Perrotin,Toothed Wheel,299860,80
+14,1902.4,Perrotin/Prim,Toothed Wheel,299901,84
+15,1906,Rosa and Dorsey,Electromag. Units,299803,30
+16,1923,Mercier,Waves on Wires,299795,30
+17,1924.6,Michelson,Polygonal Mirror,299802,30
+18,1926.5,Michelson,Polygonal Mirror,299798,15
+19,1928,Mittelstaedt,Kerr Cell,299786,10
+20,1932.5,Pease/Pearson,Polygonal Mirror,299774,10
+21,1936.8,Anderson,Kerr Cell,299771,10
+22,1937,Huttel,Kerr Cell,299771,10
+23,1940,Anderson,Kerr Cell,299776,10
+24,1947,"Essen,Gordon-Smith",Cavity Resonator,299798,3
+25,1947,"Essen,Gordon-Smith",Cavity Resonator,299792,3
+26,1949,Aslakson,Radar,299792.4,2.4
+27,1949,Bergstrand,Geodimeter,299796,2
+28,1950,Essen,Cavity Resonator,299792.5,1
+29,1950,Hansen and Bol,Cavity Resonator,299794.3,1.2
+30,1950,Bergstrand,Geodimeter,299793.1,0.26
+31,1951,Bergstrand,Geodimeter,299793.1,0.4
+32,1951,Aslakson,Radar,299794.2,1.4
+33,1951,Froome,Radio Interferom.,299792.6,0.7
+34,1953,Bergstrand,Geodimeter,299792.85,0.16
+35,1954,Froome,Radio Interferom.,299792.75,0.3
+36,1954,Florman,Radio Interferom.,299795.1,3.1
+37,1955,Scholdstrom,Geodimeter,299792.4,0.4
+38,1955,Plyler et. al.,Spectral Lines,299792,6
+39,1956,Wadley,Tellurometer,299792.9,2
+40,1956,Wadley,Tellurometer,299792.7,2
+41,1956,Rank et. al.,Spectral Lines,299791.9,2
+42,1956,Edge,Geodimeter,299792.4,0.11
+43,1956,Edge,Geodimeter,299792.2,0.13
+44,1957,Wadley,Tellurometer,299792.6,1.2
+45,1958,Froome,Radio Interferom.,299792.5,0.1
+46,1960,Kolibayev,Geodimeter,299792.6,0.06
+47,1966,Karolus,Modulated Light,299792.44,0.2
+48,1967,Simkin et. al.,Microwave Interf.,299792.56,0.11
+49,1967,Grosse,Geodimeter,299792.5,0.05
+50,1972,"Bay,Luther,White",Laser,299792.462,0.018
+51,1972,NBS (Boulder),Laser,299792.46,0.006
+52,1973,Evenson et. al.,Laser,299792.4574,0.0011
+53,1973,"NRC, NBS",Laser,299792.458,0.002
+54,1974,Blaney et. al.,Laser,299792.459,0.0008
+55,1978,Woods et. al.,Laser,299792.4588,0.0002
+56,1979,Baird et. al.,Laser,299792.4581,0.0019
+57,1983,NBS (US),Laser,299792.4586,0.0003
+"""
