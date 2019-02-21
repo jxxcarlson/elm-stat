@@ -1,15 +1,15 @@
-module Data exposing (Point, Data, xCoord, yCoord, makePoint)
+module Data exposing (Point, Data, makePoint, xCoord, yCoord)
 
 {-| This module provides functions for
 extracting `Data` both from strings and
 `RawData` values.
 
-@docs Point, Data, xCoord, yCoord, makePoint
+@docs Point, Data, makePoint, xCoord, yCoord
 
 -}
 
 
-{-| A point ni the xy plane
+{-| A point in the xy plane
 -}
 type alias Point =
     ( Float, Float )
@@ -36,7 +36,7 @@ yCoord ( x, y ) =
     y
 
 
-{-| A list of points in the xy plane. Used for making graphs.
+{-| A list of points in the xy plane.
 -}
 type alias Data =
     List Point

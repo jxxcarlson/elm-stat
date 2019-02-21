@@ -56,27 +56,28 @@ Transform this text to a RawData value using `RawData.get`, a function which aut
 Pipe this computation into `getData 0 1` to extract a list of points:
 
 ```
-> RawData.get SampleData.temperature |> Maybe.andThen (Data.get 0 1) |> Maybe.map (List.take 2)
-  Just [{ x = 1880, y = -0.12 },{ x = 1881, y = -0.07 }, ...]
-    : Maybe (List Point)
+> RawData.get SampleData.temperature
+  |> Maybe.andThen (RawData.toData 0 1)
+  |> Maybe.map (List.take 2)
+    Just [(1880,-0.12),(1881,-0.07)]
 ```
 
 
 Statistics can be computed rom a `Data = List Point` value:
 
 ```
-> data = get SampleData.temperature
-  |> Maybe.andThen (getData 0 1)
+> data = RawData.get SampleData.temperature
+  |> Maybe.andThen (RawData.toData 0 1)
   |> Maybe.withDefault []
 
-> Stat.mean .x data
+> Stat.mean Data.xCoord data
   Just 1948 : Maybe Float
 
-> Stat.mean .y data
-  Just 0.04875912408759121 : Maybe Float
+> Stat.mean yCoord data
+  Just 0.048759 : Maybe Float
 ```
 
-The `statistics` function computes a package of statistical measures, including left and right endpoints for the regression line for the data.  These can be used to superimpose the regression line on the plot of the data.  
+The `statistics` function computes a package of statistical measures, including left and right endpoints for the regression line for the data.  These can be used to superimpose the regression line on the plot of the data.
 
 ```
 > Stat.statistics data

@@ -11,6 +11,7 @@ module Stat
         )
 
 {-| The aim of this library is to compute statistics for 2D data.
+In the examples below, `xCoord` is `Data.xCoord`.
 
 @docs Statistics, mean, mode, filter, maximum, minimum, statistics, stdev
 

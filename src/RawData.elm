@@ -50,7 +50,7 @@ type alias DelimiterStatistics =
     }
 
 
-{-| `Here is an example of how one extracts RawData from a string:
+{-| Example:
 
     > import SampleData
     > import RawData
@@ -83,13 +83,13 @@ get str =
                     }
 
 
-{-| Examples:
+{-| Example:
 
-    > SampleData.eb2 |> RawData.get
-      Just { columnHeaders = ["x","y"]
-          , data = [["0","1.0"],["0","0.9"],["1","1.8"],["0","1.0"],["1","2.0"]
-                   ,["1","2.2"],["0","1.1"]]
-          , metadata = [] }
+    > SampleData.eb2
+      |> RawData.get
+      |> Maybe.map (RawData.toData 0 1)
+      |> Utility.maybeJoin
+         Just [(0,1),(0,0.9),(1,1.8),(0,1),(1,2),(1,2.2),(0,1.1)]
 
 -}
 toData : Int -> Int -> RawData -> Maybe Data
