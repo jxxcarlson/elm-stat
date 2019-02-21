@@ -26,7 +26,7 @@ and minimum of the data with given x value, use
 
 -}
 
-import Data exposing (Point, Data)
+import Data exposing (Point, Data, xCoord, yCoord)
 import Dict exposing (Dict)
 import Utility
 
@@ -146,7 +146,7 @@ meanValue es =
             Nothing
 
         Just y ->
-            Just { x = es.x, y = y }
+            Just ( es.x, y )
 
 
 {-|
@@ -206,12 +206,12 @@ emptyErrorDictionary =
 
 insertInErrorDict : Point -> ErrorDictionary -> ErrorDictionary
 insertInErrorDict point errorDict =
-    case Dict.get point.x errorDict of
+    case Dict.get (xCoord point) errorDict of
         Nothing ->
-            Dict.insert point.x [ point.y ] errorDict
+            Dict.insert (xCoord point) [ (yCoord point) ] errorDict
 
         Just ys ->
-            Dict.insert point.x (point.y :: ys) errorDict
+            Dict.insert (xCoord point) ((yCoord point) :: ys) errorDict
 
 
 {-|
