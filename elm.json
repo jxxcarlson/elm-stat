@@ -3,7 +3,7 @@
     "name": "jxxcarlson/elm-stat",
     "summary": "Elm stat utility",
     "license": "BSD-3-Clause",
-    "version": "3.1.0",
+    "version": "4.0.0",
     "exposed-modules": [
         "RawData",
         "Data",
