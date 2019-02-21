@@ -77,6 +77,7 @@ type Msg
     | FileLoaded String
     | SelectLinePlot
     | SelectScatterPlot
+    | SelectErrorBarPlot
     | ToggleRegression
     | Recompute
     | Reset
@@ -157,6 +158,9 @@ update msg model =
 
         SelectScatterPlot ->
             ( { model | plotType = Chart.Scatter }, Cmd.none )
+
+        SelectErrorBarPlot ->
+            ( { model | plotType = Chart.ErrorBars }, Cmd.none )
 
         ToggleRegression ->
             case model.plotOption of
@@ -300,7 +304,7 @@ rightColumn model =
     column [ spacing 8, moveUp 90 ]
         [ visualDataDisplay model
         , row [ moveDown 100, spacing 24 ]
-            [ row [ spacing 12 ] [ linePlotButton model, scatterPlotButton model ]
+            [ row [ spacing 12 ] [ linePlotButton model, scatterPlotButton model, errorBarsPlotButton model ]
             , toggleRegressionButton model
             ]
         , column
@@ -476,6 +480,9 @@ xInfoDisplay model =
         Chart.Scatter ->
             Display.info "x" model.xLabel xCoord model.data
 
+        Chart.ErrorBars ->
+            Display.smallInfo "x" model.xLabel xCoord model.data
+
 
 plotTypeAsString : Chart.GraphType -> String
 plotTypeAsString graphType =
@@ -485,6 +492,9 @@ plotTypeAsString graphType =
 
         Chart.Scatter ->
             "Plot: scatter"
+
+        Chart.ErrorBars ->
+            "Plot: error bars"
 
 
 
@@ -664,6 +674,16 @@ scatterPlotButton model =
         [ Input.button (Style.plainButton ++ [ activeBackground (model.plotType == Chart.Scatter) ])
             { onPress = Just SelectScatterPlot
             , label = el [] (text "Scatter")
+            }
+        ]
+
+
+errorBarsPlotButton : Model -> Element Msg
+errorBarsPlotButton model =
+    row [ centerX ]
+        [ Input.button (Style.plainButton ++ [ activeBackground (model.plotType == Chart.ErrorBars) ])
+            { onPress = Just SelectErrorBarPlot
+            , label = el [] (text "Error bars")
             }
         ]
 

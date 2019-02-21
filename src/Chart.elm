@@ -1,4 +1,4 @@
-module Chart exposing (Chart, Graph, GraphType(..), graph, addGraph, chart, scatter, view)
+module Chart exposing (Chart, Graph, GraphType(..), graph, addGraph, chart, scatter, view, errorBars)
 
 {-| This module shows how to build a simple line and area chart using some of
 the primitives provided in this library.
@@ -17,6 +17,7 @@ import TypedSvg.Core exposing (Svg)
 import TypedSvg.Types exposing (Fill(..), Transform(..))
 import Data exposing (xCoord, yCoord)
 import Stat
+import ErrorBars exposing (ErrorBar)
 import Utility
 
 
@@ -29,6 +30,7 @@ type alias Chart =
 type GraphType
     = Line
     | Scatter
+    | ErrorBars
 
 
 type alias BoundingBox =
@@ -37,6 +39,20 @@ type alias BoundingBox =
     , yMin : Float
     , yMax : Float
     }
+
+
+type alias Graph =
+    { graphType : GraphType
+    , r : Float
+    , g : Float
+    , b : Float
+    , boundingBox : BoundingBox
+    , data : Data
+    }
+
+
+type alias Data =
+    List ( Float, Float )
 
 
 boundingBox : Data.Data -> BoundingBox
@@ -73,20 +89,6 @@ addGraph newGraph c =
             { newGraph | boundingBox = c.boundingBox }
     in
         { c | data = adjustedGraph :: c.data }
-
-
-type alias Graph =
-    { graphType : GraphType
-    , r : Float
-    , g : Float
-    , b : Float
-    , boundingBox : BoundingBox
-    , data : Data
-    }
-
-
-type alias Data =
-    List ( Float, Float )
 
 
 w : Float
@@ -135,6 +137,13 @@ line g =
         |> Shape.line Shape.monotoneInXCurve
 
 
+basicLine : Float -> Float -> Float -> BoundingBox -> Data -> Svg msg
+basicLine r g b bb dat =
+    List.map (transformScale bb) dat
+        |> Shape.line Shape.monotoneInXCurve
+        |> (\path -> Path.element path [ stroke (Color.rgb r g b), strokeWidth 2.0, fill FillNone ])
+
+
 scatter : Graph -> Svg msg
 scatter gr =
     gr.data
@@ -144,14 +153,46 @@ scatter gr =
         |> g []
 
 
+lineGraph : Graph -> Svg msg
+lineGraph g =
+    Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1.5, fill FillNone ]
+
+
+errorBars : Graph -> Svg msg
+errorBars gr =
+    let
+        bb =
+            gr.boundingBox
+
+        ebList =
+            ErrorBars.normal 2.0 gr.data
+
+        meanValues =
+            List.map (\eb -> ( eb.x, eb.y )) ebList
+
+        ebList2 =
+            List.map (\eb -> [ ( eb.x, eb.bottom ), ( eb.x, eb.top ) ]) ebList
+
+        meanValueGraph =
+            lineGraph { gr | data = meanValues, r = 1, g = 0, b = 0 }
+
+        errorBarGraph =
+            List.map (basicLine 0 0 1 bb) ebList2
+    in
+        g [] (meanValueGraph :: errorBarGraph)
+
+
 viewGraph : Graph -> Svg msg
 viewGraph g =
     case g.graphType of
         Line ->
-            Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1.5, fill FillNone ]
+            lineGraph g
 
         Scatter ->
             scatter g
+
+        ErrorBars ->
+            errorBars g
 
 
 view : Chart -> Svg msg
