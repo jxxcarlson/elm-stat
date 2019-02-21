@@ -1,1 +1,1 @@
-elm make Main.elm
+elm make --optimize Main.elm

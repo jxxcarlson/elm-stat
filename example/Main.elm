@@ -242,22 +242,21 @@ recompute : Model -> ( Data, Maybe Statistics )
 recompute model =
     let
         data =
-            Debug.log "FINAL DATA" <|
-                case model.rawData of
-                    Nothing ->
-                        []
+            case model.rawData of
+                Nothing ->
+                    []
 
-                    Just rawData ->
-                        let
-                            i =
-                                model.xColumn |> Maybe.withDefault 0
+                Just rawData ->
+                    let
+                        i =
+                            model.xColumn |> Maybe.withDefault 0
 
-                            j =
-                                model.yColumn |> Maybe.withDefault 1
-                        in
-                            Debug.log "DATA" (RawData.toData i j rawData)
-                                |> Maybe.withDefault []
-                                |> Stat.filter { xMin = model.xMin, xMax = model.xMax }
+                        j =
+                            model.yColumn |> Maybe.withDefault 1
+                    in
+                        RawData.toData i j rawData
+                            |> Maybe.withDefault []
+                            |> Stat.filter { xMin = model.xMin, xMax = model.xMax }
 
         statistics =
             case data of
