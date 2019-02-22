@@ -305,7 +305,7 @@ mainRow model =
 rightColumn : Model -> Element Msg
 rightColumn model =
     column [ spacing 8, moveUp 90 ]
-        [ displayChart model
+        [ viewChart model
         , row [ moveDown 100, spacing 36 ]
             [ row [ spacing 12 ]
                 [ linePlotButton model
@@ -394,8 +394,8 @@ downloadSampleCsvFile =
 --
 
 
-displayChart : Model -> Element msg
-displayChart model =
+viewChart : Model -> Element msg
+viewChart model =
     let
         regressionGraph =
             case model.statistics of
@@ -408,6 +408,14 @@ displayChart model =
 
         meanlineGraph =
             Chart.graph Chart.Line 0 1 0 (ErrorBars.mean model.data)
+
+        errorBarAnnotation =
+            case List.member WithErrorBars model.plotOptions of
+                False ->
+                    Nothing
+
+                True ->
+                    Just <| Chart.errorBars (Maybe.withDefault 1 model.confidence) model.data
 
         mainChart =
             Chart.setConfidence model.confidence <|
@@ -427,7 +435,7 @@ displayChart model =
             , padding 30
             , moveDown 95
             ]
-            [ Element.html (Chart.view <| finalChart) ]
+            [ Element.html (Chart.view errorBarAnnotation finalChart) ]
 
 
 

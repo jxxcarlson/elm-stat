@@ -204,14 +204,14 @@ lineGraph g =
     Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1.5, fill FillNone ]
 
 
-errorBars : Float -> Graph -> Svg msg
-errorBars confidenceLevel gr =
+errorBars : Float -> Data -> Svg msg
+errorBars confidenceLevel data_ =
     let
         bb =
-            gr.boundingBox
+            boundingBox data_
 
         ebList =
-            ErrorBars.normal confidenceLevel gr.data
+            ErrorBars.normal confidenceLevel data_
 
         meanValues =
             List.map (\eb -> ( eb.x, eb.y )) ebList
@@ -219,13 +219,10 @@ errorBars confidenceLevel gr =
         ebList2 =
             List.map (\eb -> [ ( eb.x, eb.bottom ), ( eb.x, eb.top ) ]) ebList
 
-        meanValueGraph =
-            lineGraph { gr | data = meanValues, r = 1, g = 0, b = 0 }
-
         errorBarGraph =
             List.map (basicLine 0 0 1 bb) ebList2
     in
-        g [] (errorBarGraph)
+        g [] errorBarGraph
 
 
 meanLine : Graph -> Svg msg
@@ -259,18 +256,25 @@ viewGraph confidence g =
             meanLine g
 
 
-
--- MeanLine ->
---     meanLine g
-
-
-view : Chart -> Svg msg
-view chartData =
-    svg [ viewBox 0 0 w h ]
-        [ g [ transform [ Translate (padding - 1) (h - padding) ] ]
-            [ xAxis chartData.boundingBox ]
-        , g [ transform [ Translate (padding - 1) padding ] ]
-            [ yAxis chartData.boundingBox ]
-        , g [ transform [ Translate padding padding ], class [ "series" ] ]
+view : Maybe (Svg msg) -> Chart -> Svg msg
+view annotation_ chartData =
+    let
+        svgList =
             (List.map (viewGraph chartData.confidence) chartData.data)
-        ]
+
+        finalSvgList =
+            case annotation_ of
+                Nothing ->
+                    svgList
+
+                Just annotation ->
+                    annotation :: svgList
+    in
+        svg [ viewBox 0 0 w h ]
+            [ g [ transform [ Translate (padding - 1) (h - padding) ] ]
+                [ xAxis chartData.boundingBox ]
+            , g [ transform [ Translate (padding - 1) padding ] ]
+                [ yAxis chartData.boundingBox ]
+            , g [ transform [ Translate padding padding ], class [ "series" ] ]
+                finalSvgList
+            ]
