@@ -26,11 +26,16 @@ import Svg exposing (Svg)
 import Task
 import RawData exposing (RawData)
 import SampleData
+import Table
 
 
 type PlotOption
     = Normal
     | WithRegression
+
+
+
+-- | WithErroBars
 
 
 main =
@@ -81,8 +86,8 @@ type Msg
     | SelectScatterPlot
     | SelectErrorBarPlot
     | ToggleRegression
-    | Recompute
-    | Reset
+    | SetColumns
+    | SetRange
 
 
 type alias Flags =
@@ -176,22 +181,18 @@ update msg model =
                 WithRegression ->
                     ( { model | plotOption = Normal }, Cmd.none )
 
-        Reset ->
+        SetRange ->
             let
-                nextModel =
-                    { model | xMin = model.xMinOriginal, xMax = model.xMaxOriginal }
-
-                ( numericalData, statistics ) =
-                    recompute nextModel
-            in
-                ( { nextModel | data = numericalData, statistics = statistics }, Cmd.none )
-
-        Recompute ->
-            let
-                ( numericalData, statistics ) =
+                newModel =
                     recompute model
+
+                newData =
+                    newModel.data |> Stat.filter { xMin = model.xMin, xMax = model.xMax }
             in
-                ( { model | data = numericalData, statistics = statistics }, Cmd.none )
+                ( { newModel | data = newData, xMin = model.xMin, xMax = model.xMax }, Cmd.none )
+
+        SetColumns ->
+            ( recompute model, Cmd.none )
 
         FileLoaded content ->
             let
@@ -248,38 +249,37 @@ update msg model =
                 )
 
 
-recompute : Model -> ( Data, Maybe Statistics )
+recompute : Model -> Model
 recompute model =
-    let
-        data =
-            case model.rawData of
-                Nothing ->
-                    []
+    case model.rawData of
+        Nothing ->
+            model
 
-                Just rawData ->
-                    let
-                        i =
-                            model.xColumn |> Maybe.withDefault 0
+        Just rawData ->
+            let
+                i =
+                    model.xColumn |> Maybe.withDefault 0
 
-                        j =
-                            model.yColumn |> Maybe.withDefault 1
-                    in
-                        RawData.toData i j rawData
-                            |> Maybe.withDefault []
-                            |> Stat.filter { xMin = model.xMin, xMax = model.xMax }
+                j =
+                    model.yColumn |> Maybe.withDefault 1
 
-        statistics =
-            case data of
-                [] ->
-                    Nothing
+                newData =
+                    RawData.toData i j rawData
+                        |> Maybe.withDefault []
 
-                dataList ->
-                    Stat.statistics dataList
-    in
-        ( data, statistics )
+                statistics =
+                    Stat.statistics newData
+            in
+                { model
+                    | data = newData
+                    , statistics = statistics
+                    , xMin = Maybe.map .xMin statistics
+                    , xMax = Maybe.map .xMax statistics
+                }
 
 
 
+--|> Stat.filter { xMin = model.xMin, xMax = model.xMax }
 --
 -- VIEW
 --
@@ -450,18 +450,18 @@ statisticsPanel model =
         , moveDown 15
         ]
         [ el []
-            (text <| numberOfRecordsString model.data)
+            (text <| numberOfRowsString model.rawData)
         , el []
-            (text <| plotTypeAsString model.plotType)
+            (text <| numberOfColumnsString model.rawData)
         , showIfNot (model.rawData == Nothing) <| xInfoDisplay model
         , showIfNot (model.rawData == Nothing) <| Display.info "y" model.yLabel yCoord model.data
         , showIfNot (model.rawData == Nothing) <| Display.correlationInfo model.data
         , showIfNot (model.rawData == Nothing) <| el [ Font.bold, paddingXY 0 5 ] (text <| "TOOLS")
+        , showIfNot (model.rawData == Nothing) <| row [ spacing 12 ] [ el [ Font.bold ] (text <| "Column"), inputI model, inputJ model ]
+        , showIfNot (model.rawData == Nothing) <| setColumnsButton
         , showIfNot (model.rawData == Nothing) <| inputXMin model
         , showIfNot (model.rawData == Nothing) <| inputXMax model
-        , showIfNot (model.rawData == Nothing) <| row [ spacing 12 ] [ el [ Font.bold ] (text <| "Column"), inputI model, inputJ model ]
-        , showIfNot (model.rawData == Nothing) <| recomputeButton
-        , showIfNot (model.rawData == Nothing) <| resetButton
+        , showIfNot (model.rawData == Nothing) <| setRangeButton
         ]
 
 
@@ -498,28 +498,30 @@ xInfoDisplay model =
             Display.smallInfo "x" model.xLabel xCoord model.data
 
 
-plotTypeAsString : Chart.GraphType -> String
-plotTypeAsString graphType =
-    case graphType of
-        Chart.Line ->
-            "Plot: line"
-
-        Chart.Scatter ->
-            "Plot: scatter"
-
-        Chart.ErrorBars ->
-            "Plot: error bars"
-
-
 
 --
 -- RAW DATA DISPLAY
 --
 
 
-numberOfRecordsString : Data -> String
-numberOfRecordsString data =
-    "Records: " ++ String.fromInt (List.length data)
+numberOfRowsString : Maybe RawData -> String
+numberOfRowsString maybeRawData =
+    case maybeRawData of
+        Nothing ->
+            "Rows: -"
+
+        Just rawData ->
+            "Rows: " ++ String.fromInt (Table.nRows rawData.data)
+
+
+numberOfColumnsString : Maybe RawData -> String
+numberOfColumnsString maybeRawData =
+    case maybeRawData of
+        Nothing ->
+            "Columns: -"
+
+        Just rawData ->
+            "Columns: " ++ String.fromInt (Table.nCols rawData.data)
 
 
 title : String -> Element msg
@@ -712,21 +714,21 @@ errorBarsPlotButton model =
         ]
 
 
-recomputeButton : Element Msg
-recomputeButton =
+setColumnsButton : Element Msg
+setColumnsButton =
     row [ centerX ]
         [ Input.button Style.button
-            { onPress = Just Recompute
-            , label = el [ centerX, width (px 85) ] (text "Recompute")
+            { onPress = Just SetColumns
+            , label = el [ centerX, width (px 85) ] (text "Set columns")
             }
         ]
 
 
-resetButton : Element Msg
-resetButton =
+setRangeButton : Element Msg
+setRangeButton =
     row [ centerX ]
         [ Input.button Style.button
-            { onPress = Just Reset
-            , label = el [ centerX, width (px 85) ] (text "Reset")
+            { onPress = Just SetRange
+            , label = el [ centerX, width (px 85) ] (text "Set range")
             }
         ]
