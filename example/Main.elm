@@ -171,7 +171,7 @@ update msg model =
             ( { model | plotType = Chart.Scatter }, Cmd.none )
 
         SelectErrorBarPlot ->
-            ( { model | plotType = Chart.ErrorBars }, Cmd.none )
+            ( { model | plotType = Chart.MeanLine }, Cmd.none )
 
         ToggleRegression ->
             case model.plotOption of
@@ -494,7 +494,7 @@ xInfoDisplay model =
         Chart.Scatter ->
             Display.info "x" model.xLabel xCoord model.data
 
-        Chart.ErrorBars ->
+        Chart.MeanLine ->
             Display.smallInfo "x" model.xLabel xCoord model.data
 
 
@@ -707,9 +707,9 @@ scatterPlotButton model =
 errorBarsPlotButton : Model -> Element Msg
 errorBarsPlotButton model =
     row [ centerX ]
-        [ Input.button (Style.plainButton ++ [ activeBackground (model.plotType == Chart.ErrorBars) ])
+        [ Input.button (Style.plainButton ++ [ activeBackground (model.plotType == Chart.MeanLine) ])
             { onPress = Just SelectErrorBarPlot
-            , label = el [] (text "Error bars")
+            , label = el [] (text "Mean line")
             }
         ]
 

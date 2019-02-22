@@ -43,7 +43,7 @@ type alias Chart =
 type GraphType
     = Line
     | Scatter
-    | ErrorBars
+    | MeanLine
 
 
 type alias BoundingBox =
@@ -210,7 +210,7 @@ viewGraph confidence g =
         Scatter ->
             scatter g
 
-        ErrorBars ->
+        MeanLine ->
             errorBars (confidence |> Maybe.withDefault 2.0) g
 
 
