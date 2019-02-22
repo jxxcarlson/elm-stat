@@ -45,6 +45,7 @@ type alias Chart =
 type GraphType
     = Line
     | Scatter
+    | MeanLine
 
 
 
@@ -253,6 +254,9 @@ viewGraph confidence g =
 
         Scatter ->
             scatter g
+
+        MeanLine ->
+            meanLine g
 
 
 

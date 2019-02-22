@@ -27,6 +27,7 @@ import Task
 import RawData exposing (RawData)
 import SampleData
 import Table
+import ErrorBars
 
 
 type PlotOption
@@ -304,7 +305,7 @@ mainRow model =
 rightColumn : Model -> Element Msg
 rightColumn model =
     column [ spacing 8, moveUp 90 ]
-        [ visualDataDisplay model
+        [ displayChart model
         , row [ moveDown 100, spacing 36 ]
             [ row [ spacing 12 ]
                 [ linePlotButton model
@@ -393,8 +394,8 @@ downloadSampleCsvFile =
 --
 
 
-visualDataDisplay : Model -> Element msg
-visualDataDisplay model =
+displayChart : Model -> Element msg
+displayChart model =
     let
         regressionGraph =
             case model.statistics of
@@ -405,6 +406,9 @@ visualDataDisplay model =
                 Nothing ->
                     Chart.emptyGraph
 
+        meanlineGraph =
+            Chart.graph Chart.Line 0 1 0 (ErrorBars.mean model.data)
+
         mainChart =
             Chart.setConfidence model.confidence <|
                 Chart.chart <|
@@ -413,6 +417,7 @@ visualDataDisplay model =
         finalChart =
             mainChart
                 |> Chart.addGraphIf (List.member WithRegression model.plotOptions) regressionGraph
+                |> Chart.addGraphIf (List.member MeanLine model.plotOptions) meanlineGraph
     in
         row
             [ Font.size 12
@@ -485,6 +490,9 @@ xInfoDisplay model =
             Display.smallInfo "x" model.xLabel xCoord model.data
 
         Chart.Scatter ->
+            Display.info "x" model.xLabel xCoord model.data
+
+        Chart.MeanLine ->
             Display.info "x" model.xLabel xCoord model.data
 
 
