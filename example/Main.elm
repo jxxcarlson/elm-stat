@@ -30,12 +30,9 @@ import Table
 
 
 type PlotOption
-    = Normal
+    = WithErrorBars
     | WithRegression
-
-
-
--- | WithErroBars
+    | MeanLine
 
 
 main =
@@ -65,7 +62,7 @@ type alias Model =
     , xLabel : Maybe String
     , yLabel : Maybe String
     , plotType : Chart.GraphType
-    , plotOption : PlotOption
+    , plotOptions : List PlotOption
     , output : String
     }
 
@@ -84,7 +81,8 @@ type Msg
     | FileLoaded String
     | SelectLinePlot
     | SelectScatterPlot
-    | SelectErrorBarPlot
+    | ToggleMeanLine
+    | ToggleErrorBars
     | ToggleRegression
     | SetColumns
     | SetRange
@@ -111,7 +109,7 @@ init flags =
       , header = Nothing
       , statistics = Nothing
       , plotType = Chart.Line
-      , plotOption = Normal
+      , plotOptions = []
       , xLabel = Nothing
       , yLabel = Nothing
       , output = "Ready!"
@@ -170,16 +168,14 @@ update msg model =
         SelectScatterPlot ->
             ( { model | plotType = Chart.Scatter }, Cmd.none )
 
-        SelectErrorBarPlot ->
-            ( { model | plotType = Chart.MeanLine }, Cmd.none )
+        ToggleErrorBars ->
+            ( { model | plotOptions = Utility.toggleElement WithErrorBars model.plotOptions }, Cmd.none )
+
+        ToggleMeanLine ->
+            ( { model | plotOptions = Utility.toggleElement MeanLine model.plotOptions }, Cmd.none )
 
         ToggleRegression ->
-            case model.plotOption of
-                Normal ->
-                    ( { model | plotOption = WithRegression }, Cmd.none )
-
-                WithRegression ->
-                    ( { model | plotOption = Normal }, Cmd.none )
+            ( { model | plotOptions = Utility.toggleElement WithRegression model.plotOptions }, Cmd.none )
 
         SetRange ->
             let
@@ -309,14 +305,17 @@ rightColumn : Model -> Element Msg
 rightColumn model =
     column [ spacing 8, moveUp 90 ]
         [ visualDataDisplay model
-        , row [ moveDown 100, spacing 24 ]
+        , row [ moveDown 100, spacing 36 ]
             [ row [ spacing 12 ]
                 [ linePlotButton model
                 , scatterPlotButton model
-                , errorBarsPlotButton model
+                ]
+            , row [ spacing 12 ]
+                [ toggleRegressionButton model
+                , toggleMeanLineButton model
+                , toggleErrorBarsButton model
                 , inputConfidenceLevel model
                 ]
-            , toggleRegressionButton model
             ]
         , column
             [ spacing 8
@@ -398,28 +397,22 @@ visualDataDisplay : Model -> Element msg
 visualDataDisplay model =
     let
         regressionGraph =
-            case ( model.statistics, model.plotOption ) of
-                ( Just stats, WithRegression ) ->
-                    Just <|
-                        Chart.graph Chart.Line 0 0 1 <|
-                            [ stats.leftRegressionPoint, stats.rightRegressionPoint ]
+            case model.statistics of
+                Just stats ->
+                    [ stats.leftRegressionPoint, stats.rightRegressionPoint ]
+                        |> Chart.graph Chart.Line 0 0 1
 
-                ( _, _ ) ->
-                    Nothing
+                Nothing ->
+                    Chart.emptyGraph
 
-        chart1 =
+        mainChart =
             Chart.setConfidence model.confidence <|
                 Chart.chart <|
                     Chart.graph model.plotType 1 0 0 model.data
 
-        chart2 =
-            case regressionGraph of
-                Nothing ->
-                    chart1
-
-                Just rg ->
-                    Chart.setConfidence model.confidence <|
-                        Chart.addGraph rg chart1
+        finalChart =
+            mainChart
+                |> Chart.addGraphIf (List.member WithRegression model.plotOptions) regressionGraph
     in
         row
             [ Font.size 12
@@ -429,7 +422,7 @@ visualDataDisplay model =
             , padding 30
             , moveDown 95
             ]
-            [ Element.html (Chart.view <| chart2) ]
+            [ Element.html (Chart.view <| finalChart) ]
 
 
 
@@ -493,9 +486,6 @@ xInfoDisplay model =
 
         Chart.Scatter ->
             Display.info "x" model.xLabel xCoord model.data
-
-        Chart.MeanLine ->
-            Display.smallInfo "x" model.xLabel xCoord model.data
 
 
 
@@ -677,7 +667,7 @@ activeBackground flag =
 toggleRegressionButton : Model -> Element Msg
 toggleRegressionButton model =
     row [ centerX ]
-        [ Input.button (Style.plainButton ++ [ activeBackground (model.plotOption == WithRegression) ])
+        [ Input.button (Style.plainButton ++ [ activeBackground (List.member WithRegression model.plotOptions) ])
             { onPress = Just ToggleRegression
             , label = el [] (text "Regression line")
             }
@@ -704,12 +694,22 @@ scatterPlotButton model =
         ]
 
 
-errorBarsPlotButton : Model -> Element Msg
-errorBarsPlotButton model =
+toggleMeanLineButton : Model -> Element Msg
+toggleMeanLineButton model =
     row [ centerX ]
-        [ Input.button (Style.plainButton ++ [ activeBackground (model.plotType == Chart.MeanLine) ])
-            { onPress = Just SelectErrorBarPlot
+        [ Input.button (Style.plainButton ++ [ activeBackground (List.member MeanLine model.plotOptions) ])
+            { onPress = Just ToggleMeanLine
             , label = el [] (text "Mean line")
+            }
+        ]
+
+
+toggleErrorBarsButton : Model -> Element Msg
+toggleErrorBarsButton model =
+    row [ centerX ]
+        [ Input.button (Style.plainButton ++ [ activeBackground (List.member WithErrorBars model.plotOptions) ])
+            { onPress = Just ToggleErrorBars
+            , label = el [] (text "Error bars")
             }
         ]
 
@@ -732,3 +732,9 @@ setRangeButton =
             , label = el [ centerX, width (px 85) ] (text "Set range")
             }
         ]
+
+
+
+--
+-- HELPERS
+--

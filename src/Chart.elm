@@ -3,8 +3,10 @@ module Chart
         ( Chart
         , Graph
         , GraphType(..)
+        , emptyGraph
         , graph
         , addGraph
+        , addGraphIf
         , chart
         , scatter
         , view
@@ -43,7 +45,10 @@ type alias Chart =
 type GraphType
     = Line
     | Scatter
-    | MeanLine
+
+
+
+-- | MeanLine
 
 
 type alias BoundingBox =
@@ -66,6 +71,17 @@ type alias Graph =
 
 type alias Data =
     List ( Float, Float )
+
+
+emptyGraph : Graph
+emptyGraph =
+    { graphType = Line
+    , r = 0
+    , g = 0
+    , b = 0
+    , boundingBox = boundingBox []
+    , data = []
+    }
 
 
 boundingBox : Data.Data -> BoundingBox
@@ -108,6 +124,16 @@ addGraph newGraph c =
             { newGraph | boundingBox = c.boundingBox }
     in
         { c | data = adjustedGraph :: c.data }
+
+
+addGraphIf : Bool -> Graph -> Chart -> Chart
+addGraphIf flag newGraph c =
+    case flag of
+        True ->
+            addGraph newGraph c
+
+        False ->
+            c
 
 
 w : Float
@@ -198,7 +224,25 @@ errorBars confidenceLevel gr =
         errorBarGraph =
             List.map (basicLine 0 0 1 bb) ebList2
     in
-        g [] (meanValueGraph :: errorBarGraph)
+        g [] (errorBarGraph)
+
+
+meanLine : Graph -> Svg msg
+meanLine gr =
+    let
+        bb =
+            gr.boundingBox
+
+        ebList =
+            ErrorBars.normal 1 gr.data
+
+        meanValues =
+            List.map (\eb -> ( eb.x, eb.y )) ebList
+
+        meanValueGraph =
+            lineGraph { gr | data = meanValues, r = 1, g = 0, b = 0 }
+    in
+        meanValueGraph
 
 
 viewGraph : Maybe Float -> Graph -> Svg msg
@@ -210,8 +254,10 @@ viewGraph confidence g =
         Scatter ->
             scatter g
 
-        MeanLine ->
-            errorBars (confidence |> Maybe.withDefault 2.0) g
+
+
+-- MeanLine ->
+--     meanLine g
 
 
 view : Chart -> Svg msg
