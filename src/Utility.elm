@@ -1,4 +1,4 @@
-module Utility exposing (listGetAt, maybeValues, maybeCombine, maybeJoin)
+module Utility exposing (listGetAt, maybeValues, maybeCombine, maybeJoin, toggleElement)
 
 {- Credits; from elm-community/list-extra. Copied
    here to eliminate a dependency.
@@ -65,3 +65,29 @@ traverse f =
                     Maybe.map ((::) x) acc
     in
         List.foldr step (Just [])
+
+
+{-| Remove the first occurrence of a value from a list.
+(From List.Extra)
+-}
+removeFromList : a -> List a -> List a
+removeFromList x xs =
+    case xs of
+        [] ->
+            []
+
+        y :: ys ->
+            if x == y then
+                ys
+            else
+                y :: removeFromList x ys
+
+
+toggleElement : a -> List a -> List a
+toggleElement element list =
+    case List.member element list of
+        True ->
+            removeFromList element list
+
+        False ->
+            element :: list
