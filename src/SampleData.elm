@@ -1288,7 +1288,8 @@ NO.,DATE,OBSERVER,METHOD,VALUE OF C (Km/s), UNCERTAINTY
 hubble1929 =
     """
 The galaxy recession data from Hubble's
-1929 paper.
+1929 paper.  View as scatter plot using
+columns 2 and 3 of the data.
 Obj    distance    velocity
 1      0.032   170
 2      0.034   290

@@ -80,6 +80,7 @@ type Msg
     | FileRequested
     | FileSelected File
     | LoadContent String
+    | LoadData DataSource
     | SelectLinePlot
     | SelectScatterPlot
     | ToggleMeanLine
@@ -194,6 +195,21 @@ update msg model =
         LoadContent content ->
             ( loadContent content model, Cmd.none )
 
+        LoadData dataSource ->
+            let
+                content =
+                    case dataSource of
+                        Hubble1929 ->
+                            SampleData.hubble1929
+
+                        TemperatureAnomaly ->
+                            SampleData.temperature
+
+                        SeaLevel ->
+                            SampleData.sealevel
+            in
+                ( loadContent content model, Cmd.none )
+
 
 loadContent : String -> Model -> Model
 loadContent content model =
@@ -302,6 +318,17 @@ mainRow model =
         [ dataColumn model
         , statisticsPanel model
         , rightColumn model
+        , dataSourceColumn model
+        ]
+
+
+dataSourceColumn : Model -> Element Msg
+dataSourceColumn model =
+    column [ spacing 12, alignTop, moveDown 50 ]
+        [ el [ Font.size 16 ] (text "Sample data")
+        , loadContentButton model Hubble1929
+        , loadContentButton model TemperatureAnomaly
+        , loadContentButton model SeaLevel
         ]
 
 
@@ -674,7 +701,7 @@ toggleRegressionButton model =
         styleF m =
             Style.plainButton ++ [ activeBackground (List.member WithRegression m.plotOptions) ]
     in
-        basicButton model ToggleRegression styleF "Regression line"
+        basicButton model ToggleRegression styleF "Regression"
 
 
 linePlotButton : Model -> Element Msg
@@ -726,7 +753,7 @@ basicButton : Model -> Msg -> (Model -> List (Element.Attr () Msg)) -> String ->
 basicButton model msg styleFunction label_ =
     row [ centerX ]
         [ Input.button (styleFunction model)
-            { onPress = Just SetColumns
+            { onPress = Just msg
             , label = el [ centerX, width (px 85) ] (text label_)
             }
         ]
@@ -740,6 +767,30 @@ activeBackground flag =
 
         False ->
             Style.buttonBackground
+
+
+type DataSource
+    = Hubble1929
+    | TemperatureAnomaly
+    | SeaLevel
+
+
+dataSourceAsString : DataSource -> String
+dataSourceAsString dataSource =
+    case dataSource of
+        Hubble1929 ->
+            "Hubble 1929"
+
+        TemperatureAnomaly ->
+            "Temperature"
+
+        SeaLevel ->
+            "Sea level"
+
+
+loadContentButton : Model -> DataSource -> Element Msg
+loadContentButton model dataSource =
+    basicButton model (LoadData dataSource) (\_ -> Style.button) (dataSourceAsString dataSource)
 
 
 
