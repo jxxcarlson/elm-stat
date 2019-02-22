@@ -244,7 +244,7 @@ rawStdev rawMean_ xs =
                     squaredDifferences =
                         List.map (\x -> square (x - m)) xs
                 in
-                    Just <| List.sum squaredDifferences / (n - 1)
+                    Just <| sqrt <| List.sum squaredDifferences / (n - 1)
 
             ( _, _ ) ->
                 Nothing

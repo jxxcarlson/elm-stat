@@ -1,4 +1,16 @@
-module Chart exposing (Chart, Graph, GraphType(..), graph, addGraph, chart, scatter, view, errorBars)
+module Chart
+    exposing
+        ( Chart
+        , Graph
+        , GraphType(..)
+        , graph
+        , addGraph
+        , chart
+        , scatter
+        , view
+        , errorBars
+        , setConfidence
+        )
 
 {-| This module shows how to build a simple line and area chart using some of
 the primitives provided in this library.
@@ -23,6 +35,7 @@ import Utility
 
 type alias Chart =
     { boundingBox : BoundingBox
+    , confidence : Maybe Float
     , data : List Graph
     }
 
@@ -75,9 +88,15 @@ graph graphType r g b data =
     }
 
 
+setConfidence : Maybe Float -> Chart -> Chart
+setConfidence conf chart_ =
+    { chart_ | confidence = conf }
+
+
 chart : Graph -> Chart
 chart g =
     { boundingBox = g.boundingBox
+    , confidence = Nothing
     , data = [ g ]
     }
 
@@ -158,14 +177,14 @@ lineGraph g =
     Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1.5, fill FillNone ]
 
 
-errorBars : Graph -> Svg msg
-errorBars gr =
+errorBars : Float -> Graph -> Svg msg
+errorBars confidenceLevel gr =
     let
         bb =
             gr.boundingBox
 
         ebList =
-            ErrorBars.normal 2.0 gr.data
+            ErrorBars.normal confidenceLevel gr.data
 
         meanValues =
             List.map (\eb -> ( eb.x, eb.y )) ebList
@@ -182,8 +201,8 @@ errorBars gr =
         g [] (meanValueGraph :: errorBarGraph)
 
 
-viewGraph : Graph -> Svg msg
-viewGraph g =
+viewGraph : Maybe Float -> Graph -> Svg msg
+viewGraph confidence g =
     case g.graphType of
         Line ->
             lineGraph g
@@ -192,7 +211,7 @@ viewGraph g =
             scatter g
 
         ErrorBars ->
-            errorBars g
+            errorBars (confidence |> Maybe.withDefault 2.0) g
 
 
 view : Chart -> Svg msg
@@ -203,5 +222,5 @@ view chartData =
         , g [ transform [ Translate (padding - 1) padding ] ]
             [ yAxis chartData.boundingBox ]
         , g [ transform [ Translate padding padding ], class [ "series" ] ]
-            (List.map viewGraph chartData.data)
+            (List.map (viewGraph chartData.confidence) chartData.data)
         ]

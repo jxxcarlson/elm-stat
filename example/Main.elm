@@ -51,6 +51,7 @@ type alias Model =
     , header : Maybe String
     , xMinOriginal : Maybe Float
     , xMaxOriginal : Maybe Float
+    , confidence : Maybe Float
     , xColumn : Maybe Int
     , yColumn : Maybe Int
     , xMin : Maybe Float
@@ -72,6 +73,7 @@ type Msg
     | InputXMax String
     | InputI String
     | InputJ String
+    | InputConfidence String
     | FileRequested
     | FileSelected File
     | FileLoaded String
@@ -96,6 +98,7 @@ init flags =
       , data = []
       , xMinOriginal = Nothing
       , xMaxOriginal = Nothing
+      , confidence = Just 1
       , xColumn = Just 0
       , yColumn = Just 1
       , xMax = Nothing
@@ -133,6 +136,9 @@ update msg model =
 
         InputXMax str ->
             ( { model | xMax = String.toFloat str }, Cmd.none )
+
+        InputConfidence str ->
+            ( { model | confidence = String.toFloat str }, Cmd.none )
 
         InputI str ->
             ( { model | xColumn = (String.toInt str) |> Maybe.map (\x -> x - 1) }, Cmd.none )
@@ -304,7 +310,12 @@ rightColumn model =
     column [ spacing 8, moveUp 90 ]
         [ visualDataDisplay model
         , row [ moveDown 100, spacing 24 ]
-            [ row [ spacing 12 ] [ linePlotButton model, scatterPlotButton model, errorBarsPlotButton model ]
+            [ row [ spacing 12 ]
+                [ linePlotButton model
+                , scatterPlotButton model
+                , errorBarsPlotButton model
+                , inputConfidenceLevel model
+                ]
             , toggleRegressionButton model
             ]
         , column
@@ -390,14 +401,16 @@ visualDataDisplay model =
             case ( model.statistics, model.plotOption ) of
                 ( Just stats, WithRegression ) ->
                     Just <|
-                        Chart.graph model.plotType 0 0 1 <|
+                        Chart.graph Chart.Line 0 0 1 <|
                             [ stats.leftRegressionPoint, stats.rightRegressionPoint ]
 
                 ( _, _ ) ->
                     Nothing
 
         chart1 =
-            Chart.chart <| Chart.graph model.plotType 1 0 0 model.data
+            Chart.setConfidence model.confidence <|
+                Chart.chart <|
+                    Chart.graph model.plotType 1 0 0 model.data
 
         chart2 =
             case regressionGraph of
@@ -405,7 +418,8 @@ visualDataDisplay model =
                     chart1
 
                 Just rg ->
-                    Chart.addGraph rg chart1
+                    Chart.setConfidence model.confidence <|
+                        Chart.addGraph rg chart1
     in
         row
             [ Font.size 12
@@ -538,6 +552,16 @@ rawDataDisplay model =
 --
 -- INPUT FIELDS
 --
+
+
+inputConfidenceLevel : Model -> Element Msg
+inputConfidenceLevel model =
+    Input.text [ height (px 24), width (px 48), Font.size 12, paddingXY 8 0 ]
+        { onChange = InputConfidence
+        , text = Display.label "" (Maybe.map String.fromFloat model.confidence)
+        , placeholder = Nothing
+        , label = Input.labelLeft [ moveDown 4 ] <| el [] (text "c: ")
+        }
 
 
 inputI : Model -> Element Msg
