@@ -254,7 +254,7 @@ stdev selector dataList =
                     squaredDifferences =
                         List.map (\x -> square (x - mean_)) (List.map selector dataList)
                 in
-                    Just <| List.sum squaredDifferences / toFloat (n - 1)
+                    Just <| sqrt <| List.sum squaredDifferences / toFloat (n - 1)
 
 
 {-| Compute the minimum of a column in a list of data, e.g.,
