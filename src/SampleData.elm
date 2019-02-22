@@ -1287,8 +1287,11 @@ NO.,DATE,OBSERVER,METHOD,VALUE OF C (Km/s), UNCERTAINTY
 
 hubble1929 =
     """
-SMag   0.032   170
-LMag   0.034   290
+The galaxy recession data from Hubble's
+1929 paper.
+Obj    distance    velocity
+1      0.032   170
+2      0.034   290
 6822   0.214  -130
 598    0.263  -70
 221    0.275  -185

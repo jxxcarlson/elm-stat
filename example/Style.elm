@@ -10,6 +10,7 @@ import Element.Font as Font
 --
 
 
+outer : List (Element.Attr () msg)
 outer =
     [ Background.color (rgb255 180 180 180)
     , height fill

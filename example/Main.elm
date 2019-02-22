@@ -79,7 +79,7 @@ type Msg
     | InputConfidence String
     | FileRequested
     | FileSelected File
-    | FileLoaded String
+    | LoadContent String
     | SelectLinePlot
     | SelectScatterPlot
     | ToggleMeanLine
@@ -160,7 +160,7 @@ update msg model =
                 | filename = Just <| File.name file
                 , fileSize = Just <| File.size file
               }
-            , Task.perform FileLoaded (File.toString file)
+            , Task.perform LoadContent (File.toString file)
             )
 
         SelectLinePlot ->
@@ -191,59 +191,62 @@ update msg model =
         SetColumns ->
             ( recompute model, Cmd.none )
 
-        FileLoaded content ->
-            let
-                rawData =
-                    RawData.get content
+        LoadContent content ->
+            ( loadContent content model, Cmd.none )
 
-                xLabel =
-                    case rawData of
-                        Nothing ->
-                            Nothing
 
-                        Just data ->
-                            Utility.listGetAt 0 data.columnHeaders
+loadContent : String -> Model -> Model
+loadContent content model =
+    let
+        rawData =
+            RawData.get content
 
-                yLabel =
-                    case rawData of
-                        Nothing ->
-                            Nothing
+        xLabel =
+            case rawData of
+                Nothing ->
+                    Nothing
 
-                        Just data ->
-                            Utility.listGetAt 1 data.columnHeaders
+                Just data ->
+                    Utility.listGetAt 0 data.columnHeaders
 
-                numericalData =
-                    case rawData of
-                        Nothing ->
-                            []
+        yLabel =
+            case rawData of
+                Nothing ->
+                    Nothing
 
-                        Just rawData_ ->
-                            (RawData.toData 0 1 rawData_)
-                                |> Maybe.withDefault []
+                Just data ->
+                    Utility.listGetAt 1 data.columnHeaders
 
-                statistics =
-                    case numericalData of
-                        [] ->
-                            Nothing
+        numericalData =
+            case rawData of
+                Nothing ->
+                    []
 
-                        dataList ->
-                            Stat.statistics dataList
-            in
-                ( { model
-                    | dataText = Just content
-                    , rawData = rawData
-                    , data = numericalData
-                    , header = Maybe.map .metadata rawData |> Maybe.map (String.join "\n")
-                    , xLabel = xLabel
-                    , yLabel = yLabel
-                    , xMin = Maybe.map .xMin statistics
-                    , xMax = Maybe.map .xMax statistics
-                    , xMinOriginal = Maybe.map .xMin statistics
-                    , xMaxOriginal = Maybe.map .xMax statistics
-                    , statistics = statistics
-                  }
-                , Cmd.none
-                )
+                Just rawData_ ->
+                    (RawData.toData 0 1 rawData_)
+                        |> Maybe.withDefault []
+
+        statistics =
+            case numericalData of
+                [] ->
+                    Nothing
+
+                dataList ->
+                    Stat.statistics dataList
+    in
+        { model
+            | dataText = Just content
+            , rawData = rawData
+            , data = numericalData
+            , header = Maybe.map .metadata rawData |> Maybe.map (String.join "\n")
+            , xLabel = xLabel
+            , yLabel = yLabel
+            , xMin = Maybe.map .xMin statistics
+            , xMax = Maybe.map .xMax statistics
+            , xMinOriginal = Maybe.map .xMin statistics
+            , xMaxOriginal = Maybe.map .xMax statistics
+            , statistics = statistics
+        }
 
 
 recompute : Model -> Model
@@ -353,7 +356,7 @@ dataColumn : Model -> Element Msg
 dataColumn model =
     column Style.mainColumn
         [ column [ spacing 20 ]
-            [ column [ spacing 8 ] [ title "Data Explorer", openFileButton ]
+            [ column [ spacing 8 ] [ title "Data Explorer", openFileButton model ]
             , column
                 [ spacing 8 ]
                 [ inputXLabel model, inputYLabel model ]
@@ -464,10 +467,10 @@ statisticsPanel model =
         , showIfNot (model.rawData == Nothing) <| Display.correlationInfo model.data
         , showIfNot (model.rawData == Nothing) <| el [ Font.bold, paddingXY 0 5 ] (text <| "TOOLS")
         , showIfNot (model.rawData == Nothing) <| row [ spacing 12 ] [ el [ Font.bold ] (text <| "Column"), inputI model, inputJ model ]
-        , showIfNot (model.rawData == Nothing) <| setColumnsButton
+        , showIfNot (model.rawData == Nothing) <| setColumnsButton model
         , showIfNot (model.rawData == Nothing) <| inputXMin model
         , showIfNot (model.rawData == Nothing) <| inputXMax model
-        , showIfNot (model.rawData == Nothing) <| setRangeButton
+        , showIfNot (model.rawData == Nothing) <| setRangeButton model
         ]
 
 
@@ -660,12 +663,71 @@ inputYLabel model =
 --
 
 
-openFileButton : Element Msg
-openFileButton =
+openFileButton : Model -> Element Msg
+openFileButton model =
+    basicButton model FileRequested (\_ -> Style.button) "Open data file"
+
+
+toggleRegressionButton : Model -> Element Msg
+toggleRegressionButton model =
+    let
+        styleF m =
+            Style.plainButton ++ [ activeBackground (List.member WithRegression m.plotOptions) ]
+    in
+        basicButton model ToggleRegression styleF "Regression line"
+
+
+linePlotButton : Model -> Element Msg
+linePlotButton model =
+    let
+        styleF m =
+            Style.plainButton ++ [ activeBackground (m.plotType == Chart.Line) ]
+    in
+        basicButton model SelectLinePlot styleF "Line"
+
+
+scatterPlotButton : Model -> Element Msg
+scatterPlotButton model =
+    let
+        styleF m =
+            Style.plainButton ++ [ activeBackground (m.plotType == Chart.Scatter) ]
+    in
+        basicButton model SelectScatterPlot styleF "Scatter"
+
+
+toggleMeanLineButton : Model -> Element Msg
+toggleMeanLineButton model =
+    let
+        styleF m =
+            Style.plainButton ++ [ activeBackground (List.member MeanLine model.plotOptions) ]
+    in
+        basicButton model ToggleMeanLine styleF "Mean line"
+
+
+toggleErrorBarsButton model =
+    let
+        styleF m =
+            Style.plainButton ++ [ activeBackground (List.member WithErrorBars m.plotOptions) ]
+    in
+        basicButton model ToggleErrorBars styleF "Error bars"
+
+
+setColumnsButton : Model -> Element Msg
+setColumnsButton model =
+    basicButton model SetColumns (\_ -> Style.button) "Set columns"
+
+
+setRangeButton : Model -> Element Msg
+setRangeButton model =
+    basicButton model SetRange (\_ -> Style.button) "Set range"
+
+
+basicButton : Model -> Msg -> (Model -> List (Element.Attr () Msg)) -> String -> Element Msg
+basicButton model msg styleFunction label_ =
     row [ centerX ]
-        [ Input.button Style.button
-            { onPress = Just FileRequested
-            , label = el [] (text "Open data file")
+        [ Input.button (styleFunction model)
+            { onPress = Just SetColumns
+            , label = el [ centerX, width (px 85) ] (text label_)
             }
         ]
 
@@ -678,76 +740,6 @@ activeBackground flag =
 
         False ->
             Style.buttonBackground
-
-
-toggleRegressionButton : Model -> Element Msg
-toggleRegressionButton model =
-    row [ centerX ]
-        [ Input.button (Style.plainButton ++ [ activeBackground (List.member WithRegression model.plotOptions) ])
-            { onPress = Just ToggleRegression
-            , label = el [] (text "Regression line")
-            }
-        ]
-
-
-linePlotButton : Model -> Element Msg
-linePlotButton model =
-    row [ centerX ]
-        [ Input.button (Style.plainButton ++ [ activeBackground (model.plotType == Chart.Line) ])
-            { onPress = Just SelectLinePlot
-            , label = el [] (text "Line")
-            }
-        ]
-
-
-scatterPlotButton : Model -> Element Msg
-scatterPlotButton model =
-    row [ centerX ]
-        [ Input.button (Style.plainButton ++ [ activeBackground (model.plotType == Chart.Scatter) ])
-            { onPress = Just SelectScatterPlot
-            , label = el [] (text "Scatter")
-            }
-        ]
-
-
-toggleMeanLineButton : Model -> Element Msg
-toggleMeanLineButton model =
-    row [ centerX ]
-        [ Input.button (Style.plainButton ++ [ activeBackground (List.member MeanLine model.plotOptions) ])
-            { onPress = Just ToggleMeanLine
-            , label = el [] (text "Mean line")
-            }
-        ]
-
-
-toggleErrorBarsButton : Model -> Element Msg
-toggleErrorBarsButton model =
-    row [ centerX ]
-        [ Input.button (Style.plainButton ++ [ activeBackground (List.member WithErrorBars model.plotOptions) ])
-            { onPress = Just ToggleErrorBars
-            , label = el [] (text "Error bars")
-            }
-        ]
-
-
-setColumnsButton : Element Msg
-setColumnsButton =
-    row [ centerX ]
-        [ Input.button Style.button
-            { onPress = Just SetColumns
-            , label = el [ centerX, width (px 85) ] (text "Set columns")
-            }
-        ]
-
-
-setRangeButton : Element Msg
-setRangeButton =
-    row [ centerX ]
-        [ Input.button Style.button
-            { onPress = Just SetRange
-            , label = el [ centerX, width (px 85) ] (text "Set range")
-            }
-        ]
 
 
 
