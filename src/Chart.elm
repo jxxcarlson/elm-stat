@@ -1,18 +1,17 @@
-module Chart
-    exposing
-        ( Chart
-        , Graph
-        , GraphType(..)
-        , emptyGraph
-        , graph
-        , addGraph
-        , addGraphIf
-        , chart
-        , scatter
-        , view
-        , errorBars
-        , setConfidence
-        )
+module Chart exposing
+    ( Chart
+    , Graph
+    , GraphType(..)
+    , addGraph
+    , addGraphIf
+    , chart
+    , emptyGraph
+    , errorBars
+    , graph
+    , scatter
+    , setConfidence
+    , view
+    )
 
 {-| This module shows how to build a simple line and area chart using some of
 the primitives provided in this library.
@@ -20,18 +19,18 @@ the primitives provided in this library.
 
 import Axis
 import Color
+import Data exposing (xCoord, yCoord)
+import ErrorBars exposing (ErrorBar)
 import Path exposing (Path)
 import SampleData exposing (simpleData)
 import Scale exposing (ContinuousScale)
 import Shape
-import TypedSvg exposing (g, svg, circle)
+import Stat
+import TypedSvg exposing (circle, g, svg)
 import TypedSvg.Attributes exposing (class, fill, stroke, transform, viewBox)
-import TypedSvg.Attributes.InPx exposing (strokeWidth, cx, cy, r)
+import TypedSvg.Attributes.InPx exposing (cx, cy, r, strokeWidth)
 import TypedSvg.Core exposing (Svg)
 import TypedSvg.Types exposing (Fill(..), Transform(..))
-import Data exposing (xCoord, yCoord)
-import Stat
-import ErrorBars exposing (ErrorBar)
 import Utility
 
 
@@ -124,7 +123,7 @@ addGraph newGraph c =
         adjustedGraph =
             { newGraph | boundingBox = c.boundingBox }
     in
-        { c | data = adjustedGraph :: c.data }
+    { c | data = adjustedGraph :: c.data }
 
 
 addGraphIf : Bool -> Graph -> Chart -> Chart
@@ -222,7 +221,7 @@ errorBars confidenceLevel data_ =
         errorBarGraph =
             List.map (basicLine 0 0 1 bb) ebList2
     in
-        g [] errorBarGraph
+    g [] errorBarGraph
 
 
 meanLine : Graph -> Svg msg
@@ -240,7 +239,7 @@ meanLine gr =
         meanValueGraph =
             lineGraph { gr | data = meanValues, r = 1, g = 0, b = 0 }
     in
-        meanValueGraph
+    meanValueGraph
 
 
 viewGraph : Maybe Float -> Graph -> Svg msg
@@ -260,7 +259,7 @@ view : Maybe (Svg msg) -> Chart -> Svg msg
 view annotation_ chartData =
     let
         svgList =
-            (List.map (viewGraph chartData.confidence) chartData.data)
+            List.map (viewGraph chartData.confidence) chartData.data
 
         finalSvgList =
             case annotation_ of
@@ -270,11 +269,11 @@ view annotation_ chartData =
                 Just annotation ->
                     annotation :: svgList
     in
-        svg [ viewBox 0 0 w h ]
-            [ g [ transform [ Translate (padding - 1) (h - padding) ] ]
-                [ xAxis chartData.boundingBox ]
-            , g [ transform [ Translate (padding - 1) padding ] ]
-                [ yAxis chartData.boundingBox ]
-            , g [ transform [ Translate padding padding ], class [ "series" ] ]
-                finalSvgList
-            ]
+    svg [ viewBox 0 0 w h ]
+        [ g [ transform [ Translate (padding - 1) (h - padding) ] ]
+            [ xAxis chartData.boundingBox ]
+        , g [ transform [ Translate (padding - 1) padding ] ]
+            [ yAxis chartData.boundingBox ]
+        , g [ transform [ Translate padding padding ], class [ "series" ] ]
+            finalSvgList
+        ]

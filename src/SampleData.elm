@@ -44,7 +44,7 @@ csvTestEB =
     "x,y\n0,0.9\n0,1.0\n0,1.1\n1,1.9\n1,2.0,\n1,2.1\n"
 
 
-{-| RawData.get3 '\t' tabTest
+{-| RawData.get3 '\\t' tabTest
 Just (["x","y"],[["0","0"],["1","0"],["1","1"],["0","1"]])
 -}
 tabTest =
