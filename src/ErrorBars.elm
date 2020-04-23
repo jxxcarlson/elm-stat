@@ -26,7 +26,7 @@ and minimum of the data with given x value, use
 
 -}
 
-import Data exposing (Point, Data, xCoord, yCoord)
+import Data exposing (Data, Point, xCoord, yCoord)
 import Dict exposing (Dict)
 import Utility
 
@@ -100,6 +100,7 @@ normal p data =
     > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.maxmin
       [{ bottom = 0.9, y = 1, top = 1.1, x = 0 }
        ,{ bottom = 1.8, y = 2, top = 2.2, x = 1 }]
+
 -}
 maxmin : Data -> List ErrorBar
 maxmin data =
@@ -154,6 +155,7 @@ meanValue es =
     > Data.fromString 0 1 SampleData.eb2 |> ErrorStat.rawStats
        [ { max = Just 1.1, mean = Just 1, min = Just 0.9, stdev = Just 0.0066666666666666706 }
        ,{ max = Just 2.2, mean = Just 2, min = Just 1.8, stdev = Just 0.04000000000000002 }
+
 -}
 rawStats : Data -> List ErrorStats
 rawStats data =
@@ -171,12 +173,12 @@ rawMean xs =
         n =
             toFloat n_
     in
-        case n == 0 of
-            True ->
-                Nothing
+    case n == 0 of
+        True ->
+            Nothing
 
-            False ->
-                Just <| (List.sum xs) / n
+        False ->
+            Just <| List.sum xs / n
 
 
 errorStatsFromErrorDatum : ErrorDatum -> ErrorStats
@@ -191,12 +193,12 @@ errorStatsFromErrorDatum d =
         m =
             rawMean d.ys
     in
-        { x = d.x
-        , mean = m
-        , min = List.minimum d.ys
-        , max = List.maximum d.ys
-        , stdev = rawStdev m d.ys
-        }
+    { x = d.x
+    , mean = m
+    , min = List.minimum d.ys
+    , max = List.maximum d.ys
+    , stdev = rawStdev m d.ys
+    }
 
 
 emptyErrorDictionary : ErrorDictionary
@@ -208,15 +210,16 @@ insertInErrorDict : Point -> ErrorDictionary -> ErrorDictionary
 insertInErrorDict point errorDict =
     case Dict.get (xCoord point) errorDict of
         Nothing ->
-            Dict.insert (xCoord point) [ (yCoord point) ] errorDict
+            Dict.insert (xCoord point) [ yCoord point ] errorDict
 
         Just ys ->
-            Dict.insert (xCoord point) ((yCoord point) :: ys) errorDict
+            Dict.insert (xCoord point) (yCoord point :: ys) errorDict
 
 
 {-|
 
 > dd = fromString 0 1 SD.eb2
+
 -}
 getErrorData2 : Data -> List ErrorDatum
 getErrorData2 data =
@@ -235,16 +238,16 @@ rawStdev rawMean_ xs =
         n =
             toFloat n_
     in
-        case ( rawMean_, n_ > 1 ) of
-            ( Just m, True ) ->
-                let
-                    square x =
-                        x * x
+    case ( rawMean_, n_ > 1 ) of
+        ( Just m, True ) ->
+            let
+                square x =
+                    x * x
 
-                    squaredDifferences =
-                        List.map (\x -> square (x - m)) xs
-                in
-                    Just <| sqrt <| List.sum squaredDifferences / (n - 1)
+                squaredDifferences =
+                    List.map (\x -> square (x - m)) xs
+            in
+            Just <| sqrt <| List.sum squaredDifferences / (n - 1)
 
-            ( _, _ ) ->
-                Nothing
+        ( _, _ ) ->
+            Nothing

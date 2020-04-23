@@ -1,14 +1,4 @@
-module Stat
-    exposing
-        ( Statistics
-        , mean
-        , filter
-        , maximum
-        , minimum
-        , mode
-        , statistics
-        , stdev
-        )
+module Stat exposing (Statistics, mean, mode, filter, maximum, minimum, statistics, stdev)
 
 {-| The aim of this library is to compute statistics for 2D data.
 In the examples below, `xCoord` is `Data.xCoord`.
@@ -17,7 +7,7 @@ In the examples below, `xCoord` is `Data.xCoord`.
 
 -}
 
-import Data exposing (Point, Data, xCoord, yCoord)
+import Data exposing (Data, Point, xCoord, yCoord)
 import Dict exposing (Dict)
 
 
@@ -91,112 +81,112 @@ statistics data =
         nn =
             List.length data
     in
-        case nn < 2 of
-            True ->
-                Nothing
+    case nn < 2 of
+        True ->
+            Nothing
 
-            False ->
-                let
-                    n =
-                        toFloat nn
+        False ->
+            let
+                n =
+                    toFloat nn
 
-                    xs =
-                        List.map xCoord data
+                xs =
+                    List.map xCoord data
 
-                    ys =
-                        List.map yCoord data
+                ys =
+                    List.map yCoord data
 
-                    xMin =
-                        minimum xCoord data |> Maybe.withDefault 0
+                xMin =
+                    minimum xCoord data |> Maybe.withDefault 0
 
-                    xMax =
-                        maximum xCoord data |> Maybe.withDefault 0
+                xMax =
+                    maximum xCoord data |> Maybe.withDefault 0
 
-                    origin =
-                        ( 0, 0 )
+                origin =
+                    ( 0, 0 )
 
-                    leftDataPoint =
-                        data |> List.filter (\point -> xCoord point == xMin) |> List.head |> Maybe.withDefault origin
+                leftDataPoint =
+                    data |> List.filter (\point -> xCoord point == xMin) |> List.head |> Maybe.withDefault origin
 
-                    rightDataPoint =
-                        data |> List.filter (\point -> xCoord point == xMax) |> List.head |> Maybe.withDefault origin
+                rightDataPoint =
+                    data |> List.filter (\point -> xCoord point == xMax) |> List.head |> Maybe.withDefault origin
 
-                    xSum =
-                        List.sum xs
+                xSum =
+                    List.sum xs
 
-                    xMean =
-                        xSum / n
+                xMean =
+                    xSum / n
 
-                    ySum =
-                        List.sum ys
+                ySum =
+                    List.sum ys
 
-                    yMean =
-                        ySum / n
+                yMean =
+                    ySum / n
 
-                    xsSquared =
-                        List.sum (List.map (\x -> x * x) xs)
+                xsSquared =
+                    List.sum (List.map (\x -> x * x) xs)
 
-                    xySum =
-                        List.map2 (*) xs ys |> List.sum
+                xySum =
+                    List.map2 (*) xs ys |> List.sum
 
-                    square x =
-                        x * x
+                square x =
+                    x * x
 
-                    ssTot =
-                        List.sum (List.map (\y -> square (y - yMean)) ys)
+                ssTot =
+                    List.sum (List.map (\y -> square (y - yMean)) ys)
 
-                    xDeltaSquaredSum =
-                        xs |> List.map (\x -> square (x - xMean)) |> List.sum
+                xDeltaSquaredSum =
+                    xs |> List.map (\x -> square (x - xMean)) |> List.sum
 
-                    yDeltaSquaredSum =
-                        ys |> List.map (\y -> square (y - yMean)) |> List.sum
+                yDeltaSquaredSum =
+                    ys |> List.map (\y -> square (y - yMean)) |> List.sum
 
-                    xStdev =
-                        sqrt (xDeltaSquaredSum / (n - 1))
+                xStdev =
+                    sqrt (xDeltaSquaredSum / (n - 1))
 
-                    yStdev =
-                        sqrt (yDeltaSquaredSum / (n - 1))
+                yStdev =
+                    sqrt (yDeltaSquaredSum / (n - 1))
 
-                    determinant =
-                        n * xDeltaSquaredSum
+                determinant =
+                    n * xDeltaSquaredSum
 
-                    m =
-                        (1 / determinant) * (n * xySum - xSum * ySum)
+                m =
+                    (1 / determinant) * (n * xySum - xSum * ySum)
 
-                    b =
-                        (1 / determinant) * (-xSum * xySum + xsSquared * ySum)
+                b =
+                    (1 / determinant) * (-xSum * xySum + xsSquared * ySum)
 
-                    fs =
-                        List.map (\x -> m * x + b) xs
+                fs =
+                    List.map (\x -> m * x + b) xs
 
-                    ssRes =
-                        List.sum (List.map2 (\f y -> square (f - y)) fs ys)
+                ssRes =
+                    List.sum (List.map2 (\f y -> square (f - y)) fs ys)
 
-                    r2 =
-                        1 - ssRes / ssTot
+                r2 =
+                    1 - ssRes / ssTot
 
-                    leftRegressionPoint =
-                        ( xCoord leftDataPoint, m * (xCoord leftDataPoint) + b )
+                leftRegressionPoint =
+                    ( xCoord leftDataPoint, m * xCoord leftDataPoint + b )
 
-                    rightRegressionPoint =
-                        ( xCoord rightDataPoint, m * (xCoord rightDataPoint) + b )
-                in
-                    Just
-                        { n = nn
-                        , xMax = xMax
-                        , xMin = xMin
-                        , xMean = xMean
-                        , yMean = yMean
-                        , xStdev = xStdev
-                        , yStdev = yStdev
-                        , m = m
-                        , b = b
-                        , r2 = r2
-                        , leftDataPoint = leftDataPoint
-                        , rightDataPoint = rightDataPoint
-                        , leftRegressionPoint = leftRegressionPoint
-                        , rightRegressionPoint = rightRegressionPoint
-                        }
+                rightRegressionPoint =
+                    ( xCoord rightDataPoint, m * xCoord rightDataPoint + b )
+            in
+            Just
+                { n = nn
+                , xMax = xMax
+                , xMin = xMin
+                , xMean = xMean
+                , yMean = yMean
+                , xStdev = xStdev
+                , yStdev = yStdev
+                , m = m
+                , b = b
+                , r2 = r2
+                , leftDataPoint = leftDataPoint
+                , rightDataPoint = rightDataPoint
+                , leftRegressionPoint = leftRegressionPoint
+                , rightRegressionPoint = rightRegressionPoint
+                }
 
 
 {-| Compute the mean of a column in a list of data, e.g.,
@@ -218,12 +208,12 @@ mean selector dataList =
         n =
             toFloat (List.length values)
     in
-        case n > 0 of
-            True ->
-                Just <| sum / n
+    case n > 0 of
+        True ->
+            Just <| sum / n
 
-            False ->
-                Nothing
+        False ->
+            Nothing
 
 
 {-| Compute the standard deviation of a column in a list of data, e.g.,
@@ -239,22 +229,22 @@ stdev selector dataList =
         n =
             List.length dataList
     in
-        case n > 1 of
-            False ->
-                Nothing
+    case n > 1 of
+        False ->
+            Nothing
 
-            True ->
-                let
-                    mean_ =
-                        mean selector dataList |> Maybe.withDefault 0
+        True ->
+            let
+                mean_ =
+                    mean selector dataList |> Maybe.withDefault 0
 
-                    square x =
-                        x * x
+                square x =
+                    x * x
 
-                    squaredDifferences =
-                        List.map (\x -> square (x - mean_)) (List.map selector dataList)
-                in
-                    Just <| sqrt <| List.sum squaredDifferences / toFloat (n - 1)
+                squaredDifferences =
+                    List.map (\x -> square (x - mean_)) (List.map selector dataList)
+            in
+            Just <| sqrt <| List.sum squaredDifferences / toFloat (n - 1)
 
 
 {-| Compute the minimum of a column in a list of data, e.g.,
@@ -325,11 +315,11 @@ mode list =
         kvList =
             Dict.toList frequencyTable
     in
-        List.filter (\( k, v ) -> Just v == maxValue) kvList
-            |> List.head
-            |> Maybe.map Tuple.first
-            |> (\x -> ( x, maxValue ))
-            |> combineTuple
+    List.filter (\( k, v ) -> Just v == maxValue) kvList
+        |> List.head
+        |> Maybe.map Tuple.first
+        |> (\x -> ( x, maxValue ))
+        |> combineTuple
 
 
 combineTuple : ( Maybe a, Maybe b ) -> Maybe ( a, b )

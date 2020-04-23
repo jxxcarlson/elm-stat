@@ -1,9 +1,4 @@
-module RawData
-    exposing
-        ( RawData
-        , get
-        , toData
-        )
+module RawData exposing (RawData, get, toData)
 
 {-| The purpose of the RawData module is
 to intelligently extract a data table,
@@ -17,12 +12,12 @@ in the xy plane from a data table.
 
 -}
 
-import Parser exposing (..)
-import Utility
-import Data exposing (Point, Data)
 import Csv
+import Data exposing (Data, Point)
+import Parser exposing (..)
 import Stat
-import Table exposing (Table, Column)
+import Table exposing (Column, Table)
+import Utility
 
 
 {-| A RawData value consists of metadata, columnHeaders,
@@ -71,16 +66,16 @@ get str =
         ( metadata, goodData ) =
             get2 (delimiter str) str
     in
-        case getDataAndHeader goodData of
-            Nothing ->
-                Nothing
+    case getDataAndHeader goodData of
+        Nothing ->
+            Nothing
 
-            Just ( columnHeaders, clearData ) ->
-                Just
-                    { metadata = metadata
-                    , columnHeaders = columnHeaders
-                    , data = clearData
-                    }
+        Just ( columnHeaders, clearData ) ->
+            Just
+                { metadata = metadata
+                , columnHeaders = columnHeaders
+                , data = clearData
+                }
 
 
 {-| Example:
@@ -101,12 +96,12 @@ toData i j rawData_ =
         ys =
             rawData_.data |> Table.getColumnAsFloats j
     in
-        case ( xs, ys ) of
-            ( Just xss, Just yss ) ->
-                Just (List.map2 Data.makePoint xss yss)
+    case ( xs, ys ) of
+        ( Just xss, Just yss ) ->
+            Just (List.map2 Data.makePoint xss yss)
 
-            ( _, _ ) ->
-                Nothing
+        ( _, _ ) ->
+            Nothing
 
 
 {-| Example:
@@ -159,16 +154,18 @@ dataType dataString =
         p =
             delimiterProfile dataString
     in
-        if p.tabs > p.spaces && p.tabs > p.spaces then
-            TabDelimited
-        else if p.commas > p.spaces && p.commas > p.tabs then
-            CommaDelimited
-        else
-            SpaceDelimited
+    if p.tabs > p.spaces && p.tabs > p.spaces then
+        TabDelimited
+
+    else if p.commas > p.spaces && p.commas > p.tabs then
+        CommaDelimited
+
+    else
+        SpaceDelimited
 
 
 {-| Return a record giving the numbeor of times the
-characters ' ', ',', and '\t' appear in the file.
+characters ' ', ',', and '\\t' appear in the file.
 -}
 delimiterProfile : String -> DelimiterStatistics
 delimiterProfile dataString =
@@ -190,6 +187,7 @@ get1 : Char -> String -> Table String
 get1 sepChar str =
     if sepChar == ',' then
         Csv.parse str |> (\csv -> [ csv.headers ] ++ csv.records)
+
     else
         case run (rawData (field sepChar)) str of
             Ok data_ ->
@@ -225,7 +223,7 @@ get2 sepChar str =
             ( [], [] )
 
         data_ ->
-            case (Stat.mode (spectrum2 data_)) of
+            case Stat.mode (spectrum2 data_) of
                 Nothing ->
                     ( [], [] )
 
@@ -243,7 +241,7 @@ get2 sepChar str =
                         headerData =
                             List.take (n - k) data_ |> List.map (String.join " ")
                     in
-                        ( headerData, goodData )
+                    ( headerData, goodData )
 
 
 {-| dd = getRawData D.temperature
@@ -315,13 +313,13 @@ indexOfLastNonNumericalFieldAt k rawData_ =
 
 {-| Test rawData:
 
-d1 = "a b c\nd e f\n"
-d2 = "a\tb\tc\nd\t\t\te\tf\n"
+d1 = "a b c\\nd e f\\n"
+d2 = "a\\tb\\tc\\nd\\t\\t\\te\\tf\\n"
 
 > run (rawData (field ' ')) d1
 > Ok [["a","b","c"],["d","e","f"]]
 
-> run (rawData (field '\t')) d2
+> run (rawData (field '\\t')) d2
 > Ok [["a","b","c"],["d","e","f"]]
 
 -}
@@ -343,13 +341,13 @@ rawDataGofer fieldParser revFields =
 
 {-| Test rawData:
 
-str1 = "a b c\n"
-str2 = "a\tb\tc\n"
+str1 = "a b c\\n"
+str2 = "a\\tb\\tc\\n"
 
 > run (record (field ' ')) str1
 > Ok ["a","b","c"]
 
-> run (record (field '\t')) str2
+> run (record (field '\\t')) str2
 > Ok ["a","b","c"]
 
 -}
@@ -368,7 +366,7 @@ recordGofer fieldParser revFields =
         ]
 
 
-{-| A field may be preceded by any number of `sepChar
+{-| A field may be preceded by any number of \`sepChar
 and consists of one or more characters which is neither
 a sepChar or a newline.
 -}
