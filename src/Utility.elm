@@ -1,8 +1,16 @@
-module Utility exposing (listGetAt, maybeCombine, maybeJoin, maybeValues, toggleElement)
+module Utility exposing (FrequencyTable, addToTable, buildTable, combineTuple, listGetAt, maybeCombine, maybeJoin, maybeValues, substractTuple, toggleElement)
+
+import Dict exposing (Dict)
+
+
 
 {- Credits; from elm-community/list-extra. Copied
    here to eliminate a dependency.
 -}
+
+
+type alias FrequencyTable comparable =
+    Dict comparable Int
 
 
 listGetAt : Int -> List a -> Maybe a
@@ -93,3 +101,35 @@ toggleElement element list =
 
         False ->
             element :: list
+
+
+{-| buildTable [1,2,3,3,1,1,2,1] == Dict.fromList [(1,4),(2,2),(3,2)]
+-}
+buildTable : List comparable -> FrequencyTable comparable
+buildTable list =
+    list |> List.foldl (\item dict -> addToTable item dict) Dict.empty
+
+
+combineTuple : ( Maybe a, Maybe b ) -> Maybe ( a, b )
+combineTuple ( aa, bb ) =
+    case ( aa, bb ) of
+        ( Just k, Just v ) ->
+            Just ( k, v )
+
+        ( _, _ ) ->
+            Nothing
+
+
+substractTuple : ( number, number ) -> ( number, number ) -> ( number, number )
+substractTuple x y =
+    ( Tuple.first x - Tuple.first y, Tuple.second x - Tuple.second y )
+
+
+addToTable : comparable -> FrequencyTable comparable -> FrequencyTable comparable
+addToTable item dict =
+    case Dict.get item dict of
+        Nothing ->
+            Dict.insert item 1 dict
+
+        Just f ->
+            Dict.insert item (f + 1) dict
