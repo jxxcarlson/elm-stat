@@ -1,4 +1,4 @@
-module Utility exposing (FrequencyTable, addToTable, buildTable, combineTuple, listGetAt, maybeCombine, maybeJoin, maybeValues, substractTuple, toggleElement)
+module Utility exposing (FrequencyTable, addToTable, buildTable, combination, combineTuple, factorial, listGetAt, maybeCombine, maybeJoin, maybeValues, sterling, substractTuple, toggleElement)
 
 import Dict exposing (Dict)
 
@@ -133,3 +133,29 @@ addToTable item dict =
 
         Just f ->
             Dict.insert item (f + 1) dict
+
+
+factorial : Int -> Int
+factorial n =
+    if n < 1 then
+        1
+
+    else
+        n * factorial (n - 1)
+
+
+combination : Int -> Int -> Int
+combination n k =
+    factorial n // (factorial k * factorial (n - k))
+
+
+sterling : Float -> Float
+sterling n =
+    let
+        f =
+            sqrt (2 * pi / n)
+
+        s =
+            ((1 / e) * (n + (1 / ((12 * n) - (0.1 * n))))) ^ n
+    in
+    f * s

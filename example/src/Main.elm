@@ -35,7 +35,12 @@ main =
 type alias Model =
     { normalList : List Float
     , uniformList : List Float
+    , exponentialList : List Float
+    , betaList : List Float
     , bernoulliList : List Bool
+    , binomialList : List Int
+    , poissonList : List Int
+    , geometricList : List Int
     }
 
 
@@ -43,7 +48,12 @@ init : () -> ( Model, Cmd Msg )
 init _ =
     ( { normalList = []
       , uniformList = []
+      , exponentialList = []
+      , betaList = []
       , bernoulliList = []
+      , binomialList = []
+      , poissonList = []
+      , geometricList = []
       }
     , Cmd.none
     )
@@ -56,10 +66,20 @@ init _ =
 type Msg
     = GenerateNormalList
     | GenerateUniformList
+    | GenerateExponentialList
+    | GenerateBetaList
     | GenerateBenroulliBoolList
+    | GenerateBinomialList
+    | GeneratePoissonList
+    | GenerateGeometricList
     | NormalList (List Float)
     | UniformList (List Float)
+    | ExponentialList (List Float)
+    | BetaList (List Float)
     | BernoulliList (List Bool)
+    | BinomialList (List Int)
+    | PoissonList (List Int)
+    | GeometricList (List Int)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -67,7 +87,7 @@ update msg model =
     case msg of
         GenerateNormalList ->
             ( model
-            , Random.generate NormalList (StatRandom.generateList 500 (StatRandom.normal 2 0.5))
+            , Random.generate NormalList (StatRandom.generateList 1000 (StatRandom.normal 2 0.5))
             )
 
         NormalList list ->
@@ -85,6 +105,26 @@ update msg model =
             , Cmd.none
             )
 
+        GenerateExponentialList ->
+            ( model
+            , Random.generate ExponentialList (StatRandom.generateList 1000 (StatRandom.exponential 1.5))
+            )
+
+        ExponentialList list ->
+            ( { model | exponentialList = list }
+            , Cmd.none
+            )
+
+        GenerateBetaList ->
+            ( model
+            , Random.generate BetaList (StatRandom.generateList 1000 (StatRandom.beta 0.5 0.5))
+            )
+
+        BetaList list ->
+            ( { model | betaList = list }
+            , Cmd.none
+            )
+
         GenerateBenroulliBoolList ->
             ( model
             , Random.generate BernoulliList (StatRandom.generateList 1000 (StatRandom.bernoulliBool 0.4))
@@ -92,6 +132,36 @@ update msg model =
 
         BernoulliList list ->
             ( { model | bernoulliList = list }
+            , Cmd.none
+            )
+
+        GenerateBinomialList ->
+            ( model
+            , Random.generate BinomialList (StatRandom.generateList 500 (StatRandom.binomial 0.8 4))
+            )
+
+        BinomialList list ->
+            ( { model | binomialList = list }
+            , Cmd.none
+            )
+
+        GeneratePoissonList ->
+            ( model
+            , Random.generate PoissonList (StatRandom.generateList 500 (StatRandom.poisson 0.8 4))
+            )
+
+        PoissonList list ->
+            ( { model | poissonList = list }
+            , Cmd.none
+            )
+
+        GenerateGeometricList ->
+            ( model
+            , Random.generate GeometricList (StatRandom.generateList 1000 (StatRandom.geometric 0.166 6))
+            )
+
+        GeometricList list ->
+            ( { model | geometricList = list }
             , Cmd.none
             )
 
@@ -153,8 +223,9 @@ leftColumn model =
             ]
             [ el [] (text "Welcome to the elm-stat examples!") ]
         , section "Measures of Central Tendency" [ "mean", "average", "weightedMean", "harmonicMean", "geometricMean", "mode", "median", "rootMeanSquare", "sampleSkewness" ]
-        , section "Measures of Dispersion" [ "variance", "sampleVariance", "standardDeviation", "sampleStandardDeviation", "medianAbsoluteDeviation", "zScore" ]
-        , section "Similarity" [ "sampleCorrelation", "sampleCovariance", "rSquared" ]
+        , section "Measures of Dispersion" [ "variance", "standardDeviation", "meanAbsoluteDeviation", "medianAbsoluteDeviation", "zScore", "zScores" ]
+        , section "Similarity" [ "covariance", "correlation" ]
+        , section "Linear regression" [ "linearRegression", "linearRegressionLine" ]
         , section "Distributions" [ "Bernoulli", "Binomial", "Poisson", "Geometric", "Uniform", "Normal", "Student T", "Exponential" ]
         ]
 
@@ -213,6 +284,28 @@ uniform model =
             ]
         )
 
+exponential : Model -> Element Msg
+exponential model =
+    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
+        (column []
+            [ descriptionTitle "Exponential Distribution"
+            , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 1000 (StatRandom.exponential 1.0)" |> Element.html)
+            , el [ width <| px 900, height fill ] (HistogramChart.view model.exponentialList |> Element.html)
+            , button "Generate" GenerateExponentialList
+            ]
+        )
+
+beta : Model -> Element Msg
+beta model =
+    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
+        (column []
+            [ descriptionTitle "Beta Distribution"
+            , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 1000 (StatRandom.beta 1.0)" |> Element.html)
+            , el [ width <| px 900, height fill ] (HistogramChart.view model.betaList |> Element.html)
+            , button "Generate" GenerateBetaList
+            ]
+        )
+
 
 bernoulli : Model -> Element Msg
 bernoulli model =
@@ -229,6 +322,41 @@ bernoulli model =
                 , text (String.fromInt t)
                 ]
             , button "Generate" GenerateBenroulliBoolList
+            ]
+        )
+
+
+binomial : Model -> Element Msg
+binomial model =
+    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
+        (column []
+            [ descriptionTitle "Binomial Distribution"
+            , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.binomial 0.8 4)" |> Element.html)
+            , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.binomialList) |> Element.html)
+            , button "Generate" GenerateBinomialList
+            ]
+        )
+
+
+poisson : Model -> Element Msg
+poisson model =
+    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
+        (column []
+            [ descriptionTitle "Poisson Distribution"
+            , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.poisson 0.8 4)" |> Element.html)
+            , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.poissonList) |> Element.html)
+            , button "Generate" GeneratePoissonList
+            ]
+        )
+
+geometric : Model -> Element Msg
+geometric model =
+    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
+        (column []
+            [ descriptionTitle "Geometric Distribution"
+            , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.geometric 0.166 4)" |> Element.html)
+            , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.geometricList) |> Element.html)
+            , button "Generate" GenerateGeometricList
             ]
         )
 
@@ -257,11 +385,12 @@ modeExample model =
             ]
         )
 
+
 dispersion : Model -> Element Msg
 dispersion model =
     let
         t =
-            [ 2, 4, 4, 4, 5, 5, 7, 9 ]
+            [ 2, 4, 4, 4, 5, 5, 7, 9, 122 ]
 
         w =
             [ ( 2, 4 ), ( 2, 10 ) ]
@@ -271,10 +400,46 @@ dispersion model =
             [ descriptionTitle "Measures of Dispersion"
             , el [ Border.rounded 5, paddingXY 0 10 ] (text (t |> List.map String.fromInt |> String.join ", "))
             , centralTendencyRow "variance" Stat.variance t
-            , centralTendencyRow "average deviation" Stat.averageDeviation t
             , centralTendencyRow "standard deviation" Stat.standardDeviation t
+            , centralTendencyRow "mean absolute deviation" Stat.meanAbsoluteDeviation t
+            , centralTendencyRow "median absolute deviation" Stat.medianAbsoluteDeviation t
             , text ("z score: " ++ Debug.toString (Stat.zScore 2 5 2))
             , centralTendencyRow "z scores" Stat.zScores t
+            ]
+        )
+
+
+similarity : Model -> Element Msg
+similarity model =
+    let
+        t =
+            [ 2, 4, 4, 4, 5, 5, 7, 9 ]
+
+        w =
+            -- [ ( 1, 10 ), ( 2, 20 ), (3,27), (4,35), (5, 55) ]
+            [ ( 1, 1 ), ( 2, 3 ), ( 3, 3 ), ( 4, 5 ) ]
+    in
+    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
+        (column []
+            [ descriptionTitle "Similarity"
+            , el [ Border.rounded 5, paddingXY 0 10 ] (text <| Debug.toString w)
+            , centralTendencyRow "covariance" Stat.covariance w
+            , centralTendencyRow "correlation" Stat.correlation w
+            ]
+        )
+
+
+linearReg : Model -> Element Msg
+linearReg model =
+    let
+        w =
+            [ ( 1, 4 ), ( 2, 4.5 ), ( 3, 5.5 ), ( 4, 5.3 ), ( 5, 6 ) ]
+    in
+    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
+        (column []
+            [ descriptionTitle "Linear Regression"
+            , el [ Border.rounded 5, paddingXY 0 10 ] (text <| Debug.toString w)
+            , centralTendencyRow "linear regression" Stat.linearRegression w
             ]
         )
 
@@ -305,9 +470,16 @@ mainColumn model =
     Element.column [ width fill, height fill, centerX, centerY, spacing 36, padding 50, scrollbars ]
         [ uniform model
         , normal model
+        , exponential model
+        , beta model
         , bernoulli model
+        , binomial model
+        , poisson model
+        , geometric model
         , modeExample model
         , dispersion model
+        , similarity model
+        , linearReg model
         ]
 
 

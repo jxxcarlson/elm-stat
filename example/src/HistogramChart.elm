@@ -1,5 +1,4 @@
-module HistogramChart exposing (view)
-
+module HistogramChart exposing (histogram, view)
 
 import Axis
 import Color
@@ -13,10 +12,9 @@ import TypedSvg.Core exposing (Svg)
 import TypedSvg.Types exposing (Paint(..), Transform(..))
 
 
-
 histogram : List Float -> List (Bin Float Float)
 histogram model =
-    Histogram.float
+    Histogram.custom (Histogram.steps (Histogram.binCount ( 0, 4 ) 20)) identity
         |> Histogram.withDomain ( 0, 4 )
         |> Histogram.compute model
 
@@ -53,7 +51,7 @@ yScaleFromBins bins =
 
 xAxis : List Float -> Svg msg
 xAxis model =
-    Axis.bottom [] xScale
+    Axis.bottom [ Axis.tickCount 20 ] xScale
 
 
 yAxis : List (Bin Float Float) -> Svg msg
