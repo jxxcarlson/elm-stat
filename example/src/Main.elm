@@ -226,7 +226,7 @@ leftColumn model =
         , section "Measures of Dispersion" [ "variance", "standardDeviation", "meanAbsoluteDeviation", "medianAbsoluteDeviation", "zScore", "zScores" ]
         , section "Similarity" [ "covariance", "correlation" ]
         , section "Linear regression" [ "linearRegression", "linearRegressionLine" ]
-        , section "Distributions" [ "Bernoulli", "Binomial", "Poisson", "Geometric", "Uniform", "Normal", "Student T", "Exponential" ]
+        , section "Distributions" [ "Bernoulli", "Binomial", "Poisson", "Geometric", "Uniform", "Normal", "Standard Normal", "Exponential", "Beta" ]
         ]
 
 

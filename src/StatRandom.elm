@@ -1,8 +1,25 @@
-module StatRandom exposing (bernoulliBool, bernoulliInt, generateList, generateMatrix, normal, standardNormal, binomial, poisson, geometric, exponential, beta)
+module StatRandom exposing
+    ( bernoulliBool, bernoulliInt, binomial, poisson, geometric
+    , normal, standardNormal, exponential, beta
+    , generateList, generateMatrix
+    )
 
 {-| The goal of this module is to provide commonly used probability distributions.
 
-@docs bernoulliBool, bernoulliInt, generateList, generateMatrix, normal, standardNormal, binomial, poisson, geometric, exponential, beta
+
+# Discrete distributions
+
+@docs bernoulliBool, bernoulliInt, binomial, poisson, geometric
+
+
+# Continous distributions
+
+@docs normal, standardNormal, exponential, beta
+
+
+# Data Structures
+
+@docs generateList, generateMatrix
 
 -}
 
@@ -154,7 +171,7 @@ geo p k =
     Tuple.pair ((1 - p) ^ (kk - 1) * p) k
 
 
-{-| Generates a list, same as Random.list
+{-| Generates a list with the given size. `(same as Random.list)`
 -}
 generateList : Int -> Generator a -> Generator (List a)
 generateList cols distribution =

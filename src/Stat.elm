@@ -1,8 +1,31 @@
-module Stat exposing (average, correlation, covariance, geometricMean, harmonicMean, linearRegression, linearRegressionLine, mean, meanAbsoluteDeviation, meanWithDefault, median, medianAbsoluteDeviation, mode, rootMeanSquare, skewness, standardDeviation, variance, weightedMean, zScore, zScores)
+module Stat exposing
+    ( mean, meanWithDefault, average, geometricMean, harmonicMean, weightedMean, median, mode, rootMeanSquare, skewness
+    , variance, standardDeviation, meanAbsoluteDeviation, medianAbsoluteDeviation, zScore, zScores
+    , covariance, correlation
+    , linearRegression, linearRegressionLine
+    )
 
 {-| The goal of this module is to provide the most comonly used statistical methods.
 
-@docs average, correlation, covariance, geometricMean, harmonicMean, linearRegression, linearRegressionLine, mean, meanAbsoluteDeviation, meanWithDefault, median, medianAbsoluteDeviation, mode, rootMeanSquare, skewness, standardDeviation, variance, weightedMean, zScore, zScores
+
+# Measures of Central Tendency
+
+@docs mean, meanWithDefault, average, geometricMean, harmonicMean, weightedMean, median, mode, rootMeanSquare, skewness
+
+
+# Measures of Dispersion
+
+@docs variance, standardDeviation, meanAbsoluteDeviation, medianAbsoluteDeviation, zScore, zScores
+
+
+# Similarity
+
+@docs covariance, correlation
+
+
+# Linear Regression
+
+@docs linearRegression, linearRegressionLine
 
 -}
 
