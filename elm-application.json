@@ -1,0 +1,11 @@
+{
+    "name": "jxxcarlson/elm-stat",
+    "summary": "Elm stat utility",
+    "version": "4.0.4",
+    "exposed-modules": [
+        "Data",
+        "Stat",
+        "ErrorBars",
+        "StatRandom"
+    ]
+}

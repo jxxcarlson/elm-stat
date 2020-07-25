@@ -361,11 +361,25 @@ The tuple returned is `(alpha, beta)` where `y = alpha + beta * x`
 -}
 linearRegression : List ( Float, Float ) -> Maybe ( Float, Float )
 linearRegression tupleList =
-    let
-        ( xs, ys ) =
-            List.unzip tupleList
-    in
-    Maybe.map4 (\cov mxs mys varxs -> Tuple.pair (mys - (cov / varxs) * mxs) (cov / varxs)) (covariance tupleList) (mean xs) (mean ys) (variance xs)
+    if List.length tupleList > 1 then
+        let
+            ( xs, ys ) =
+                List.unzip tupleList
+
+            cov =
+                covariance tupleList |> Maybe.withDefault 0
+
+            varxs =
+                variance xs |> Maybe.withDefault 0
+        in
+        if varxs /= 0 then
+            Maybe.map2 (\mxs mys -> Tuple.pair (mys - (cov / varxs) * mxs) (cov / varxs)) (mean xs) (mean ys)
+
+        else
+            Nothing
+
+    else
+        Nothing
 
 
 {-| Returns a function that looks like this: `y = alpha + beta * x`.
