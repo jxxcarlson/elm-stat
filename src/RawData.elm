@@ -1,4 +1,4 @@
-module RawData exposing (RawData, get, toData)
+module RawData exposing (RawData, get, toData, dataToFloatList)
 
 {-| The purpose of the RawData module is
 to intelligently extract a data table,
@@ -8,12 +8,11 @@ csv, tab-delimited, or space-delimited. With
 the second, one can extract a list of Points
 in the xy plane from a data table.
 
-@docs RawData, get, toData
+@docs RawData, get, toData, dataToFloatList
 
 -}
 
 import Csv
-import Data exposing (Data, Point)
 import Parser exposing (..)
 import Stat
 import Table exposing (Column, Table)
@@ -78,16 +77,12 @@ get str =
                 }
 
 
-{-| Example:
+{-| Extracts two columns as a tuple list, usefull when checking for correlation between data.
 
-    > SampleData.eb2
-      |> RawData.get
-      |> Maybe.map (RawData.toData 0 1)
-      |> Utility.maybeJoin
-         Just [(0,1),(0,0.9),(1,1.8),(0,1),(1,2),(1,2.2),(0,1.1)]
+    >RawData.toData 0 1 (Maybe.withDefault (RawData.RawData [] [] [[]]) data) == [(1880,-0.12),(1881,-0.07),(1882,-0.08),(1883,-0.15),(1884,-0.22), ...]
 
 -}
-toData : Int -> Int -> RawData -> Maybe Data
+toData : Int -> Int -> RawData -> List ( Float, Float )
 toData i j rawData_ =
     let
         xs =
@@ -98,38 +93,10 @@ toData i j rawData_ =
     in
     case ( xs, ys ) of
         ( Just xss, Just yss ) ->
-            Just (List.map2 Data.makePoint xss yss)
+            List.map2 Tuple.pair xss yss
 
         ( _, _ ) ->
-            Nothing
-
-
-{-| Example:
-
-    > SampleData.eb2 |> Data.fromString 0 1
-      [{ x = 0, y = 1 },{ x = 0, y = 0.9 },{ x = 1, y = 1.8 }
-      ,{ x = 0, y = 1 },{ x = 1, y = 2 },{ x = 1, y = 2.2 }
-      ,{ x = 0, y = 1.1 }]
-
--}
-fromString : Int -> Int -> String -> Data
-fromString i j str =
-    str
-        |> get
-        |> Maybe.andThen (toData i j)
-        |> Maybe.withDefault []
-
-
-{-| getColumn i table extracts a list of Floats from
-a table (List of Records) by extracting column i of the
-Table String, transforming the result to lists of floats.
--}
-getColumn : Int -> Table String -> Maybe (List Float)
-getColumn k rawData_ =
-    rawData_
-        |> List.map (Utility.listGetAt k)
-        |> List.map (Maybe.andThen String.toFloat)
-        |> Utility.maybeCombine
+            []
 
 
 delimiter : String -> Char
@@ -227,7 +194,7 @@ get2 sepChar str =
                 Nothing ->
                     ( [], [] )
 
-                Just ( numberOfFields, numberOfRecords ) ->
+                Just ( numberOfFields, _ ) ->
                     let
                         goodData =
                             data_ |> List.filter (\rec -> List.length rec == numberOfFields)
@@ -299,7 +266,7 @@ indexOfLastNonNumericalFieldAt k rawData_ =
     column k rawData_
         |> Maybe.withDefault []
         |> List.indexedMap (\i s -> ( i, String.toFloat s ))
-        |> List.filter (\( x, y ) -> y == Nothing)
+        |> List.filter (\( _, y ) -> y == Nothing)
         |> List.reverse
         |> List.head
         |> Maybe.map Tuple.first
@@ -381,6 +348,21 @@ field sepChar =
         |= getSource
     )
         |> map String.trim
+
+
+{-| Function to extract a column of values from the given data
+
+    > firstColumn = RawData.dataToFloatList data 1
+
+-}
+dataToFloatList : Maybe RawData -> Int -> List Float
+dataToFloatList rawData_ i =
+    case rawData_ of
+        Nothing ->
+            []
+
+        Just x ->
+            x.data |> Table.getColumnAsFloats i |> Maybe.withDefault []
 
 
 

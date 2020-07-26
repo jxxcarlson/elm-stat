@@ -3,13 +3,11 @@
     "name": "jxxcarlson/elm-stat",
     "summary": "Elm stat utility",
     "license": "BSD-3-Clause",
-    "version": "4.0.3",
+    "version": "5.0.0",
     "exposed-modules": [
-        "RawData",
-        "Data",
+        "StatRandom",
         "Stat",
-        "ErrorBars",
-        "StatRandom"
+        "RawData"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {

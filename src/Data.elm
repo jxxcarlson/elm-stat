@@ -39,4 +39,4 @@ yCoord ( x, y ) =
 {-| A list of points in the xy plane.
 -}
 type alias Data =
-    List Point
+    List ( Float, Float )
