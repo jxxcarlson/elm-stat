@@ -41,6 +41,8 @@ type alias Model =
     , binomialList : List Int
     , poissonList : List Int
     , geometricList : List Int
+    , text : String
+    , centralList : List Float
     }
 
 
@@ -54,6 +56,8 @@ init _ =
       , binomialList = []
       , poissonList = []
       , geometricList = []
+      , text = "1, 2, 3, 4, 5"
+      , centralList = [ 1, 2, 3, 4, 5 ]
       }
     , Cmd.none
     )
@@ -80,6 +84,7 @@ type Msg
     | BinomialList (List Int)
     | PoissonList (List Int)
     | GeometricList (List Int)
+    | SetText String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -162,6 +167,11 @@ update msg model =
 
         GeometricList list ->
             ( { model | geometricList = list }
+            , Cmd.none
+            )
+
+        SetText string ->
+            ( { model | text = string, centralList = stringToFloatList string }
             , Cmd.none
             )
 
@@ -263,48 +273,42 @@ createSubTopic name =
 
 normal : Model -> Element Msg
 normal model =
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Normal Distribution"
-            , el [] (syntax "StatRandom.generateList 500 (StatRandom.normal 2 0.5)" |> Element.html)
-            , el [ width <| px 900, height fill ] (HistogramChart.view model.normalList |> Element.html)
-            , button "Generate" GenerateNormalList
-            ]
-        )
+    box model
+        [ descriptionTitle "Normal Distribution"
+        , el [] (syntax "StatRandom.generateList 500 (StatRandom.normal 2 0.5)" |> Element.html)
+        , el [ width <| px 900, height fill ] (HistogramChart.view model.normalList |> Element.html)
+        , button "Generate" GenerateNormalList
+        ]
 
 
 uniform : Model -> Element Msg
 uniform model =
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Uniform Distribution"
-            , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 500 (StatRandom.float 0 4)" |> Element.html)
-            , el [ width <| px 900, height fill ] (HistogramChart.view model.uniformList |> Element.html)
-            , button "Generate" GenerateUniformList
-            ]
-        )
+    box model
+        [ descriptionTitle "Uniform Distribution"
+        , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 500 (StatRandom.float 0 4)" |> Element.html)
+        , el [ width <| px 900, height fill ] (HistogramChart.view model.uniformList |> Element.html)
+        , button "Generate" GenerateUniformList
+        ]
+
 
 exponential : Model -> Element Msg
 exponential model =
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Exponential Distribution"
-            , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 1000 (StatRandom.exponential 1.0)" |> Element.html)
-            , el [ width <| px 900, height fill ] (HistogramChart.view model.exponentialList |> Element.html)
-            , button "Generate" GenerateExponentialList
-            ]
-        )
+    box model
+        [ descriptionTitle "Exponential Distribution"
+        , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 1000 (StatRandom.exponential 1.0)" |> Element.html)
+        , el [ width <| px 900, height fill ] (HistogramChart.view model.exponentialList |> Element.html)
+        , button "Generate" GenerateExponentialList
+        ]
+
 
 beta : Model -> Element Msg
 beta model =
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Beta Distribution"
-            , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 1000 (StatRandom.beta 1.0)" |> Element.html)
-            , el [ width <| px 900, height fill ] (HistogramChart.view model.betaList |> Element.html)
-            , button "Generate" GenerateBetaList
-            ]
-        )
+    box model
+        [ descriptionTitle "Beta Distribution"
+        , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 1000 (StatRandom.beta 1.0)" |> Element.html)
+        , el [ width <| px 900, height fill ] (HistogramChart.view model.betaList |> Element.html)
+        , button "Generate" GenerateBetaList
+        ]
 
 
 bernoulli : Model -> Element Msg
@@ -313,56 +317,63 @@ bernoulli model =
         t =
             List.length <| List.filter (\x -> x) model.bernoulliList
     in
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Bernoulli Distribution"
-            , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 1000 (Random.bernoulliBool 0.4)" |> Element.html)
-            , row [ Border.rounded 5, paddingXY 0 10 ]
-                [ text "True: "
-                , text (String.fromInt t)
-                ]
-            , button "Generate" GenerateBenroulliBoolList
+    box model
+        [ descriptionTitle "Bernoulli Distribution"
+        , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 1000 (Random.bernoulliBool 0.4)" |> Element.html)
+        , row [ Border.rounded 5, paddingXY 0 10 ]
+            [ text "True: "
+            , text (String.fromInt t)
             ]
-        )
+        , button "Generate" GenerateBenroulliBoolList
+        ]
 
 
 binomial : Model -> Element Msg
 binomial model =
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Binomial Distribution"
-            , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.binomial 0.8 4)" |> Element.html)
-            , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.binomialList) |> Element.html)
-            , button "Generate" GenerateBinomialList
-            ]
-        )
+    box model
+        [ descriptionTitle "Binomial Distribution"
+        , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.binomial 0.8 4)" |> Element.html)
+        , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.binomialList) |> Element.html)
+        , button "Generate" GenerateBinomialList
+        ]
 
 
 poisson : Model -> Element Msg
 poisson model =
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Poisson Distribution"
-            , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.poisson 0.8 4)" |> Element.html)
-            , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.poissonList) |> Element.html)
-            , button "Generate" GeneratePoissonList
-            ]
-        )
+    box model
+        [ descriptionTitle "Poisson Distribution"
+        , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.poisson 0.8 4)" |> Element.html)
+        , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.poissonList) |> Element.html)
+        , button "Generate" GeneratePoissonList
+        ]
+
 
 geometric : Model -> Element Msg
 geometric model =
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Geometric Distribution"
-            , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.geometric 0.166 4)" |> Element.html)
-            , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.geometricList) |> Element.html)
-            , button "Generate" GenerateGeometricList
-            ]
-        )
+    box model
+        [ descriptionTitle "Geometric Distribution"
+        , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.geometric 0.166 4)" |> Element.html)
+        , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.geometricList) |> Element.html)
+        , button "Generate" GenerateGeometricList
+        ]
 
 
-modeExample : Model -> Element Msg
-modeExample model =
+options string =
+    { onChange = SetText
+    , text = string
+    , placeholder = Just (Input.placeholder [] (text ""))
+    , label = Input.labelAbove [] none
+    , spellcheck = False
+    }
+
+
+stringToFloatList : String -> List Float
+stringToFloatList s =
+    String.replace " " "" s |> String.split "," |> List.map (\x -> Maybe.withDefault 0 (String.toFloat x))
+
+
+measuresOfCentralTendency : Model -> Element Msg
+measuresOfCentralTendency model =
     let
         t =
             [ 2, 4, 4, 4, 5, 5, 7, 9 ]
@@ -370,20 +381,18 @@ modeExample model =
         w =
             [ ( 2, 4 ), ( 2, 10 ) ]
     in
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Measures of Central Tendency"
-            , el [ Border.rounded 5, paddingXY 0 10 ] (text (t |> List.map String.fromInt |> String.join ", "))
-            , centralTendencyRow "mode" Stat.mode t
-            , centralTendencyRow "average" Stat.mean t
-            , centralTendencyRow "geometric mean" Stat.geometricMean t
-            , centralTendencyRow "harmonic mean" Stat.harmonicMean t
-            , centralTendencyRow "weighted mean" Stat.weightedMean w
-            , centralTendencyRow "root mean square" Stat.rootMeanSquare t
-            , centralTendencyRow "median" Stat.median t
-            , centralTendencyRow "skewness" Stat.skewness t
-            ]
-        )
+    box model
+        [ descriptionTitle "Measures of Central Tendency"
+        , el [ width fill ] (Input.multiline [] (options model.text))
+        , centralTendencyRow "Mode" Stat.mode model.centralList
+        , centralTendencyRow "Average" Stat.mean model.centralList
+        , centralTendencyRow "Geometric Mean" Stat.geometricMean model.centralList
+        , centralTendencyRow "Harmonic Mean" Stat.harmonicMean model.centralList
+        , centralTendencyRow "Weighted Mean" Stat.weightedMean w
+        , centralTendencyRow "Root Mean Square" Stat.rootMeanSquare model.centralList
+        , centralTendencyRow "Median" Stat.median model.centralList
+        , centralTendencyRow "Skewness" Stat.skewness model.centralList
+        ]
 
 
 dispersion : Model -> Element Msg
@@ -395,18 +404,16 @@ dispersion model =
         w =
             [ ( 2, 4 ), ( 2, 10 ) ]
     in
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Measures of Dispersion"
-            , el [ Border.rounded 5, paddingXY 0 10 ] (text (t |> List.map String.fromInt |> String.join ", "))
-            , centralTendencyRow "variance" Stat.variance t
-            , centralTendencyRow "standard deviation" Stat.standardDeviation t
-            , centralTendencyRow "mean absolute deviation" Stat.meanAbsoluteDeviation t
-            , centralTendencyRow "median absolute deviation" Stat.medianAbsoluteDeviation t
-            , text ("z score: " ++ Debug.toString (Stat.zScore 2 5 2))
-            , centralTendencyRow "z scores" Stat.zScores t
-            ]
-        )
+    box model
+        [ descriptionTitle "Measures of Dispersion"
+        , el [ Border.rounded 5, paddingXY 0 10 ] (text (t |> List.map String.fromInt |> String.join ", "))
+        , centralTendencyRow "variance" Stat.variance t
+        , centralTendencyRow "standard deviation" Stat.standardDeviation t
+        , centralTendencyRow "mean absolute deviation" Stat.meanAbsoluteDeviation t
+        , centralTendencyRow "median absolute deviation" Stat.medianAbsoluteDeviation t
+        , text ("z score: " ++ Debug.toString (Stat.zScore 2 5 2))
+        , centralTendencyRow "z scores" Stat.zScores t
+        ]
 
 
 similarity : Model -> Element Msg
@@ -419,13 +426,19 @@ similarity model =
             -- [ ( 1, 10 ), ( 2, 20 ), (3,27), (4,35), (5, 55) ]
             [ ( 1, 1 ), ( 2, 3 ), ( 3, 3 ), ( 4, 5 ) ]
     in
+    box model
+        [ descriptionTitle "Similarity"
+        , el [ Border.rounded 5, paddingXY 0 10 ] (text <| Debug.toString w)
+        , centralTendencyRow "covariance" Stat.covariance w
+        , centralTendencyRow "correlation" Stat.correlation w
+        ]
+
+
+box : Model -> List (Element Msg) -> Element Msg
+box model cc =
     el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
         (column []
-            [ descriptionTitle "Similarity"
-            , el [ Border.rounded 5, paddingXY 0 10 ] (text <| Debug.toString w)
-            , centralTendencyRow "covariance" Stat.covariance w
-            , centralTendencyRow "correlation" Stat.correlation w
-            ]
+            cc
         )
 
 
@@ -435,18 +448,30 @@ linearReg model =
         w =
             [ ( 1, 4 ), ( 2, 4.5 ), ( 3, 5.5 ), ( 4, 5.3 ), ( 5, 6 ) ]
     in
-    el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
-        (column []
-            [ descriptionTitle "Linear Regression"
-            , el [ Border.rounded 5, paddingXY 0 10 ] (text <| Debug.toString w)
-            , centralTendencyRow "linear regression" Stat.linearRegression w
-            ]
-        )
+    box model
+        [ descriptionTitle "Linear Regression"
+        , el [ Border.rounded 5, paddingXY 0 10 ] (text <| Debug.toString w)
+        , centralTendencyRow "linear regression" Stat.linearRegression w
+        ]
 
 
 centralTendencyRow funcName func list =
+    let
+        res =
+            func list
+    in
     row [ paddingXY 0 10, width <| px 800 ]
-        [ text (funcName ++ ": " ++ Debug.toString (func list))
+        [ text
+            (funcName
+                ++ ": "
+                ++ (case res of
+                        Nothing ->
+                            "NaN"
+
+                        Just x ->
+                            Debug.toString x
+                   )
+            )
         ]
 
 
@@ -462,13 +487,17 @@ syntax code =
 
 descriptionTitle : String -> Element Msg
 descriptionTitle title =
-    el [ Font.size 18, paddingXY 0 30 ] (text title)
+    el [ Font.size 24, paddingXY 0 30, Font.underline ] (text title)
 
 
 mainColumn : Model -> Element Msg
 mainColumn model =
     Element.column [ width fill, height fill, centerX, centerY, spacing 36, padding 50, scrollbars ]
-        [ uniform model
+        [ measuresOfCentralTendency model
+        , dispersion model
+        , similarity model
+        , linearReg model
+        , uniform model
         , normal model
         , exponential model
         , beta model
@@ -476,10 +505,6 @@ mainColumn model =
         , binomial model
         , poisson model
         , geometric model
-        , modeExample model
-        , dispersion model
-        , similarity model
-        , linearReg model
         ]
 
 
