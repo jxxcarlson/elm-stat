@@ -41,8 +41,16 @@ type alias Model =
     , binomialList : List Int
     , poissonList : List Int
     , geometricList : List Int
-    , text : String
+    , centralText : String
     , centralList : List Float
+    , dispersionText : String
+    , dispersionList : List Float
+    , similarityInput1 : String
+    , similarityInput2 : String
+    , similarityInput : List ( Float, Float )
+    , regressionInput1 : String
+    , regressionInput2 : String
+    , regressionInput : List ( Float, Float )
     }
 
 
@@ -56,8 +64,16 @@ init _ =
       , binomialList = []
       , poissonList = []
       , geometricList = []
-      , text = "1, 2, 3, 4, 5"
+      , centralText = "1, 2, 3, 4, 5"
       , centralList = [ 1, 2, 3, 4, 5 ]
+      , dispersionText = "0, 10, 20, 30"
+      , dispersionList = [ 0, 10, 20, 30 ]
+      , similarityInput1 = "1,2,3"
+      , similarityInput2 = "5,10,15"
+      , similarityInput = [ ( 1, 5 ), ( 2, 10 ), ( 3, 15 ) ]
+      , regressionInput1 = "1,2,3"
+      , regressionInput2 = "5,10,15"
+      , regressionInput = [ ( 1, 5 ), ( 2, 10 ), ( 3, 15 ) ]
       }
     , Cmd.none
     )
@@ -84,7 +100,12 @@ type Msg
     | BinomialList (List Int)
     | PoissonList (List Int)
     | GeometricList (List Int)
-    | SetText String
+    | SetCentralText String
+    | SetDispersionText String
+    | SetSimilarityInput1 String
+    | SetSimilarityInput2 String
+    | SetRegressionInput1 String
+    | SetRegressionInput2 String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -170,8 +191,33 @@ update msg model =
             , Cmd.none
             )
 
-        SetText string ->
-            ( { model | text = string, centralList = stringToFloatList string }
+        SetCentralText string ->
+            ( { model | centralText = string, centralList = stringToFloatList string }
+            , Cmd.none
+            )
+
+        SetDispersionText string ->
+            ( { model | dispersionText = string, dispersionList = stringToFloatList string }
+            , Cmd.none
+            )
+
+        SetSimilarityInput1 string ->
+            ( { model | similarityInput1 = string, similarityInput = stringsToTuple string model.similarityInput2 }
+            , Cmd.none
+            )
+
+        SetSimilarityInput2 string ->
+            ( { model | similarityInput2 = string, similarityInput = stringsToTuple model.similarityInput1 string }
+            , Cmd.none
+            )
+
+        SetRegressionInput1 string ->
+            ( { model | regressionInput1 = string, regressionInput = stringsToTuple string model.regressionInput2 }
+            , Cmd.none
+            )
+
+        SetRegressionInput2 string ->
+            ( { model | regressionInput2 = string, regressionInput = stringsToTuple model.regressionInput1 string }
             , Cmd.none
             )
 
@@ -211,14 +257,6 @@ borders =
     , left = 0
     , right = 0
     , top = 0
-    }
-
-
-paddings =
-    { top = 0
-    , right = 0
-    , bottom = 0
-    , left = 0
     }
 
 
@@ -273,7 +311,7 @@ createSubTopic name =
 
 normal : Model -> Element Msg
 normal model =
-    box model
+    box
         [ descriptionTitle "Normal Distribution"
         , el [] (syntax "StatRandom.generateList 500 (StatRandom.normal 2 0.5)" |> Element.html)
         , el [ width <| px 900, height fill ] (HistogramChart.view model.normalList |> Element.html)
@@ -283,7 +321,7 @@ normal model =
 
 uniform : Model -> Element Msg
 uniform model =
-    box model
+    box
         [ descriptionTitle "Uniform Distribution"
         , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 500 (StatRandom.float 0 4)" |> Element.html)
         , el [ width <| px 900, height fill ] (HistogramChart.view model.uniformList |> Element.html)
@@ -293,7 +331,7 @@ uniform model =
 
 exponential : Model -> Element Msg
 exponential model =
-    box model
+    box
         [ descriptionTitle "Exponential Distribution"
         , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 1000 (StatRandom.exponential 1.0)" |> Element.html)
         , el [ width <| px 900, height fill ] (HistogramChart.view model.exponentialList |> Element.html)
@@ -303,7 +341,7 @@ exponential model =
 
 beta : Model -> Element Msg
 beta model =
-    box model
+    box
         [ descriptionTitle "Beta Distribution"
         , el [ Border.rounded 5 ] (syntax "StatRandom.generateList 1000 (StatRandom.beta 1.0)" |> Element.html)
         , el [ width <| px 900, height fill ] (HistogramChart.view model.betaList |> Element.html)
@@ -317,7 +355,7 @@ bernoulli model =
         t =
             List.length <| List.filter (\x -> x) model.bernoulliList
     in
-    box model
+    box
         [ descriptionTitle "Bernoulli Distribution"
         , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 1000 (Random.bernoulliBool 0.4)" |> Element.html)
         , row [ Border.rounded 5, paddingXY 0 10 ]
@@ -330,7 +368,7 @@ bernoulli model =
 
 binomial : Model -> Element Msg
 binomial model =
-    box model
+    box
         [ descriptionTitle "Binomial Distribution"
         , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.binomial 0.8 4)" |> Element.html)
         , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.binomialList) |> Element.html)
@@ -340,7 +378,7 @@ binomial model =
 
 poisson : Model -> Element Msg
 poisson model =
-    box model
+    box
         [ descriptionTitle "Poisson Distribution"
         , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.poisson 0.8 4)" |> Element.html)
         , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.poissonList) |> Element.html)
@@ -350,7 +388,7 @@ poisson model =
 
 geometric : Model -> Element Msg
 geometric model =
-    box model
+    box
         [ descriptionTitle "Geometric Distribution"
         , el [ Border.rounded 5, paddingXY 0 10 ] (syntax "StatRandom.generateList 500 (Random.geometric 0.166 4)" |> Element.html)
         , el [ width <| px 900, height fill ] (HistogramChart.view (List.map toFloat model.geometricList) |> Element.html)
@@ -358,8 +396,8 @@ geometric model =
         ]
 
 
-options string =
-    { onChange = SetText
+options string func =
+    { onChange = func
     , text = string
     , placeholder = Just (Input.placeholder [] (text ""))
     , label = Input.labelAbove [] none
@@ -372,70 +410,70 @@ stringToFloatList s =
     String.replace " " "" s |> String.split "," |> List.map (\x -> Maybe.withDefault 0 (String.toFloat x))
 
 
+stringsToTuple : String -> String -> List ( Float, Float )
+stringsToTuple s1 s2 =
+    List.map2 Tuple.pair (stringToFloatList s1) (stringToFloatList s2)
+
+
 measuresOfCentralTendency : Model -> Element Msg
 measuresOfCentralTendency model =
-    let
-        t =
-            [ 2, 4, 4, 4, 5, 5, 7, 9 ]
-
-        w =
-            [ ( 2, 4 ), ( 2, 10 ) ]
-    in
-    box model
+    box
         [ descriptionTitle "Measures of Central Tendency"
-        , el [ width fill ] (Input.multiline [] (options model.text))
+        , multilineInput model.centralText SetCentralText model.centralList
         , centralTendencyRow "Mode" Stat.mode model.centralList
         , centralTendencyRow "Average" Stat.mean model.centralList
         , centralTendencyRow "Geometric Mean" Stat.geometricMean model.centralList
         , centralTendencyRow "Harmonic Mean" Stat.harmonicMean model.centralList
-        , centralTendencyRow "Weighted Mean" Stat.weightedMean w
+        , centralTendencyRow "Weighted Mean" Stat.weightedMean [ ( 2, 4 ), ( 2, 10 ) ]
         , centralTendencyRow "Root Mean Square" Stat.rootMeanSquare model.centralList
         , centralTendencyRow "Median" Stat.median model.centralList
         , centralTendencyRow "Skewness" Stat.skewness model.centralList
         ]
 
 
+multilineInput : String -> (String -> Msg) -> List a -> Element Msg
+multilineInput content func list =
+    row [width fill, paddingXY 0 20]
+        [ el [ width <| fillPortion 2 ] (Input.multiline [] (options content func))
+        , el [ width <| fillPortion 2, paddingXY 20 0 ] (text ("Your list: " ++ Debug.toString list))
+        ]
+
+
+tupleInput : String -> (String -> Msg) -> String -> (String -> Msg) -> List a -> Element Msg
+tupleInput content1 func1 content2 func2 list =
+    column [paddingXY 0 20, width fill]
+        [ row [paddingXY 0 10, width fill] [el [ width fill ] (Input.multiline [] (options content1 func1))
+        , el [ width fill ] (Input.multiline [] (options content2 func2))]
+        , text ("Your tuple list: " ++ Debug.toString list)
+        ]
+
+
 dispersion : Model -> Element Msg
 dispersion model =
-    let
-        t =
-            [ 2, 4, 4, 4, 5, 5, 7, 9, 122 ]
-
-        w =
-            [ ( 2, 4 ), ( 2, 10 ) ]
-    in
-    box model
+    box
         [ descriptionTitle "Measures of Dispersion"
-        , el [ Border.rounded 5, paddingXY 0 10 ] (text (t |> List.map String.fromInt |> String.join ", "))
-        , centralTendencyRow "variance" Stat.variance t
-        , centralTendencyRow "standard deviation" Stat.standardDeviation t
-        , centralTendencyRow "mean absolute deviation" Stat.meanAbsoluteDeviation t
-        , centralTendencyRow "median absolute deviation" Stat.medianAbsoluteDeviation t
-        , text ("z score: " ++ Debug.toString (Stat.zScore 2 5 2))
-        , centralTendencyRow "z scores" Stat.zScores t
+        , multilineInput model.dispersionText SetDispersionText model.dispersionList
+        , centralTendencyRow "Variance" Stat.variance model.dispersionList
+        , centralTendencyRow "Standard Deviation" Stat.standardDeviation model.dispersionList
+        , centralTendencyRow "Mean Absolute Deviation" Stat.meanAbsoluteDeviation model.dispersionList
+        , centralTendencyRow "Median Absolute Deviation" Stat.medianAbsoluteDeviation model.dispersionList
+        , text ("Z score: " ++ Debug.toString (Stat.zScore 2 5 2))
+        , centralTendencyRow "Z scores" Stat.zScores model.dispersionList
         ]
 
 
 similarity : Model -> Element Msg
 similarity model =
-    let
-        t =
-            [ 2, 4, 4, 4, 5, 5, 7, 9 ]
-
-        w =
-            -- [ ( 1, 10 ), ( 2, 20 ), (3,27), (4,35), (5, 55) ]
-            [ ( 1, 1 ), ( 2, 3 ), ( 3, 3 ), ( 4, 5 ) ]
-    in
-    box model
+    box
         [ descriptionTitle "Similarity"
-        , el [ Border.rounded 5, paddingXY 0 10 ] (text <| Debug.toString w)
-        , centralTendencyRow "covariance" Stat.covariance w
-        , centralTendencyRow "correlation" Stat.correlation w
+        , tupleInput model.similarityInput1 SetSimilarityInput1 model.similarityInput2 SetSimilarityInput2 model.similarityInput
+        , centralTendencyRow "Covariance" Stat.covariance model.similarityInput
+        , centralTendencyRow "Correlation" Stat.correlation model.similarityInput
         ]
 
 
-box : Model -> List (Element Msg) -> Element Msg
-box model cc =
+box : List (Element Msg) -> Element Msg
+box cc =
     el [ width shrink, height shrink, Border.width 1, Border.color black, Border.rounded 5, Border.shadow { offset = ( 0, 0 ), size = 10.0, blur = 50.0, color = black }, centerX, padding 30 ]
         (column []
             cc
@@ -444,17 +482,14 @@ box model cc =
 
 linearReg : Model -> Element Msg
 linearReg model =
-    let
-        w =
-            [ ( 1, 4 ), ( 2, 4.5 ), ( 3, 5.5 ), ( 4, 5.3 ), ( 5, 6 ) ]
-    in
-    box model
+    box
         [ descriptionTitle "Linear Regression"
-        , el [ Border.rounded 5, paddingXY 0 10 ] (text <| Debug.toString w)
-        , centralTendencyRow "linear regression" Stat.linearRegression w
+        , tupleInput model.regressionInput1 SetRegressionInput1 model.regressionInput2 SetRegressionInput2 model.regressionInput
+        , centralTendencyRow "linear regression" Stat.linearRegression model.regressionInput
         ]
 
 
+centralTendencyRow : String -> (List a -> Maybe b) -> List a -> Element Msg
 centralTendencyRow funcName func list =
     let
         res =
@@ -508,16 +543,6 @@ mainColumn model =
         ]
 
 
-blue : Color
-blue =
-    Element.rgb 0 0 0.8
-
-
-red : Color
-red =
-    Element.rgb 0.8 0 0
-
-
 black : Color
 black =
     Element.rgba 0 0 0 0.1
@@ -526,11 +551,6 @@ black =
 white : Color
 white =
     Element.rgb 1 1 1
-
-
-orange : Color
-orange =
-    Element.rgba255 247 111 27 0.84
 
 
 grey : Color
