@@ -12,10 +12,10 @@ import TypedSvg.Core exposing (Svg)
 import TypedSvg.Types exposing (Paint(..), Transform(..))
 
 
-histogram : List Float -> List (Bin Float Float)
-histogram model =
-    Histogram.custom (Histogram.steps (Histogram.binCount ( 0, 4 ) 20)) identity
-        |> Histogram.withDomain ( 0, 4 )
+histogram : List Float -> ( Float, Float ) -> Int -> List (Bin Float Float)
+histogram model range binNum =
+    Histogram.custom (Histogram.steps (Histogram.binCount range binNum)) identity
+        |> Histogram.withDomain range
         |> Histogram.compute model
 
 
@@ -34,9 +34,9 @@ padding =
     30
 
 
-xScale : ContinuousScale Float
-xScale =
-    Scale.linear ( 0, w - 2 * padding ) ( 0, 4 )
+xScale : ( Float, Float ) -> ContinuousScale Float
+xScale range =
+    Scale.linear ( 0, w - 2 * padding ) range
 
 
 yScaleFromBins : List (Bin Float Float) -> ContinuousScale Float
@@ -49,9 +49,9 @@ yScaleFromBins bins =
         |> Scale.linear ( h - 2 * padding, 0 )
 
 
-xAxis : List Float -> Svg msg
-xAxis model =
-    Axis.bottom [ Axis.tickCount 20 ] xScale
+xAxis : ContinuousScale Float -> Int -> Svg msg
+xAxis xscale tc =
+    Axis.bottom [ Axis.tickCount tc ] xscale
 
 
 yAxis : List (Bin Float Float) -> Svg msg
@@ -59,28 +59,31 @@ yAxis bins =
     Axis.left [ Axis.tickCount 10 ] (yScaleFromBins bins)
 
 
-column : ContinuousScale Float -> Bin Float Float -> Svg msg
-column yScale { length, x0, x1 } =
+column : ContinuousScale Float -> ContinuousScale Float -> Bin Float Float -> Svg msg
+column yScale xscale { length, x0, x1 } =
     rect
-        [ x <| Scale.convert xScale x0
+        [ x <| Scale.convert xscale x0
         , y <| Scale.convert yScale (toFloat length)
-        , width <| (Scale.convert xScale x1 - Scale.convert xScale x0) - 2
+        , width <| (Scale.convert xscale x1 - Scale.convert xscale x0) - 2
         , height <| h - Scale.convert yScale (toFloat length) - 2 * padding
-        , fill <| Paint <| Color.rgb255 46 118 149
+        , fill <| Paint <| Color.rgb255 117 165 255
         ]
         []
 
 
-view model =
+view model range binNum xnum =
     let
         bins =
-            histogram model
+            histogram model range binNum
+
+        xscale =
+            xScale range
     in
     svg [ viewBox 0 0 w h ]
         [ g [ transform [ Translate (padding - 1) (h - padding) ] ]
-            [ xAxis model ]
+            [ xAxis xscale xnum ]
         , g [ transform [ Translate (padding - 1) padding ] ]
             [ yAxis bins ]
         , g [ transform [ Translate padding padding ], class [ "series" ] ] <|
-            List.map (column (yScaleFromBins bins)) bins
+            List.map (column (yScaleFromBins bins) xscale) bins
         ]

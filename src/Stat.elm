@@ -5,7 +5,7 @@ module Stat exposing
     , linearRegression, linearRegressionLine
     )
 
-{-| The goal of this module is to provide the most comonly used statistical methods.
+{-| The goal of this module is to provide the most comonly used statistical functions .
 
 
 # Measures of Central Tendency
