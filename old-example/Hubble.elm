@@ -34,6 +34,9 @@ main =
 
 type alias Model =
     { chart : Chart.Chart
+    , b : Float
+    , m : Float
+    , r2 : Float
     }
 
 
@@ -48,15 +51,43 @@ type alias Flags =
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
-        chart : Chart.Chart
-        chart =
+        data =
             RawData.get SampleData.hubble1929
                 |> Maybe.withDefault RawData.empty
                 |> RawData.toData 1 2
+
+        ( b, m ) =
+            Stat.linearRegression data
+                |> Maybe.withDefault ( 0, 1 )
+
+        -- Compute regression line
+        x1 =
+            RawData.minimum Tuple.first data |> Maybe.withDefault 0
+
+        y1 =
+            b + m * x1
+
+        x2 =
+            RawData.maximum Tuple.second data |> Maybe.withDefault 1
+
+        y2 =
+            b + m * x2
+
+        regressionLine =
+            Chart.graph Line 0 0 1 [ ( x1, y1 ), ( x2, y2 ) ]
+
+        r2 =
+            Stat.r2 data |> Maybe.withDefault 0
+
+        -- Chart
+        chart : Chart.Chart
+        chart =
+            data
                 |> Chart.graph Scatter 1.0 0 0
                 |> Chart.chart
+                |> Chart.addGraph regressionLine
     in
-    ( { chart = chart }, Cmd.none )
+    ( { chart = chart, b = b, m = m, r2 = r2 }, Cmd.none )
 
 
 subscriptions model =
@@ -77,12 +108,32 @@ viewData model =
 
 view : Model -> Html Msg
 view model =
+    let
+        roundTo : Int -> Float -> Float
+        roundTo n x =
+            let
+                factor =
+                    10.0 ^ toFloat n
+            in
+            x * factor |> round |> toFloat |> (\u -> u / factor)
+
+        mm =
+            String.fromFloat (roundTo 1 model.m)
+
+        bb =
+            String.fromFloat (roundTo 1 model.b |> abs)
+
+        rr2 =
+            String.fromFloat (roundTo 1 model.r2)
+    in
     Element.layout mainColumn
         (column
             [ height fill, spacing 8, Font.size 14 ]
             [ viewData model
-            , el [ Font.bold, centerX ] (text "Hubble galactic recession data")
+            , el [ Font.bold, centerX, Font.size 18 ] (text "Hubble galactic recession data")
             , el [ centerX ] (text "x-axis: distance in megaparsecs, y-axis: velocity in km/sec")
+            , el [ centerX ] (text ("Regression line: y = " ++ mm ++ "x - " ++ bb ++ ", R2 = " ++ rr2))
+            , el [ centerX ] (text ("Hubble constant H ~ " ++ mm ++ " km/sec/megaparsec"))
             , Element.newTabLink [ centerX ]
                 { url = "https://www.pnas.org/content/112/11/3173"
                 , label = el [ Font.color (Element.rgb 0 0 1) ] (text "Hubble's law and the expanding universe (PNAS)")

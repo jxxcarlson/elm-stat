@@ -11,18 +11,6 @@ type alias Table a =
     List (Column a)
 
 
-testTable =
-    [ col1, col2 ]
-
-
-col1 =
-    [ 1, 2, 3 ]
-
-
-col2 =
-    [ 10, 20, 30 ]
-
-
 row : Int -> Table a -> Maybe (List a)
 row k table =
     List.map (Utility.listGetAt k) table |> Utility.maybeCombine
@@ -59,3 +47,19 @@ getColumnAsFloats k table =
         |> List.map (Utility.listGetAt k)
         |> List.map (Maybe.andThen String.toFloat)
         |> Utility.maybeCombine
+
+
+
+-- FOR TESTING
+
+
+testTable =
+    [ col1, col2 ]
+
+
+col1 =
+    [ 1, 2, 3 ]
+
+
+col2 =
+    [ 10, 20, 30 ]

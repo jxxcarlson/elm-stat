@@ -1,7 +1,7 @@
 module Stat exposing
     ( mean, meanWithDefault, average, geometricMean, harmonicMean, weightedMean, median, mode, rootMeanSquare, skewness
     , variance, standardDeviation, meanAbsoluteDeviation, medianAbsoluteDeviation, zScore, zScores
-    , covariance, correlation
+    , covariance, correlation, r2
     , linearRegression, linearRegressionLine
     )
 
@@ -20,7 +20,7 @@ module Stat exposing
 
 # Similarity
 
-@docs covariance, correlation
+@docs covariance, correlation, r2
 
 
 # Linear Regression
@@ -351,6 +351,21 @@ correlation tupleList =
             List.unzip tupleList
     in
     Maybe.map3 (\cov stdDevXs stdDevYs -> cov / (stdDevXs * stdDevYs)) (covariance tupleList) (standardDeviation xs) (standardDeviation ys)
+
+
+{-| R2 is the square of the correlation coefficient
+
+    > Stat.r2[(1,2),(4,8),(5,10)] == Just 1.00
+    > Stat.r2[(10,0),(40,-30),(50,-32)] == Just 0.97
+
+-}
+r2 : List ( Float, Float ) -> Maybe Float
+r2 tupleList =
+    let
+        cc =
+            correlation tupleList
+    in
+    Maybe.map2 (*) cc cc
 
 
 {-| Linear regression finds the line that best fits the given points. The method used here is the [simple linear regression](https://en.wikipedia.org/wiki/Linear_regression).
