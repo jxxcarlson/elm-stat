@@ -1,12 +1,12 @@
 # Elm-stat
 
 The `elm-stat` package provides tools for statistics and visualization of n-column data files.
-Most of the features of the package are exposed in the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html) (work in progress), the code for which is in `./examples`.
-The package is intended to be a long-term research and development effort which will gradually add features over time. I'd be very interested in finding collaborators with some background in mathematics and/or statistics.
+Most of the features of the package are exposed in the the demo apps, found in the
+`./examples` folder of the source code. The package is intended to be a long-term research and development effort which will gradually add features over time. I'd be very interested in finding collaborators with some background in mathematics and/or statistics.
 
 ## The API
 
-The `elm-stat` package consists of six modules divided into three groups
+The `elm-stat` package consists of seven modules divided into three groups
 
 ### Statistical Functions
 
@@ -28,6 +28,8 @@ Graphs come in various types, e.g, line and scatter.
 - `Data`  provides types and functions for
 extracting lists of 2D points both from strings and
 `RawData` values.  This module is used in `Chart`
+
+- `ErrorBars` provides utilities for drawing error bars.  Used in `Chart`.
 
 
 ## Example usage
@@ -120,3 +122,9 @@ elm make src/Main.elm
 ```
 
 then opening `index.html` in a browser.
+
+## Note  
+
+This version is a major update to version 4.0.3.  The API for the statistical functions in module `Stat`
+has been completely rewritten, and a new module, `StatRandom`, featuring generators for many common statistical
+packages has been added.  These are contributions of Raul Andor Fleischman ()

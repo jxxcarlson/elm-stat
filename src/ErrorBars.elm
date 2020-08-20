@@ -11,7 +11,7 @@ Then
     > ErrorBars.mean data
 
 produces a list of ponts that pass through the
-mean valjues of data points with given x value.
+mean values of data points with given x value.
 For error bars with extreme ponts one standard
 deviatoin from the mean, use
 
@@ -66,7 +66,7 @@ type alias ErrorDictionary =
     Dict Float (List Float)
 
 
-{-| Use to ompute the y-centroids of the data, as in this example:
+{-| Use to compute the y-centroids of the data, as in this example:
 
     > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.mean
     [{ x = 0, y = 1 },{ x = 1, y = 2 }]
@@ -80,7 +80,7 @@ mean data =
         |> Utility.maybeValues
 
 
-{-| Use to ompute error bars, as in this example:
+{-| Use to compute error bars, as in this example:
 
     > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.normal 0.5
       [{ bottom = 0.99667, y = 1, top = 1.003333, x = 0 }
