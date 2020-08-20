@@ -1,10 +1,10 @@
-module SampleData exposing (historicSpeedOfLightCSV, hubble1929, sealevel, temperature)
+module SampleData exposing (historicSpeedOfLightCSV, hubble1929, sealevel, temperature, errorBarData)
 
 {-| The SampleData module provides a few data sets to play with:
 Globabl temperature anomalies, sea level data, Edwin Hubble's galactic recession data,
 and historic speed of light data.
 
-@docs historicSpeedOfLightCSV, hubble1929, sealevel, temperature
+@docs historicSpeedOfLightCSV, hubble1929, sealevel, temperature, errorBarData
 
 -}
 
@@ -1271,3 +1271,72 @@ Obj    distance    velocity
 4486   2.0     800
 4649   2.0     1090
 """
+
+
+
+-- TEST DATA
+
+
+simpleData : List ( Float, Float )
+simpleData =
+    [ ( 0, 0 )
+    , ( 1, 0.5 )
+    , ( 2, 1 )
+    , ( 3, 2 )
+    , ( 4, 5 )
+    , ( 5, 0 )
+    ]
+
+
+{-| Test data
+-}
+errorBarData : String
+errorBarData =
+    """
+x,y
+0,1.0
+0,0.9
+1,1.8
+0,1.0
+1,2.0
+1,2.2
+0,1.1
+"""
+
+
+csvTest =
+    "x,y\n0,0\n1,0\n1,1\n0,1\n"
+
+
+csvTest2 =
+    "This data describes a square\nx,y\n0,0\n1,0\n1,1\n0,1\n"
+
+
+csvTest32 =
+    "x, y\n  0, 0 \n1,0\n1,1\n0,1\n"
+
+
+csvTestEB =
+    "x,y\n0,0.9\n0,1.0\n0,1.1\n1,1.9\n1,2.0,\n1,2.1\n"
+
+
+{-| RawData.get3 '\\t' tabTest
+Just (["x","y"],[["0","0"],["1","0"],["1","1"],["0","1"]])
+-}
+tabTest =
+    "x\ty\n0\t0\n1\t0\n1\t1\n0\t1\n"
+
+
+tabTest2 =
+    "This data describes a square\nx\ty\n0\t0\n1\t0\n1\t1\n0\t1\n"
+
+
+{-| RawData.get3 ' ' spaceTest
+Just (["x","y"],[["0","0"],["1","0"],["1","1"],["0","1"]])
+-}
+spaceTest =
+    "x y\n0 0\n1 0\n1 1\n0 1\n"
+
+
+spaceTest2 =
+    "This data describes a square\nx y\n0 0\n1 0\n1 1\n0 1\n"

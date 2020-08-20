@@ -4,7 +4,7 @@ module ErrorBars exposing (ErrorBar, mean, normal, maxmin)
 drawing graphs with errors bars. Suppose that
 we have dome data:
 
-    > data = SampleData.eb2 |> Data.fromString 0 1
+    > data = SampleData.errorBarData |> Data.fromString 0 1
 
 Then
 
@@ -68,7 +68,7 @@ type alias ErrorDictionary =
 
 {-| Use to compute the y-centroids of the data, as in this example:
 
-    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.mean
+    > SampleData.errorBarData |> Data.fromString 0 1 |> ErrorBars.mean
     [{ x = 0, y = 1 },{ x = 1, y = 2 }]
 
 -}
@@ -82,7 +82,7 @@ mean data =
 
 {-| Use to compute error bars, as in this example:
 
-    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.normal 0.5
+    > SampleData.eberrorBarData2 |> Data.fromString 0 1 |> ErrorBars.normal 0.5
       [{ bottom = 0.99667, y = 1, top = 1.003333, x = 0 }
       ,{ bottom = 1.98, y = 2, top = 2.02, x = 1 }]
 
@@ -97,7 +97,7 @@ normal p data =
 
 {-|
 
-    > SampleData.eb2 |> Data.fromString 0 1 |> ErrorBars.maxmin
+    > SampleData.errorBarData |> Data.fromString 0 1 |> ErrorBars.maxmin
       [{ bottom = 0.9, y = 1, top = 1.1, x = 0 }
        ,{ bottom = 1.8, y = 2, top = 2.2, x = 1 }]
 
@@ -152,7 +152,7 @@ meanValue es =
 
 {-|
 
-    > Data.fromString 0 1 SampleData.eb2 |> ErrorStat.rawStats
+    > Data.fromString 0 1 SampleData.errorBarData |> ErrorStat.rawStats
        [ { max = Just 1.1, mean = Just 1, min = Just 0.9, stdev = Just 0.0066666666666666706 }
        ,{ max = Just 2.2, mean = Just 2, min = Just 1.8, stdev = Just 0.04000000000000002 }
 
@@ -218,7 +218,7 @@ insertInErrorDict point errorDict =
 
 {-|
 
-> dd = fromString 0 1 SD.eb2
+> dd = fromString 0 1 SD.errorBarData
 
 -}
 getErrorData2 : Data -> List ErrorDatum

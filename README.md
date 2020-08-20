@@ -11,7 +11,7 @@ The `elm-stat` package consists of seven modules divided into three groups
 ### Statistical Functions
 
 - `StatRandom` provides commonly used probability distributions
-- `Stat` provides a number of common functions useful in statistics
+- `Stat` provides many common functions used in statistics
 
 ### Data
 
@@ -34,9 +34,7 @@ extracting lists of 2D points both from strings and
 
 ## Example usage
 
-There is also a module `SampleData` with some test data. Let's import the above modules to see how some of this works. For more details, see the documentation for the individual modules.
-
-First, some test data:
+Let's import the above modules to see how some of this works. For more details, see the documentation for the individual modules. First, some test data:
 
 ```
 > SampleData.temperature
@@ -125,6 +123,6 @@ then opening `index.html` in a browser.
 
 ## Note  
 
-This version is a major update to version 4.0.3.  The API for the statistical functions in module `Stat`
+This is a major update to version 4.0.3.  The API for the statistical functions in module `Stat`
 has been completely rewritten, and a new module, `StatRandom`, featuring generators for many common statistical
-packages has been added.  These are contributions of Raul Andor Fleischman ()
+packages has been added.  Both are contributions of Raul Fleischman (FleischmanRaul on Github)

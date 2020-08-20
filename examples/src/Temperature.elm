@@ -103,8 +103,12 @@ update msg model =
 
 
 viewData model =
-    TypedSvg.svg [ TA.width (TT.px 900), TA.height (TT.px 600) ] [ Chart.view Nothing model.chart ]
+    TypedSvg.svg [ TA.width (TT.px 900), TA.height (TT.px 600) ] [ Chart.view format Nothing model.chart ]
         |> Element.html
+
+
+format =
+    { width = 900, height = 400, padding = 30 }
 
 
 view : Model -> Html Msg

@@ -1,26 +1,28 @@
 module Chart exposing
-    ( Chart, Graph, GraphType(..)
-    , boundingBox, emptyGraph, graph, lineGraph, scatter, errorBars, setConfidence
-    , view, chart, addGraph, addGraphIf
+    ( BoundingBox, Format, Graph, GraphType(..), Chart
+    , boundingBox, emptyGraph, graph, lineGraph, meanLine, scatter, errorBars
+    , view, chart, addGraph
     )
 
-{-| Functions for building graphs and charts A chart consists of one more graphs.
+{-| Functions for building graphs and charts. A chart consists of one more graphs.
 Graphs come in various flavors, notably line and scatter.
+
+In this module, `Svg` means `TypedSvg.Core.Svg`
 
 
 ## Types
 
-@docs Chart, Graph, GraphType
+@docs BoundingBox, Format, Graph, GraphType, Chart
 
 
 ## Constructing and operating on graphs
 
-@docs boundingBox, emptyGraph, graph, lineGraph, scatter, errorBars, setConfidence
+@docs boundingBox, emptyGraph, graph, lineGraph, meanLine, scatter, errorBars
 
 
-## Constructing and ope rating on charts
+## Constructing and operating on charts
 
-@docs view, chart, addGraph, addGraphIf
+@docs view, chart, addGraph
 
 -}
 
@@ -41,7 +43,9 @@ import TypedSvg.Types exposing (Paint(..), Transform(..))
 import Utility
 
 
-{-| -}
+{-| A chart consists of a boundig box and a list of Graphs.
+A chart is rendered to SVG by the `view` function.
+-}
 type alias Chart =
     { boundingBox : BoundingBox
     , confidence : Maybe Float
@@ -56,7 +60,8 @@ type GraphType
     | MeanLine
 
 
-{-| -}
+{-| A box containing data of the form `List (Float, Float)`
+-}
 type alias BoundingBox =
     { xMin : Float
     , xMax : Float
@@ -65,7 +70,9 @@ type alias BoundingBox =
     }
 
 
-{-| -}
+{-| A Graph consists of data in the form of `List (Float, Float)`,
+a bounding box, a choice of color, and a GraphType, e.g, `Line` or `Scatter`.
+-}
 type alias Graph =
     { graphType : GraphType
     , r : Float
@@ -81,6 +88,15 @@ type alias Data =
     List ( Float, Float )
 
 
+{-| Format determines the height, width, and appearance of the rendered chart
+-}
+type alias Format =
+    { width : Float
+    , height : Float
+    , padding : Float
+    }
+
+
 {-| -}
 emptyGraph : Graph
 emptyGraph =
@@ -93,7 +109,12 @@ emptyGraph =
     }
 
 
-{-| -}
+{-| Compute a bounding box from data, where
+
+    type alias Data =
+        List ( Float, Float )
+
+-}
 boundingBox : Data.Data -> BoundingBox
 boundingBox data =
     { xMin = RawData.minimum xCoord data |> Maybe.withDefault 0
@@ -103,7 +124,13 @@ boundingBox data =
     }
 
 
-{-| -}
+{-| Make a graph of given GraphType and given color r, g, b from the given data.
+where
+
+    type alias Data =
+        List ( Float, Float )
+
+-}
 graph : GraphType -> Float -> Float -> Float -> Data.Data -> Graph
 graph graphType r g b data =
     { graphType = graphType
@@ -115,13 +142,8 @@ graph graphType r g b data =
     }
 
 
-{-| -}
-setConfidence : Maybe Float -> Chart -> Chart
-setConfidence conf chart_ =
-    { chart_ | confidence = conf }
-
-
-{-| -}
+{-| Make a chart out of a graph
+-}
 chart : Graph -> Chart
 chart g =
     { boundingBox = g.boundingBox
@@ -130,7 +152,8 @@ chart g =
     }
 
 
-{-| -}
+{-| Add a graph to an existing Chart
+-}
 addGraph : Graph -> Chart -> Chart
 addGraph newGraph c =
     let
@@ -140,94 +163,68 @@ addGraph newGraph c =
     { c | data = adjustedGraph :: c.data }
 
 
-{-| -}
-addGraphIf : Bool -> Graph -> Chart -> Chart
-addGraphIf flag newGraph c =
-    case flag of
-        True ->
-            addGraph newGraph c
-
-        False ->
-            c
+xScale : Format -> Float -> Float -> ContinuousScale Float
+xScale format xMin xMax =
+    Scale.linear ( format.width - 2 * format.padding, 0 ) ( xMax, xMin )
 
 
-w : Float
-w =
-    900
+yScale : Format -> Float -> Float -> ContinuousScale Float
+yScale format yMin yMax =
+    Scale.linear ( format.height - 2 * format.padding, 0 ) ( yMin, yMax )
 
 
-h : Float
-h =
-    450
+xAxis : Format -> BoundingBox -> Svg msg
+xAxis format bb =
+    Axis.bottom [ Axis.tickCount 5 ] (xScale format bb.xMin bb.xMax)
 
 
-padding : Float
-padding =
-    30
+yAxis : Format -> BoundingBox -> Svg msg
+yAxis format bb =
+    Axis.left [ Axis.tickCount 5 ] (yScale format bb.yMin bb.yMax)
 
 
-xScale : Float -> Float -> ContinuousScale Float
-xScale xMin xMax =
-    Scale.linear ( w - 2 * padding, 0 ) ( xMax, xMin )
+transformScale : Format -> BoundingBox -> ( Float, Float ) -> Maybe ( Float, Float )
+transformScale format bb ( x, y ) =
+    Just ( Scale.convert (xScale format bb.xMin bb.xMax) x, Scale.convert (yScale format bb.yMin bb.yMax) y )
 
 
-yScale : Float -> Float -> ContinuousScale Float
-yScale yMin yMax =
-    Scale.linear ( h - 2 * padding, 0 ) ( yMin, yMax )
-
-
-xAxis : BoundingBox -> Svg msg
-xAxis bb =
-    Axis.bottom [ Axis.tickCount 5 ] (xScale bb.xMin bb.xMax)
-
-
-yAxis : BoundingBox -> Svg msg
-yAxis bb =
-    Axis.left [ Axis.tickCount 5 ] (yScale bb.yMin bb.yMax)
-
-
-transformScale : BoundingBox -> ( Float, Float ) -> Maybe ( Float, Float )
-transformScale bb ( x, y ) =
-    Just ( Scale.convert (xScale bb.xMin bb.xMax) x, Scale.convert (yScale bb.yMin bb.yMax) y )
-
-
-line : Graph -> Path
-line g =
-    List.map (transformScale g.boundingBox) g.data
+line : Format -> Graph -> Path
+line format g =
+    List.map (transformScale format g.boundingBox) g.data
         |> Shape.line Shape.monotoneInXCurve
 
 
 {-| Draw a line with given colors and bounding box
 -}
-basicLine : Float -> Float -> Float -> BoundingBox -> Data -> Svg msg
-basicLine r g b bb dat =
-    List.map (transformScale bb) dat
+basicLine : Format -> Float -> Float -> Float -> BoundingBox -> Data -> Svg msg
+basicLine format r g b bb dat =
+    List.map (transformScale format bb) dat
         |> Shape.line Shape.monotoneInXCurve
         |> (\path -> Path.element path [ stroke (Paint (Color.rgb r g b)), strokeWidth 2.0, fill PaintNone ])
 
 
-{-| Draw a scatter plot
+{-| Render graph data to SVG as a scatter plot.
 -}
-scatter : Graph -> Svg msg
-scatter gr =
+scatter : Format -> Graph -> Svg msg
+scatter format gr =
     gr.data
-        |> List.map (transformScale gr.boundingBox)
+        |> List.map (transformScale format gr.boundingBox)
         |> Utility.maybeValues
         |> List.map (\( x, y ) -> circle [ cx x, cy y, r 2.5, fill (Paint (Color.rgb gr.r gr.g gr.b)) ] [])
         |> g []
 
 
-{-| Draw a broken line graph
+{-| Render graph data to SVG as a broken line.
 -}
-lineGraph : Graph -> Svg msg
-lineGraph g =
-    Path.element (line g) [ stroke (Paint (Color.rgb g.r g.g g.b)), strokeWidth 1.5, fill PaintNone ]
+lineGraph : Format -> Graph -> Svg msg
+lineGraph format g =
+    Path.element (line format g) [ stroke (Paint (Color.rgb g.r g.g g.b)), strokeWidth 1.5, fill PaintNone ]
 
 
-{-| Draw error bars with given confidence level for the given data
+{-| Render error bars with given confidence level for the given data as SVG
 -}
-errorBars : Float -> Data -> Svg msg
-errorBars confidenceLevel data_ =
+errorBars : Format -> Float -> Data -> Svg msg
+errorBars format confidenceLevel data_ =
     let
         bb =
             boundingBox data_
@@ -242,15 +239,15 @@ errorBars confidenceLevel data_ =
             List.map (\eb -> [ ( eb.x, eb.bottom ), ( eb.x, eb.top ) ]) ebList
 
         errorBarGraph =
-            List.map (basicLine 0 0 1 bb) ebList2
+            List.map (basicLine format 0 0 1 bb) ebList2
     in
     g [] errorBarGraph
 
 
-{-| Draw the xxx
+{-| Draw a line through mean values of the data.
 -}
-meanLine : Graph -> Svg msg
-meanLine gr =
+meanLine : Format -> Graph -> Svg msg
+meanLine format gr =
     let
         bb =
             gr.boundingBox
@@ -262,33 +259,44 @@ meanLine gr =
             List.map (\eb -> ( eb.x, eb.y )) ebList
 
         meanValueGraph =
-            lineGraph { gr | data = meanValues, r = 1, g = 0, b = 0 }
+            lineGraph format { gr | data = meanValues, r = 1, g = 0, b = 0 }
     in
     meanValueGraph
 
 
 {-| Convert a graph to SVG
 -}
-viewGraph : Maybe Float -> Graph -> Svg msg
-viewGraph confidence g =
+viewGraph : Format -> Maybe Float -> Graph -> Svg msg
+viewGraph format confidence g =
     case g.graphType of
         Line ->
-            lineGraph g
+            lineGraph format g
 
         Scatter ->
-            scatter g
+            scatter format g
 
         MeanLine ->
-            meanLine g
+            meanLine format g
 
 
-{-| Convert a chart to SVG
+{-| Convert a chart to (typed) SVG. Parameters:
+
+  - `Format`: determines the dimensions and appearance of the output
+
+  - `Maybe (Svg mg)`: this is an "annotation," which maybe`Nothing`or`Just svgValue`, where`svgValue`is any value of type`Svg msg`.
+    Here`Svg`meand `TypedSvg.Core.Svg`.
+
+  - `Chart`: the chart to be rendered
+
+One use of annotations is to add error bars to a chart. See
+`./examples/src/Hubble.elm`
+
 -}
-view : Maybe (Svg msg) -> Chart -> Svg msg
-view annotation_ chartData =
+view : Format -> Maybe (Svg msg) -> Chart -> Svg msg
+view format annotation_ chartData =
     let
         svgList =
-            List.map (viewGraph chartData.confidence) chartData.data
+            List.map (viewGraph format chartData.confidence) chartData.data
 
         finalSvgList =
             case annotation_ of
@@ -298,11 +306,11 @@ view annotation_ chartData =
                 Just annotation ->
                     annotation :: svgList
     in
-    svg [ viewBox 0 0 w h ]
-        [ g [ transform [ Translate (padding - 1) (h - padding) ] ]
-            [ xAxis chartData.boundingBox ]
-        , g [ transform [ Translate (padding - 1) padding ] ]
-            [ yAxis chartData.boundingBox ]
-        , g [ transform [ Translate padding padding ], class [ "series" ] ]
+    svg [ viewBox 0 0 format.width format.height ]
+        [ g [ transform [ Translate (format.padding - 1) (format.height - format.padding) ] ]
+            [ xAxis format chartData.boundingBox ]
+        , g [ transform [ Translate (format.padding - 1) format.padding ] ]
+            [ yAxis format chartData.boundingBox ]
+        , g [ transform [ Translate format.padding format.padding ], class [ "series" ] ]
             finalSvgList
         ]

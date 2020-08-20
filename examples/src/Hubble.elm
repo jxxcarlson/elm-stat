@@ -19,6 +19,7 @@ import SampleData
 import Stat
 import TypedSvg
 import TypedSvg.Attributes as TA
+import TypedSvg.Core exposing (Svg)
 import TypedSvg.Types as TT
 
 
@@ -32,7 +33,8 @@ main =
 
 
 type alias Model =
-    { chart : Chart.Chart
+    { data : Data
+    , chart : Chart.Chart
     , b : Float
     , m : Float
     , r2 : Float
@@ -55,11 +57,13 @@ init flags =
                 |> Maybe.withDefault RawData.empty
                 |> RawData.toData 1 2
 
+        -- Regression line, computed by hand
+        -- Coefficients of the regression line y = mx  + b
         ( b, m ) =
             Stat.linearRegression data
                 |> Maybe.withDefault ( 0, 1 )
 
-        -- Compute regression line
+        -- Endpoints (x1,y1), (x2, y2) of the regression line
         x1 =
             RawData.minimum Tuple.first data |> Maybe.withDefault 0
 
@@ -72,9 +76,11 @@ init flags =
         y2 =
             b + m * x2
 
+        -- The regression line (determined by its endpoints)
         regressionLine =
             Chart.graph Line 0 0 1 [ ( x1, y1 ), ( x2, y2 ) ]
 
+        -- R-squared
         r2 =
             Stat.r2 data |> Maybe.withDefault 0
 
@@ -86,7 +92,7 @@ init flags =
                 |> Chart.chart
                 |> Chart.addGraph regressionLine
     in
-    ( { chart = chart, b = b, m = m, r2 = r2 }, Cmd.none )
+    ( { data = data, chart = chart, b = b, m = m, r2 = r2 }, Cmd.none )
 
 
 subscriptions model =
@@ -100,8 +106,21 @@ update msg model =
             ( model, Cmd.none )
 
 
+format =
+    { width = 900, height = 400, padding = 0 }
+
+
 viewData model =
-    TypedSvg.svg [ TA.width (TT.px 900), TA.height (TT.px 600) ] [ Chart.view Nothing model.chart ]
+    let
+        -- Add the error bars to the charat as an annotation
+        annotation : Maybe (Svg msg)
+        annotation =
+            Chart.errorBars format 1.5 model.data
+                |> Just
+    in
+    TypedSvg.svg [ TA.width (TT.px 900), TA.height (TT.px 600) ]
+        [ Chart.view format annotation model.chart
+        ]
         |> Element.html
 
 
@@ -132,6 +151,7 @@ view model =
             , el [ Font.bold, centerX, Font.size 18 ] (text "Hubble galactic recession data")
             , el [ centerX ] (text "x-axis: distance in megaparsecs, y-axis: velocity in km/sec")
             , el [ centerX ] (text ("Regression line: y = " ++ mm ++ "x - " ++ bb ++ ", R2 = " ++ rr2))
+            , el [ centerX ] (text "Error bar half-width: 1.5 standard deviations")
             , el [ centerX ] (text ("Hubble constant H ~ " ++ mm ++ " km/sec/megaparsec"))
             , Element.newTabLink [ centerX ]
                 { url = "https://www.pnas.org/content/112/11/3173"
