@@ -273,7 +273,7 @@ leftColumn model =
             [ el [] (text "Welcome to the elm-stat examples!") ]
         , sectionId "Measures of Central Tendency" [ "mean", "average", "weightedMean", "harmonicMean", "geometricMean", "mode", "median", "rootMeanSquare", "sampleSkewness" ] "cen"
         , sectionId "Measures of Dispersion" [ "variance", "standardDeviation", "meanAbsoluteDeviation", "medianAbsoluteDeviation", "zScore", "zScores" ] "dis"
-        , sectionId "Similarity" [ "covariance", "correlation" ] "sim"
+        , sectionId "Similarity" [ "covariance", "correlation", "r2" ] "sim"
         , sectionId "Linear regression" [ "linearRegression", "linearRegressionLine" ] "lr"
         , section "Distributions" [ "Bernoulli", "Binomial", "Poisson", "Geometric", "Uniform", "Normal", "Standard Normal", "Exponential", "Beta" ]
         ]
@@ -481,6 +481,7 @@ similarity model =
         , tupleInput model.similarityInput1 SetSimilarityInput1 model.similarityInput2 SetSimilarityInput2 model.similarityInput
         , exampleRow "Covariance" Stat.covariance model.similarityInput
         , exampleRow "Correlation" Stat.correlation model.similarityInput
+        , exampleRow "r2" Stat.r2 model.similarityInput
         ]
 
 

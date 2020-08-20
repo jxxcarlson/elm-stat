@@ -1,6 +1,17 @@
 module SampleData exposing (historicSpeedOfLightCSV, hubble1929, sealevel, temperature)
 
+{-| The SampleData module provides a few data sets to play with:
+Globabl temperature anomalies, sea level data, Edwin Hubble's galactic recession data,
+and historic speed of light data.
 
+@docs historicSpeedOfLightCSV, hubble1929, sealevel, temperature
+
+-}
+
+
+{-| Global Land and Ocean Temperature Anomalies January-December 1880-2016
+-}
+temperature : String
 temperature =
     """
   Global Land and Ocean Temperature Anomalies
@@ -149,6 +160,9 @@ temperature =
 """
 
 
+{-| Global Mean Sea Level Data
+-}
+sealevel : String
 sealevel =
     """
 Source: https://climate.nasa.gov/vital-signs/sea-level/
@@ -1157,6 +1171,9 @@ HDR Header_End---------------------------------------
 """
 
 
+{-| Historic speed of light data
+-}
+historicSpeedOfLightCSV : String
 historicSpeedOfLightCSV =
     """
 NO.,DATE,OBSERVER,METHOD,VALUE OF C (Km/s), UNCERTAINTY
@@ -1220,6 +1237,9 @@ NO.,DATE,OBSERVER,METHOD,VALUE OF C (Km/s), UNCERTAINTY
 """
 
 
+{-| Astronomer Edwin Hubble's galactic recession data
+-}
+hubble1929 : String
 hubble1929 =
     """
 The galaxy recession data from Hubble's

@@ -1,21 +1,26 @@
 module Chart exposing
-    ( Chart
-    , Graph
-    , GraphType(..)
-    , addGraph
-    , addGraphIf
-    , boundingBox
-    , chart
-    , emptyGraph
-    , errorBars
-    , graph
-    , scatter
-    , setConfidence
-    , view
+    ( Chart, Graph, GraphType(..)
+    , boundingBox, emptyGraph, graph, lineGraph, scatter, errorBars, setConfidence
+    , view, chart, addGraph, addGraphIf
     )
 
-{-| This module shows how to build a simple line and area chart using some of
-the primitives provided in this library.
+{-| Functions for building graphs A chart consists of one more graphs.
+
+
+## Types
+
+@docs Chart, Graph, GraphType
+
+
+## Constructing and operating on graphs
+
+@docs boundingBox, emptyGraph, graph, lineGraph, scatter, errorBars, setConfidence
+
+
+## Constructing and ope rating on charts
+
+@docs view, chart, addGraph, addGraphIf
+
 -}
 
 import Axis
@@ -35,6 +40,7 @@ import TypedSvg.Types exposing (Paint(..), Transform(..))
 import Utility
 
 
+{-| -}
 type alias Chart =
     { boundingBox : BoundingBox
     , confidence : Maybe Float
@@ -42,16 +48,14 @@ type alias Chart =
     }
 
 
+{-| -}
 type GraphType
     = Line
     | Scatter
     | MeanLine
 
 
-
--- | MeanLine
-
-
+{-| -}
 type alias BoundingBox =
     { xMin : Float
     , xMax : Float
@@ -60,6 +64,7 @@ type alias BoundingBox =
     }
 
 
+{-| -}
 type alias Graph =
     { graphType : GraphType
     , r : Float
@@ -70,10 +75,12 @@ type alias Graph =
     }
 
 
+{-| -}
 type alias Data =
     List ( Float, Float )
 
 
+{-| -}
 emptyGraph : Graph
 emptyGraph =
     { graphType = Line
@@ -85,6 +92,7 @@ emptyGraph =
     }
 
 
+{-| -}
 boundingBox : Data.Data -> BoundingBox
 boundingBox data =
     { xMin = RawData.minimum xCoord data |> Maybe.withDefault 0
@@ -94,6 +102,7 @@ boundingBox data =
     }
 
 
+{-| -}
 graph : GraphType -> Float -> Float -> Float -> Data.Data -> Graph
 graph graphType r g b data =
     { graphType = graphType
@@ -105,11 +114,13 @@ graph graphType r g b data =
     }
 
 
+{-| -}
 setConfidence : Maybe Float -> Chart -> Chart
 setConfidence conf chart_ =
     { chart_ | confidence = conf }
 
 
+{-| -}
 chart : Graph -> Chart
 chart g =
     { boundingBox = g.boundingBox
@@ -118,6 +129,7 @@ chart g =
     }
 
 
+{-| -}
 addGraph : Graph -> Chart -> Chart
 addGraph newGraph c =
     let
@@ -127,6 +139,7 @@ addGraph newGraph c =
     { c | data = adjustedGraph :: c.data }
 
 
+{-| -}
 addGraphIf : Bool -> Graph -> Chart -> Chart
 addGraphIf flag newGraph c =
     case flag of
@@ -183,6 +196,8 @@ line g =
         |> Shape.line Shape.monotoneInXCurve
 
 
+{-| Draw a line with given colors and bounding box
+-}
 basicLine : Float -> Float -> Float -> BoundingBox -> Data -> Svg msg
 basicLine r g b bb dat =
     List.map (transformScale bb) dat
@@ -190,6 +205,8 @@ basicLine r g b bb dat =
         |> (\path -> Path.element path [ stroke (Paint (Color.rgb r g b)), strokeWidth 2.0, fill PaintNone ])
 
 
+{-| Draw a scatter plot
+-}
 scatter : Graph -> Svg msg
 scatter gr =
     gr.data
@@ -199,11 +216,15 @@ scatter gr =
         |> g []
 
 
+{-| Draw a broken line graph
+-}
 lineGraph : Graph -> Svg msg
 lineGraph g =
     Path.element (line g) [ stroke (Paint (Color.rgb g.r g.g g.b)), strokeWidth 1.5, fill PaintNone ]
 
 
+{-| Draw error bars with given confidence level for the given data
+-}
 errorBars : Float -> Data -> Svg msg
 errorBars confidenceLevel data_ =
     let
@@ -225,6 +246,8 @@ errorBars confidenceLevel data_ =
     g [] errorBarGraph
 
 
+{-| Draw the xxx
+-}
 meanLine : Graph -> Svg msg
 meanLine gr =
     let
@@ -243,6 +266,8 @@ meanLine gr =
     meanValueGraph
 
 
+{-| Convert a graph to SVG
+-}
 viewGraph : Maybe Float -> Graph -> Svg msg
 viewGraph confidence g =
     case g.graphType of
@@ -256,6 +281,8 @@ viewGraph confidence g =
             meanLine g
 
 
+{-| Convert a chart to SVG
+-}
 view : Maybe (Svg msg) -> Chart -> Svg msg
 view annotation_ chartData =
     let
