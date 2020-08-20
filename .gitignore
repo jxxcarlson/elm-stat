@@ -4,3 +4,4 @@ example/index.html
 src/scratch.txt
 node_modules/
 package-lock.json
+**/index.html

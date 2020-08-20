@@ -1,1 +1,1 @@
-elm make --optimize Main.elm
+elm make --optimize Hubble.elm

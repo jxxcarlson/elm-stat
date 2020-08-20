@@ -5,6 +5,7 @@ import Element.Background as Background
 import Element.Font as Font
 
 
+
 --
 -- STYLE
 --
@@ -19,7 +20,7 @@ outer =
 
 
 mainColumn =
-    [ Background.color (rgb255 180 180 180)
+    [ Background.color (rgb 1.0 1.0 1.0)
     , paddingXY 20 20
     , height fill
     , width fill

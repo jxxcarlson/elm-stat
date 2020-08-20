@@ -1,4 +1,4 @@
-module RawData exposing (RawData, get, toData, dataToFloatList)
+module RawData exposing (RawData, empty, get, toData, dataToFloatList, minimum, maximum)
 
 {-| The purpose of the RawData module is
 to intelligently extract a data table,
@@ -8,7 +8,7 @@ csv, tab-delimited, or space-delimited. With
 the second, one can extract a list of Points
 in the xy plane from a data table.
 
-@docs RawData, get, toData, dataToFloatList
+@docs RawData, empty, get, toData, dataToFloatList, minimum, maximum
 
 -}
 
@@ -28,6 +28,16 @@ type alias RawData =
     { metadata : List String
     , columnHeaders : List String
     , data : Table String
+    }
+
+
+{-| Empty RawData value
+-}
+empty : RawData
+empty =
+    { metadata = []
+    , columnHeaders = []
+    , data = []
     }
 
 
@@ -379,3 +389,31 @@ combineMaybe ( x, y ) =
 
         ( _, _ ) ->
             Nothing
+
+
+
+--- ADDED JC
+
+
+{-| Compute the minimum of a column in a list of data, e.g.,
+
+    minimum xCoord data
+
+which computes the minimum of the x-values.
+
+-}
+minimum : (data -> Float) -> List data -> Maybe Float
+minimum selector dataList =
+    List.minimum (List.map selector dataList)
+
+
+{-| Compute the maximum of a column in a list of data, e.g.,
+
+    maximum xCoord data
+
+which computes the maximum of the x-values.
+
+-}
+maximum : (data -> Float) -> List data -> Maybe Float
+maximum selector dataList =
+    List.maximum (List.map selector dataList)

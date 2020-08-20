@@ -4,6 +4,7 @@ module Chart exposing
     , GraphType(..)
     , addGraph
     , addGraphIf
+    , boundingBox
     , chart
     , emptyGraph
     , errorBars
@@ -22,10 +23,10 @@ import Color
 import Data exposing (xCoord, yCoord)
 import ErrorBars exposing (ErrorBar)
 import Path exposing (Path)
+import RawData
 import SampleData exposing (simpleData)
 import Scale exposing (ContinuousScale)
 import Shape
-import Stat
 import TypedSvg exposing (circle, g, svg)
 import TypedSvg.Attributes exposing (class, fill, stroke, transform, viewBox)
 import TypedSvg.Attributes.InPx exposing (cx, cy, r, strokeWidth)
@@ -86,10 +87,10 @@ emptyGraph =
 
 boundingBox : Data.Data -> BoundingBox
 boundingBox data =
-    { xMin = Stat.minimum xCoord data |> Maybe.withDefault 0
-    , xMax = Stat.maximum xCoord data |> Maybe.withDefault 1
-    , yMin = Stat.minimum yCoord data |> Maybe.withDefault 0
-    , yMax = Stat.maximum yCoord data |> Maybe.withDefault 1
+    { xMin = RawData.minimum xCoord data |> Maybe.withDefault 0
+    , xMax = RawData.maximum xCoord data |> Maybe.withDefault 1
+    , yMin = RawData.minimum yCoord data |> Maybe.withDefault 0
+    , yMax = RawData.maximum yCoord data |> Maybe.withDefault 1
     }
 
 
