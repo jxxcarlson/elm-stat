@@ -24,14 +24,14 @@ import Data exposing (xCoord, yCoord)
 import ErrorBars exposing (ErrorBar)
 import Path exposing (Path)
 import RawData
-import SampleData exposing (simpleData)
+import SampleData
 import Scale exposing (ContinuousScale)
 import Shape
 import TypedSvg exposing (circle, g, svg)
 import TypedSvg.Attributes exposing (class, fill, stroke, transform, viewBox)
 import TypedSvg.Attributes.InPx exposing (cx, cy, r, strokeWidth)
 import TypedSvg.Core exposing (Svg)
-import TypedSvg.Types exposing (Fill(..), Transform(..))
+import TypedSvg.Types exposing (Paint(..), Transform(..))
 import Utility
 
 
@@ -187,7 +187,7 @@ basicLine : Float -> Float -> Float -> BoundingBox -> Data -> Svg msg
 basicLine r g b bb dat =
     List.map (transformScale bb) dat
         |> Shape.line Shape.monotoneInXCurve
-        |> (\path -> Path.element path [ stroke (Color.rgb r g b), strokeWidth 2.0, fill FillNone ])
+        |> (\path -> Path.element path [ stroke (Paint (Color.rgb r g b)), strokeWidth 2.0, fill PaintNone ])
 
 
 scatter : Graph -> Svg msg
@@ -195,13 +195,13 @@ scatter gr =
     gr.data
         |> List.map (transformScale gr.boundingBox)
         |> Utility.maybeValues
-        |> List.map (\( x, y ) -> circle [ cx x, cy y, r 2.5, fill (Fill (Color.rgb gr.r gr.g gr.b)) ] [])
+        |> List.map (\( x, y ) -> circle [ cx x, cy y, r 2.5, fill (Paint (Color.rgb gr.r gr.g gr.b)) ] [])
         |> g []
 
 
 lineGraph : Graph -> Svg msg
 lineGraph g =
-    Path.element (line g) [ stroke (Color.rgb g.r g.g g.b), strokeWidth 1.5, fill FillNone ]
+    Path.element (line g) [ stroke (Paint (Color.rgb g.r g.g g.b)), strokeWidth 1.5, fill PaintNone ]
 
 
 errorBars : Float -> Data -> Svg msg

@@ -1,4 +1,4 @@
-module Hubble exposing (main)
+module Temperature exposing (main)
 
 {- This is a starter app which presents a text label, text field, and a button.
    What you enter in the text field is echoed in the label.  When you press the
@@ -12,12 +12,10 @@ import Data exposing (Data, Point, xCoord, yCoord)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Font as Font
-import ErrorBars
 import Html exposing (Html)
 import RawData exposing (RawData)
 import SampleData
 import Stat
-import Style
 import TypedSvg
 import TypedSvg.Attributes as TA
 import TypedSvg.Types as TT
@@ -52,23 +50,26 @@ init : Flags -> ( Model, Cmd Msg )
 init flags =
     let
         data =
-            RawData.get SampleData.hubble1929
+            RawData.get SampleData.temperature
                 |> Maybe.withDefault RawData.empty
-                |> RawData.toData 1 2
+                |> RawData.toData 0 1
 
         ( b, m ) =
             Stat.linearRegression data
+                |> Debug.log "(b, m)"
                 |> Maybe.withDefault ( 0, 1 )
 
         -- Compute regression line
         x1 =
-            RawData.minimum Tuple.first data |> Maybe.withDefault 0
+            Debug.log "x1"
+                (RawData.minimum Tuple.first data |> Maybe.withDefault 0)
 
         y1 =
             b + m * x1
 
         x2 =
-            RawData.maximum Tuple.second data |> Maybe.withDefault 1
+            Debug.log "x2"
+                (RawData.maximum Tuple.first data |> Maybe.withDefault 1)
 
         y2 =
             b + m * x2
@@ -83,7 +84,7 @@ init flags =
         chart : Chart.Chart
         chart =
             data
-                |> Chart.graph Scatter 1.0 0 0
+                |> Chart.graph Line 1.0 0 0
                 |> Chart.chart
                 |> Chart.addGraph regressionLine
     in
@@ -118,7 +119,7 @@ view model =
             x * factor |> round |> toFloat |> (\u -> u / factor)
 
         mm =
-            String.fromFloat (roundTo 1 model.m)
+            String.fromFloat (roundTo 5 model.m)
 
         bb =
             String.fromFloat (roundTo 1 model.b |> abs)
@@ -130,17 +131,12 @@ view model =
         (column
             [ height fill, spacing 8, Font.size 14 ]
             [ viewData model
-            , el [ Font.bold, centerX, Font.size 18 ] (text "Hubble galactic recession data")
-            , el [ centerX ] (text "x-axis: distance in megaparsecs, y-axis: velocity in km/sec")
+            , el [ Font.bold, centerX, Font.size 18 ] (text "Global Land and Ocean Temperature Anomalies: 1880-2016")
+            , el [ centerX ] (text "x-axis: year, y-axis: anomaly, degrees Celsius")
             , el [ centerX ] (text ("Regression line: y = " ++ mm ++ "x - " ++ bb ++ ", R2 = " ++ rr2))
-            , el [ centerX ] (text ("Hubble constant H ~ " ++ mm ++ " km/sec/megaparsec"))
             , Element.newTabLink [ centerX ]
-                { url = "https://www.pnas.org/content/112/11/3173"
-                , label = el [ Font.color (Element.rgb 0 0 1) ] (text "Hubble's law and the expanding universe (PNAS)")
-                }
-            , Element.newTabLink [ centerX ]
-                { url = "http://hosting.astro.cornell.edu/academics/courses/astro201/hubbles_law.htm"
-                , label = el [ Font.color (Element.rgb 0 0 1) ] (text "Hubble's law (Cornell University)")
+                { url = "https://ourworldindata.org/grapher/temperature-anomaly"
+                , label = el [ Font.color (Element.rgb 0 0 1) ] (text "Our world in data")
                 }
             ]
         )
