@@ -56,20 +56,17 @@ init flags =
 
         ( b, m ) =
             Stat.linearRegression data
-                |> Debug.log "(b, m)"
                 |> Maybe.withDefault ( 0, 1 )
 
         -- Compute regression line
         x1 =
-            Debug.log "x1"
-                (RawData.minimum Tuple.first data |> Maybe.withDefault 0)
+            RawData.minimum Tuple.first data |> Maybe.withDefault 0
 
         y1 =
             b + m * x1
 
         x2 =
-            Debug.log "x2"
-                (RawData.maximum Tuple.first data |> Maybe.withDefault 1)
+            RawData.maximum Tuple.first data |> Maybe.withDefault 1
 
         y2 =
             b + m * x2
