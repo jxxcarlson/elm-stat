@@ -1,8 +1,9 @@
 module Data exposing (Point, Data, makePoint, xCoord, yCoord)
 
-{-| This module provides functions for
+{-| This module provides types and functions for
 extracting `Data` both from strings and
-`RawData` values.
+`RawData` values. These types and functions are used
+in the `Chart` module.
 
 @docs Point, Data, makePoint, xCoord, yCoord
 

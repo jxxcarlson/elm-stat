@@ -4,7 +4,8 @@ module Chart exposing
     , view, chart, addGraph, addGraphIf
     )
 
-{-| Functions for building graphs A chart consists of one more graphs.
+{-| Functions for building graphs and charts A chart consists of one more graphs.
+Graphs come in various flavors, notably line and scatter.
 
 
 ## Types

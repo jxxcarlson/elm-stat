@@ -135,6 +135,10 @@ view model =
             , el [ centerX ] (text "x-axis: year, y-axis: anomaly, degrees Celsius")
             , el [ centerX ] (text ("Regression line: y = " ++ mm ++ "x - " ++ bb ++ ", R2 = " ++ rr2))
             , Element.newTabLink [ centerX ]
+                { url = "http://www.climate.gov"
+                , label = el [ Font.color (Element.rgb 0 0 1) ] (text "Data source: www.climate.gov")
+                }
+            , Element.newTabLink [ centerX ]
                 { url = "https://ourworldindata.org/grapher/temperature-anomaly"
                 , label = el [ Font.color (Element.rgb 0 0 1) ] (text "Our world in data")
                 }

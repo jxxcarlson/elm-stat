@@ -1,16 +1,34 @@
 # Elm-stat
 
-The `elm-stat` package provides tools for statistics and visualization of n-column data files. 
-Most of the features of the package are exposed in the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html) (work in progress), the code for which is in `./examples`. 
+The `elm-stat` package provides tools for statistics and visualization of n-column data files.
+Most of the features of the package are exposed in the [Demo App](https://jxxcarlson.github.io/app/dataviewer.html) (work in progress), the code for which is in `./examples`.
 The package is intended to be a long-term research and development effort which will gradually add features over time. I'd be very interested in finding collaborators with some background in mathematics and/or statistics.
 
 ## The API
 
-The `elm-stat` package consists of three modules,
+The `elm-stat` package consists of six modules divided into three groups
 
-- `StatRandom`, provides commonly used probability distributions
-- `Stat`, provides a number of common functions useful in statistics
-- `RawData`, for extracting raw data from a text string or file: metadata such as comments about the data, column headings, and an `m*n` table of strings representing the actual data.
+### Statistical Functions
+
+- `StatRandom` provides commonly used probability distributions
+- `Stat` provides a number of common functions useful in statistics
+
+### Data
+
+- `RawData` is used for extracting raw data from a text string or file: metadata such as comments about the data, column headings, and an `m*n` table of strings representing the actual data.
+
+- `SampleData` provides several data sets: Global temperature anomalies, sea level data, Edwin Hubble's galactic recession data, and historic speed of light data
+
+
+### Charts  
+
+- `Chart` provides tools for building graphs and charts. A chart consists of one more graphs.
+Graphs come in various types, e.g, line and scatter.
+
+- `Data`  provides types and functions for
+extracting lists of 2D points both from strings and
+`RawData` values.  This module is used in `Chart`
+
 
 ## Example usage
 
@@ -68,7 +86,7 @@ Just -0.05 : Maybe Float
 Just 0.31324402291377174 : Maybe Float
 ```
 
-Extract two columns as a tuple list: 
+Extract two columns as a tuple list:
 
 ```
 > yearTemp = RawData.toData 0 1 (Maybe.withDefault (RawData.RawData [] [] [[]]) data)
@@ -83,8 +101,22 @@ Calculate correlation between the years and temperature anomalies:
 Just 0.8635859634657297 : Maybe Float
 
 ```
-## The Demo App
+## Demo Apps
 
-Code for the demo app is in `./examples`. There is an online version at [Data explorer](https://jxxcarlson.github.io/app/dataviewer.html).
+There are three examples in `./src`.  
 
-The data used in the example in the file `data/temperature-anomalies.csv` in this repo. It is a list of global temperature anomalies for the period 1880-2017 from [www.climate.gov](http://www.climate.gov). The annual temperature anomaly is the difference between the global mean temperature and the long-term mean global temperature. For this data set, the long-term mean is computed for the period 1901-2000.
+- `Main.elm` provides usage examples for the functions in the modules `Stat` and `StatRandom`
+
+- `Hubble.elm` provides a scatter plot and regression line for Edwin Hubble's 1929 galactic recession data.
+
+- `Temperature.elm` provides a line graph and regression line for global temperature anomalies for the period
+1880-2016. The temperature anomaly for a given year is the difference between the mean temperature for the year and the mean global temperature for a reference period.
+
+
+Code for the demo apps is in `./examples`. Compile the first example by saying
+
+```
+elm make src/Main.elm
+```
+
+then opening `index.html` in a browser.
