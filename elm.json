@@ -22,7 +22,6 @@
         "elm-community/typed-svg": "6.0.0 <= v < 7.0.0",
         "folkertdev/one-true-path-experiment": "4.0.2 <= v < 5.0.0",
         "gampleman/elm-visualization": "2.0.0 <= v < 3.0.0",
-        "ianmackenzie/elm-geometry": "1.2.1 <= v < 2.0.0",
         "zgohr/elm-csv": "1.0.1 <= v < 2.0.0"
     },
     "test-dependencies": {
