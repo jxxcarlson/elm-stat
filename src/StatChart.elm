@@ -1,5 +1,5 @@
 module StatChart exposing
-    ( BoundingBox, Format, Graph, GraphType(..), Chart
+    ( BoundingBox, Format, Graph, GraphType(..), StatChart
     , boundingBox, emptyGraph, graph, lineGraph, meanLine, scatter, errorBars
     , view, chart, addGraph
     )
@@ -46,7 +46,7 @@ import Utility
 {-| A chart consists of a boundig box and a list of Graphs.
 A chart is rendered to SVG by the `view` function.
 -}
-type alias Chart =
+type alias StatChart =
     { boundingBox : BoundingBox
     , confidence : Maybe Float
     , data : List Graph
@@ -144,7 +144,7 @@ graph graphType r g b data =
 
 {-| Make a chart out of a graph
 -}
-chart : Graph -> Chart
+chart : Graph -> StatChart
 chart g =
     { boundingBox = g.boundingBox
     , confidence = Nothing
@@ -154,7 +154,7 @@ chart g =
 
 {-| Add a graph to an existing StatChart
 -}
-addGraph : Graph -> Chart -> Chart
+addGraph : Graph -> StatChart -> StatChart
 addGraph newGraph c =
     let
         adjustedGraph =
@@ -292,7 +292,7 @@ One use of annotations is to add error bars to a chart. See
 `./examples/src/Hubble.elm`
 
 -}
-view : Format -> Maybe (Svg msg) -> Chart -> Svg msg
+view : Format -> Maybe (Svg msg) -> StatChart -> Svg msg
 view format annotation_ chartData =
     let
         svgList =
