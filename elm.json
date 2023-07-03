@@ -9,7 +9,7 @@
         "Stat",
         "RawData",
         "SampleData",
-        "Chart",
+        "StatChart",
         "Data",
         "ErrorBars"
     ],
