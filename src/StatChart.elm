@@ -1,4 +1,4 @@
-module Chart exposing
+module StatChart exposing
     ( BoundingBox, Format, Graph, GraphType(..), Chart
     , boundingBox, emptyGraph, graph, lineGraph, meanLine, scatter, errorBars
     , view, chart, addGraph
@@ -12,7 +12,7 @@ In this module, `Svg` means `TypedSvg.Core.Svg`
 
 ## Types
 
-@docs BoundingBox, Format, Graph, GraphType, Chart
+@docs BoundingBox, Format, Graph, GraphType, StatChart
 
 
 ## Constructing and operating on graphs
@@ -152,7 +152,7 @@ chart g =
     }
 
 
-{-| Add a graph to an existing Chart
+{-| Add a graph to an existing StatChart
 -}
 addGraph : Graph -> Chart -> Chart
 addGraph newGraph c =
@@ -286,7 +286,7 @@ viewGraph format confidence g =
   - `Maybe (Svg mg)`: this is an "annotation," which maybe`Nothing`or`Just svgValue`, where`svgValue`is any value of type`Svg msg`.
     Here`Svg`meand `TypedSvg.Core.Svg`.
 
-  - `Chart`: the chart to be rendered
+  - `StatChart`: the chart to be rendered
 
 One use of annotations is to add error bars to a chart. See
 `./examples/src/Hubble.elm`

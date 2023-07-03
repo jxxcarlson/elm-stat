@@ -84,7 +84,7 @@ init flags =
         r2 =
             Stat.r2 data |> Maybe.withDefault 0
 
-        -- Chart
+        -- StatChart
         chart : Chart.Chart
         chart =
             data

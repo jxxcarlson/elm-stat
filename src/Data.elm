@@ -3,7 +3,7 @@ module Data exposing (Point, Data, makePoint, xCoord, yCoord)
 {-| This module provides types and functions for
 extracting `Data` both from strings and
 `RawData` values. These types and functions are used
-in the `Chart` module.
+in the `StatChart` module.
 
 @docs Point, Data, makePoint, xCoord, yCoord
 
