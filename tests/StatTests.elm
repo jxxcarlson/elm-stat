@@ -11,13 +11,16 @@ meanFuzzTest =
     describe "mean fuzz test"
         [ fuzz (list float) "generating a list of floats" <|
             \floatList ->
-                floatList
-                    |> Stat.mean
-                    |> Maybe.withDefault 0
-                    |> Expect.all
-                        [ Expect.atLeast (List.minimum floatList |> Maybe.withDefault 0)
-                        , Expect.atMost (List.maximum floatList |> Maybe.withDefault 0)
-                        ]
+                case Stat.mean floatList of
+                    Nothing ->
+                        Expect.equal floatList []
+
+                    Just avg ->
+                        Expect.all
+                            [ Expect.atLeast (List.minimum floatList |> Maybe.withDefault 0)
+                            , Expect.atMost (List.maximum floatList |> Maybe.withDefault 0)
+                            ]
+                            avg
         ]
 
 
