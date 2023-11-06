@@ -29,7 +29,7 @@ module Stat exposing
 
 -}
 
-import Dict as Dict
+import Dict
 import Utility exposing (buildTable, combineTuple)
 
 
@@ -41,20 +41,22 @@ import Utility exposing (buildTable, combineTuple)
 -}
 mean : List Float -> Maybe Float
 mean list =
-    let
-        ( sum, len ) =
-            sumLen list
-    in
-    if len == 0 then
-        Nothing
+    case list of
+        [] ->
+            Nothing
 
-    else
-        sum / toFloat len |> Just
+        x :: xs ->
+            Just (meanHelp xs x 1)
 
 
-sumLen : List Float -> ( Float, Int )
-sumLen =
-    List.foldl (\x y -> Tuple.pair (Tuple.first y + x) (Tuple.second y + 1)) ( 0, 0 )
+meanHelp : List Float -> Float -> Float -> Float
+meanHelp remaining total length =
+    case remaining of
+        [] ->
+            total / length
+
+        x :: rest ->
+            meanHelp rest (total + x) (length + 1)
 
 
 {-| Same as mean
