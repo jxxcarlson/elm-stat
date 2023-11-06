@@ -1,8 +1,8 @@
-module FuzzTests exposing (correlationTest, covarianceTest, geometricMeanTest, harmonicMeanTest, linearRegressionTest, meanAbsoluteDeviationTest, meanFuzzTest, medianAbsoluteDeviationTest, medianFuzzTest, modeTest, rootMeanSquareFuzzTest, skewnessTest, standardDeviationFuzzTest, varianceTest, weightedMeanTest, zScoreTest, zScoresTest)
+module StatTests exposing (correlationTest, covarianceTest, geometricMeanTest, harmonicMeanTest, linearRegressionTest, meanAbsoluteDeviationTest, meanFuzzTest, medianAbsoluteDeviationTest, medianFuzzTest, modeTest, rootMeanSquareFuzzTest, skewnessTest, standardDeviationFuzzTest, varianceTest, weightedMeanTest, zScoreTest, zScoresTest)
 
 import Expect exposing (Expectation, FloatingPointTolerance(..))
 import Fuzz exposing (..)
-import Stat as Stat
+import Stat
 import Test exposing (..)
 
 
