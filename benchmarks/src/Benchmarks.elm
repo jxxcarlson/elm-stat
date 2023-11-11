@@ -72,6 +72,11 @@ suite =
             (\() -> Stat.meanAbsoluteDeviation numbers)
             "Old"
             (\() -> meanAbsoluteDeviation numbers)
+        , Benchmark.compare "Median absolute deviation"
+            "New"
+            (\() -> Stat.medianAbsoluteDeviation numbers)
+            "Old"
+            (\() -> medianAbsoluteDeviation numbers)
         ]
         
 
@@ -196,3 +201,32 @@ meanAbsoluteDeviation list =
             (\n ->
                 List.map (\x -> abs (x - n)) list |> mean
             )
+
+
+medianAbsoluteDeviation : List Float -> Maybe Float
+medianAbsoluteDeviation list =
+    median list
+        |> Maybe.andThen
+            (\n ->
+                List.map (\x -> abs (x - n)) list |> mean
+            )
+
+median : List Float -> Maybe Float
+median list =
+    let
+        l =
+            List.length list
+    in
+    if l == 0 then
+        Nothing
+
+    else if modBy 2 l == 0 then
+        List.sort list
+            |> List.drop ((l // 2) - 1)
+            |> List.take 2
+            |> mean
+
+    else
+        List.sort list
+            |> List.drop (l // 2)
+            |> List.head

@@ -376,11 +376,17 @@ meanAbsoluteDeviationHelp remaining avg total length =
 -}
 medianAbsoluteDeviation : List Float -> Maybe Float
 medianAbsoluteDeviation list =
-    median list
-        |> Maybe.andThen
-            (\n ->
-                List.map (\x -> abs (x - n)) list |> mean
-            )
+    case list of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            case median list of
+                Just mdn ->
+                    Just (meanAbsoluteDeviationHelp xs mdn (abs (mdn - x)) 1)
+
+                _ ->
+                    Nothing
 
 
 {-| Calculate the Z-score or standard score of a given elements provided the mean and the standard deviation.
