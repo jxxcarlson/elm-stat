@@ -29,9 +29,6 @@ module Stat exposing
 
 -}
 
-import Dict
-import Utility exposing (buildTable, combineTuple)
-
 
 {-| Compute the mean of a list of floats.
 
@@ -226,22 +223,6 @@ modeHelp2 rest best bestFreq new newFreq =
                 modeHelp2 xs best bestFreq x 1
 
 
-
--- let
---     frequencyTable =
---         buildTable list
---     maxValue =
---         List.maximum (Dict.values frequencyTable)
---     kvList =
---         Dict.toList frequencyTable
--- in
--- List.filter (\( _, v ) -> Just v == maxValue) kvList
---     |> List.head
---     |> Maybe.map Tuple.first
---     |> (\x -> ( x, maxValue ))
---     |> combineTuple
-
-
 {-| Compute the median of the list. The median is the value separating the higher half from the lower half of a data sample. If the sample has an odd number of values, the median is the value in the middle. If the sample has an even number of values, the median is the mean of the two middle values.
 
     > Stat.median [1,6,10] == Just 6
@@ -276,19 +257,22 @@ median list =
 -}
 rootMeanSquare : List Float -> Maybe Float
 rootMeanSquare list =
-    let
-        l =
-            List.length list
-    in
-    if l == 0 then
-        Nothing
+    case list of
+        [] ->
+            Nothing
 
-    else
-        List.map (\x -> x ^ 2) list
-            |> List.sum
-            |> (\x -> x / toFloat l)
-            |> sqrt
-            |> Just
+        x :: xs ->
+            Just (rootMeanSquareHelp xs (x ^ 2) 1)
+
+
+rootMeanSquareHelp : List Float -> Float -> Float -> Float
+rootMeanSquareHelp remaining total length =
+    case remaining of
+        [] ->
+            sqrt (total / length)
+
+        x :: xs ->
+            rootMeanSquareHelp xs (total + x ^ 2) (length + 1)
 
 
 {-| Skew or Skewness is a measure of the asymmetry of the probability distribution of a variable around its mean. There are several equations to calculate skewness. The one used in this function is [Pearson’s moment coefficient](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient) of skewness.

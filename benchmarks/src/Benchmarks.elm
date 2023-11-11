@@ -62,6 +62,11 @@ suite =
             (\() -> Stat.variance numbers)
             "Old"
             (\() -> variance numbers)
+        , Benchmark.compare "RMS: single VS multiple traversals"
+            "New"
+            (\() -> Stat.rootMeanSquare numbers)
+            "Old"
+            (\() -> rootMeanSquare numbers)
         ]
         
 
@@ -159,3 +164,19 @@ mode list =
         |> Maybe.map Tuple.first
         |> (\x -> ( x, maxValue ))
         |> combineTuple
+
+rootMeanSquare : List Float -> Maybe Float
+rootMeanSquare list =
+    let
+        l =
+            List.length list
+    in
+    if l == 0 then
+        Nothing
+
+    else
+        List.map (\x -> x ^ 2) list
+            |> List.sum
+            |> (\x -> x / toFloat l)
+            |> sqrt
+            |> Just
