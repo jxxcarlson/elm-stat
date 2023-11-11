@@ -531,35 +531,21 @@ correlation tupleList =
 
         ( a, b ) :: xs ->
             let
-                { meanA, meanB, stdDevA, stdDevB, length } =
+                { meanA, meanB, varA, varB, length } =
                     correlationHelp1 xs (a ^ 2) a (b ^ 2) b 1
             in
             covarianceHelp2 xs meanA meanB ((a - meanA) * (b - meanB))
-                / (length * stdDevA * stdDevB)
+                / (length * sqrt varA * sqrt varB)
                 |> Just
 
 
-correlationHelp1 :
-    List ( Float, Float )
-    -> Float
-    -> Float
-    -> Float
-    -> Float
-    -> Float
-    ->
-        { meanA : Float
-        , meanB : Float
-        , stdDevA : Float
-        , stdDevB : Float
-        , length : Float
-        }
 correlationHelp1 remaining squaredA sumA squaredB sumB length =
     case remaining of
         [] ->
             { meanA = sumA / length
             , meanB = sumB / length
-            , stdDevA = squaredA / length - (sumA / length) ^ 2 |> sqrt
-            , stdDevB = squaredB / length - (sumB / length) ^ 2 |> sqrt
+            , varA = squaredA / length - (sumA / length) ^ 2
+            , varB = squaredB / length - (sumB / length) ^ 2
             , length = length
             }
 
@@ -596,25 +582,49 @@ The tuple returned is `(alpha, beta)` where `y = alpha + beta * x`
 -}
 linearRegression : List ( Float, Float ) -> Maybe ( Float, Float )
 linearRegression tupleList =
-    if List.length tupleList > 1 then
-        let
-            ( xs, ys ) =
-                List.unzip tupleList
+    case tupleList of
+        ( a, b ) :: ((_ :: _) as xs) ->
+            let
+                { meanX, meanY, varX, length } =
+                    linearRegressionHelp xs (a ^ 2) a b 1
 
-            cov =
-                covariance tupleList |> Maybe.withDefault 0
+                cov : Float
+                cov =
+                    covarianceHelp2 xs meanX meanY ((a - meanX) * (b - meanY))
+                        / length
+            in
+            if varX /= 0 then
+                Just ( meanY - (cov / varX) * meanX, cov / varX )
 
-            varxs =
-                variance xs |> Maybe.withDefault 0
-        in
-        if varxs /= 0 then
-            Maybe.map2 (\mxs mys -> Tuple.pair (mys - (cov / varxs) * mxs) (cov / varxs)) (mean xs) (mean ys)
+            else
+                Nothing
 
-        else
+        _ ->
             Nothing
 
-    else
-        Nothing
+
+linearRegressionHelp :
+    List ( Float, Float )
+    -> Float
+    -> Float
+    -> Float
+    -> Float
+    -> { meanX : Float, meanY : Float, varX : Float, length : Float }
+linearRegressionHelp remaining squaredX sumX sumY length =
+    case remaining of
+        [] ->
+            { meanX = sumX / length
+            , meanY = sumY / length
+            , varX = squaredX / length - (sumX / length) ^ 2
+            , length = length
+            }
+
+        ( a, b ) :: xs ->
+            linearRegressionHelp xs
+                (squaredX + a ^ 2)
+                (sumX + a)
+                (sumY + b)
+                (length + 1)
 
 
 {-| Returns a function that looks like this: `y = alpha + beta * x`.
@@ -626,10 +636,5 @@ This may come in handy when generating points on the regreesion line.
 
 -}
 linearRegressionLine : ( Float, Float ) -> Float -> Float
-linearRegressionLine t =
-    lineFunc (Tuple.first t) (Tuple.second t)
-
-
-lineFunc : Float -> Float -> Float -> Float
-lineFunc alpha beta x =
+linearRegressionLine ( alpha, beta ) x =
     alpha + beta * x
