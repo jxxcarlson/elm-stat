@@ -62,6 +62,11 @@ suite =
             (\() -> Stat.variance numbers)
             "Old"
             (\() -> variance numbers)
+        , Benchmark.compare "Skewness"
+            "New"
+            (\() -> Stat.skewness numbers)
+            "Old"
+            (\() -> skewness numbers)
         , Benchmark.compare "RMS: single VS multiple traversals"
             "New"
             (\() -> Stat.rootMeanSquare numbers)
@@ -163,6 +168,24 @@ geometricMean list =
     else
         List.product list ^ (1 / toFloat l) |> Just
 
+
+skewness : List Float -> Maybe Float
+skewness list =
+    let
+        stdDev =
+            standardDeviation list
+    in
+    case stdDev of
+        Nothing ->
+            Nothing
+
+        Just s ->
+            mean list
+                |> Maybe.andThen
+                    (\n ->
+                        List.map (\x -> ((x - n) / s) ^ 3) list
+                            |> mean
+                    )
 
 variance : List Float -> Maybe Float
 variance list =

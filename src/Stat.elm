@@ -308,21 +308,46 @@ rootMeanSquareHelp remaining total length =
 -}
 skewness : List Float -> Maybe Float
 skewness list =
-    let
-        stdDev =
-            standardDeviation list
-    in
-    case stdDev of
-        Nothing ->
+    case list of
+        [] ->
             Nothing
 
-        Just s ->
-            mean list
-                |> Maybe.andThen
-                    (\n ->
-                        List.map (\x -> ((x - n) / s) ^ 3) list
-                            |> mean
-                    )
+        x :: xs ->
+            let
+                data =
+                    skewnessHelp1 xs (x ^ 2) x 1
+            in
+            skewnessHelp2 xs data.mean data.stdDev (((x - data.mean) / data.stdDev) ^ 3)
+                / data.length
+                |> Just
+
+
+skewnessHelp1 :
+    List Float
+    -> Float
+    -> Float
+    -> Float
+    -> { mean : Float, stdDev : Float, length : Float }
+skewnessHelp1 remaining squaredSum sum length =
+    case remaining of
+        [] ->
+            { mean = sum / length
+            , stdDev = squaredSum / length - (sum / length) ^ 2 |> sqrt
+            , length = length
+            }
+
+        x :: xs ->
+            skewnessHelp1 xs (squaredSum + x ^ 2) (sum + x) (length + 1)
+
+
+skewnessHelp2 : List Float -> Float -> Float -> Float -> Float
+skewnessHelp2 remaining m s acc =
+    case remaining of
+        [] ->
+            acc
+
+        x :: xs ->
+            skewnessHelp2 xs m s (acc + ((x - m) / s) ^ 3)
 
 
 {-| In statistics, variance is the expectation of the squared deviation of a random variable from its mean.
