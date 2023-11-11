@@ -9,7 +9,7 @@ import Test exposing (..)
 meanFuzzTest : Test
 meanFuzzTest =
     describe "mean fuzz test"
-        [ fuzz (list float) "generating a list of floats" <|
+        [ fuzz (list niceFloat) "generating a list of floats" <|
             \floatList ->
                 case Stat.mean floatList of
                     Nothing ->
@@ -115,7 +115,7 @@ modeTest =
 medianFuzzTest : Test
 medianFuzzTest =
     describe "median fuzz test"
-        [ fuzz (list float) "generating a list of floats" <|
+        [ fuzz (list niceFloat) "generating a list of floats" <|
             \floatList ->
                 floatList
                     |> Stat.median
@@ -194,7 +194,7 @@ varianceTest =
 standardDeviationFuzzTest : Test
 standardDeviationFuzzTest =
     describe "standard deviation fuzz test"
-        [ fuzz (list float) "generating a list of floats" <|
+        [ fuzz (list niceFloat) "generating a list of floats" <|
             \floatList ->
                 let
                     var =
