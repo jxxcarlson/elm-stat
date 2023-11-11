@@ -357,8 +357,13 @@ varianceHelp remaining squaredSum sum length =
 
 -}
 standardDeviation : List Float -> Maybe Float
-standardDeviation =
-    variance >> Maybe.map sqrt
+standardDeviation list =
+    case list of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            Just (varianceHelp xs (x ^ 2) x 1 |> sqrt)
 
 
 {-| The average absolute deviation, or mean absolute deviation, of a data set is the average of the absolute deviations from the mean.
