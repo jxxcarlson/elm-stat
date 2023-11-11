@@ -3,6 +3,8 @@ module Benchmarks exposing (main)
 import Benchmark exposing (describe, Benchmark)
 import Benchmark.Runner exposing (BenchmarkProgram, program)
 import Stat
+import Utility exposing (buildTable, combineTuple)
+import Dict
 
 
 main : BenchmarkProgram
@@ -21,6 +23,13 @@ suite =
         weightedNumbers =
             List.foldl (\el (w, acc) -> ( w + 0.05, ( w, el )  :: acc )) (0.05, []) numbers
                 |> Tuple.second
+
+        repeatedStrings : List String
+        repeatedStrings =
+            List.repeat 250 "red" 
+                ++ List.repeat 251 "blue" 
+                ++ List.repeat 249 "green" 
+                ++ List.repeat 250 "yellow"
     in
     describe "elm-stat"
         [ Benchmark.compare "Mean: tail call recursion VS foldl + tuple"
@@ -43,6 +52,11 @@ suite =
             (\() -> Stat.geometricMean numbers)
             "Old"
             (\() -> geometricMean numbers)
+        , Benchmark.compare "Mode: sorting VS Dict"
+            "New"
+            (\() -> Stat.mode repeatedStrings)
+            "Old"
+            (\() -> mode repeatedStrings)
         , Benchmark.compare "Variance: single VS multiple traversals"
             "New"
             (\() -> Stat.variance numbers)
@@ -125,3 +139,23 @@ variance list =
                 List.map (\x -> (x - n) ^ 2) list
                     |> mean
             )
+
+
+
+mode : List comparable -> Maybe ( comparable, Int )
+mode list =
+    let
+        frequencyTable =
+            buildTable list
+
+        maxValue =
+            List.maximum (Dict.values frequencyTable)
+
+        kvList =
+            Dict.toList frequencyTable
+    in
+    List.filter (\( _, v ) -> Just v == maxValue) kvList
+        |> List.head
+        |> Maybe.map Tuple.first
+        |> (\x -> ( x, maxValue ))
+        |> combineTuple

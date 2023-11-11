@@ -183,21 +183,63 @@ geometricMeanHelp remaining product length =
 -}
 mode : List comparable -> Maybe ( comparable, Int )
 mode list =
-    let
-        frequencyTable =
-            buildTable list
+    case List.sort list of
+        [] ->
+            Nothing
 
-        maxValue =
-            List.maximum (Dict.values frequencyTable)
+        x :: xs ->
+            Just (modeHelp1 xs x 1)
 
-        kvList =
-            Dict.toList frequencyTable
-    in
-    List.filter (\( _, v ) -> Just v == maxValue) kvList
-        |> List.head
-        |> Maybe.map Tuple.first
-        |> (\x -> ( x, maxValue ))
-        |> combineTuple
+
+modeHelp1 : List b -> b -> number -> ( b, number )
+modeHelp1 rest element frequency =
+    case rest of
+        [] ->
+            ( element, frequency )
+
+        x :: xs ->
+            if x == element then
+                modeHelp1 xs element (frequency + 1)
+
+            else
+                modeHelp2 xs element frequency x 1
+
+
+modeHelp2 : List b -> b -> number -> b -> number -> ( b, number )
+modeHelp2 rest best bestFreq new newFreq =
+    case rest of
+        [] ->
+            if newFreq > bestFreq then
+                ( new, newFreq )
+
+            else
+                ( best, bestFreq )
+
+        x :: xs ->
+            if x == new then
+                modeHelp2 xs best bestFreq new (newFreq + 1)
+
+            else if newFreq > bestFreq then
+                modeHelp2 rest new newFreq x 1
+
+            else
+                modeHelp2 xs best bestFreq x 1
+
+
+
+-- let
+--     frequencyTable =
+--         buildTable list
+--     maxValue =
+--         List.maximum (Dict.values frequencyTable)
+--     kvList =
+--         Dict.toList frequencyTable
+-- in
+-- List.filter (\( _, v ) -> Just v == maxValue) kvList
+--     |> List.head
+--     |> Maybe.map Tuple.first
+--     |> (\x -> ( x, maxValue ))
+--     |> combineTuple
 
 
 {-| Compute the median of the list. The median is the value separating the higher half from the lower half of a data sample. If the sample has an odd number of values, the median is the value in the middle. If the sample has an even number of values, the median is the mean of the two middle values.
