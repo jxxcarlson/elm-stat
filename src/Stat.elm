@@ -274,24 +274,6 @@ lengthHelp remaining total =
             lengthHelp xs (total + 1)
 
 
-
--- let
---     l =
---         List.length list
--- in
--- if l == 0 then
---     Nothing
--- else if modBy 2 l == 0 then
---     List.sort list
---         |> List.drop ((l // 2) - 1)
---         |> List.take 2
---         |> mean
--- else
---     List.sort list
---         |> List.drop (l // 2)
---         |> List.head
-
-
 {-| Root mean square (RMS) is the square root of the sum of the squares of values in a list divided by the length of the list. Also known as quadratic mean.
 
     Stat.rootMeanSquare [ 1, 10, 20 ] == Just 12.92
