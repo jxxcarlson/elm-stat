@@ -345,11 +345,28 @@ standardDeviation =
 -}
 meanAbsoluteDeviation : List Float -> Maybe Float
 meanAbsoluteDeviation list =
-    mean list
-        |> Maybe.andThen
-            (\n ->
-                List.map (\x -> abs (x - n)) list |> mean
-            )
+    case list of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            Just <|
+                let
+                    avg : Float
+                    avg =
+                        meanHelp xs x 1
+                in
+                meanAbsoluteDeviationHelp xs avg (abs (avg - x)) 1
+
+
+meanAbsoluteDeviationHelp : List Float -> Float -> Float -> Float -> Float
+meanAbsoluteDeviationHelp remaining avg total length =
+    case remaining of
+        [] ->
+            total / length
+
+        x :: xs ->
+            meanAbsoluteDeviationHelp xs avg (total + abs (avg - x)) (length + 1)
 
 
 {-| The median absolute deviation, of a data set is the average of the absolute deviations from the median.

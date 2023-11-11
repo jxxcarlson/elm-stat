@@ -67,6 +67,11 @@ suite =
             (\() -> Stat.rootMeanSquare numbers)
             "Old"
             (\() -> rootMeanSquare numbers)
+        , Benchmark.compare "Mean absolute deviation"
+            "New"
+            (\() -> Stat.meanAbsoluteDeviation numbers)
+            "Old"
+            (\() -> meanAbsoluteDeviation numbers)
         ]
         
 
@@ -165,6 +170,8 @@ mode list =
         |> (\x -> ( x, maxValue ))
         |> combineTuple
 
+
+
 rootMeanSquare : List Float -> Maybe Float
 rootMeanSquare list =
     let
@@ -180,3 +187,12 @@ rootMeanSquare list =
             |> (\x -> x / toFloat l)
             |> sqrt
             |> Just
+
+
+meanAbsoluteDeviation : List Float -> Maybe Float
+meanAbsoluteDeviation list =
+    mean list
+        |> Maybe.andThen
+            (\n ->
+                List.map (\x -> abs (x - n)) list |> mean
+            )
