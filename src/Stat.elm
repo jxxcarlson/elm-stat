@@ -525,11 +525,51 @@ covarianceHelp2 remaining meanA meanB acc =
 -}
 correlation : List ( Float, Float ) -> Maybe Float
 correlation tupleList =
-    let
-        ( xs, ys ) =
-            List.unzip tupleList
-    in
-    Maybe.map3 (\cov stdDevXs stdDevYs -> cov / (stdDevXs * stdDevYs)) (covariance tupleList) (standardDeviation xs) (standardDeviation ys)
+    case tupleList of
+        [] ->
+            Nothing
+
+        ( a, b ) :: xs ->
+            let
+                { meanA, meanB, stdDevA, stdDevB, length } =
+                    correlationHelp1 xs (a ^ 2) a (b ^ 2) b 1
+            in
+            covarianceHelp2 xs meanA meanB ((a - meanA) * (b - meanB))
+                / (length * stdDevA * stdDevB)
+                |> Just
+
+
+correlationHelp1 :
+    List ( Float, Float )
+    -> Float
+    -> Float
+    -> Float
+    -> Float
+    -> Float
+    ->
+        { meanA : Float
+        , meanB : Float
+        , stdDevA : Float
+        , stdDevB : Float
+        , length : Float
+        }
+correlationHelp1 remaining squaredA sumA squaredB sumB length =
+    case remaining of
+        [] ->
+            { meanA = sumA / length
+            , meanB = sumB / length
+            , stdDevA = squaredA / length - (sumA / length) ^ 2 |> sqrt
+            , stdDevB = squaredB / length - (sumB / length) ^ 2 |> sqrt
+            , length = length
+            }
+
+        ( a, b ) :: xs ->
+            correlationHelp1 xs
+                (squaredA + a ^ 2)
+                (sumA + a)
+                (squaredB + b ^ 2)
+                (sumB + b)
+                (length + 1)
 
 
 {-| R2 is the square of the correlation coefficient
@@ -540,11 +580,12 @@ correlation tupleList =
 -}
 r2 : List ( Float, Float ) -> Maybe Float
 r2 tupleList =
-    let
-        cc =
-            correlation tupleList
-    in
-    Maybe.map2 (*) cc cc
+    case correlation tupleList of
+        Just c ->
+            Just (c * c)
+
+        _ ->
+            Nothing
 
 
 {-| Linear regression finds the line that best fits the given points. The method used here is the [simple linear regression](https://en.wikipedia.org/wiki/Linear_regression).

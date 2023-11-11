@@ -1,10 +1,10 @@
 module Benchmarks exposing (main)
 
-import Benchmark exposing (describe, Benchmark)
+import Benchmark exposing (Benchmark, describe)
 import Benchmark.Runner exposing (BenchmarkProgram, program)
+import Dict
 import Stat
 import Utility exposing (buildTable, combineTuple)
-import Dict
 
 
 main : BenchmarkProgram
@@ -17,18 +17,18 @@ suite =
     let
         numbers : List Float
         numbers =
-            List.range 1 1000 |> List.map toFloat 
+            List.range 1 1000 |> List.map toFloat
 
-        weightedNumbers : List (Float, Float)
+        weightedNumbers : List ( Float, Float )
         weightedNumbers =
-            List.foldl (\el (w, acc) -> ( w + 0.05, ( w, el )  :: acc )) (0.05, []) numbers
+            List.foldl (\el ( w, acc ) -> ( w + 0.05, ( w, el ) :: acc )) ( 0.05, [] ) numbers
                 |> Tuple.second
 
         repeatedStrings : List String
         repeatedStrings =
-            List.repeat 250 "red" 
-                ++ List.repeat 251 "blue" 
-                ++ List.repeat 249 "green" 
+            List.repeat 250 "red"
+                ++ List.repeat 251 "blue"
+                ++ List.repeat 249 "green"
                 ++ List.repeat 250 "yellow"
     in
     describe "elm-stat"
@@ -87,8 +87,12 @@ suite =
             (\() -> Stat.covariance <| List.map2 Tuple.pair numbers numbers)
             "Old"
             (\() -> covariance <| List.map2 Tuple.pair numbers numbers)
+        , Benchmark.compare "Correlation"
+            "New"
+            (\() -> Stat.correlation <| List.map2 Tuple.pair numbers numbers)
+            "Old"
+            (\() -> correlation <| List.map2 Tuple.pair numbers numbers)
         ]
-        
 
 
 
@@ -108,11 +112,10 @@ mean list =
         sum / toFloat len |> Just
 
 
-
 sumLen : List Float -> ( Float, Int )
 sumLen =
-    List.foldl (\x y -> Tuple.pair (Tuple.first y + x) (Tuple.second y + 1)) 
-        ( 0, 0 ) 
+    List.foldl (\x y -> Tuple.pair (Tuple.first y + x) (Tuple.second y + 1))
+        ( 0, 0 )
 
 
 weightedMean : List ( Float, Float ) -> Maybe Float
@@ -125,23 +128,24 @@ weightedMean tupleList =
         Nothing
 
     else
-        (List.map (\t -> Tuple.first t * Tuple.second t) tupleList |> List.sum) 
-            / wSum 
+        (List.map (\t -> Tuple.first t * Tuple.second t) tupleList |> List.sum)
+            / wSum
             |> Just
 
 
 harmonicMean : List Float -> Maybe Float
-harmonicMean list = 
+harmonicMean list =
     let
         sum =
             List.sum (List.map (\x -> x ^ -1) list)
     in
     if sum == 0 then
         Nothing
+
     else
         toFloat (List.length list) / sum |> Just
 
-        
+
 geometricMean : List Float -> Maybe Float
 geometricMean list =
     let
@@ -155,7 +159,6 @@ geometricMean list =
         List.product list ^ (1 / toFloat l) |> Just
 
 
-        
 variance : List Float -> Maybe Float
 variance list =
     mean list
@@ -170,7 +173,6 @@ standardDeviation : List Float -> Maybe Float
 standardDeviation =
     variance >> Maybe.map sqrt
 
-    
 
 mode : List comparable -> Maybe ( comparable, Int )
 mode list =
@@ -189,7 +191,6 @@ mode list =
         |> Maybe.map Tuple.first
         |> (\x -> ( x, maxValue ))
         |> combineTuple
-
 
 
 rootMeanSquare : List Float -> Maybe Float
@@ -226,6 +227,7 @@ medianAbsoluteDeviation list =
                 List.map (\x -> abs (x - n)) list |> mean
             )
 
+
 median : List Float -> Maybe Float
 median list =
     let
@@ -249,11 +251,11 @@ median list =
 
 zScores : List Float -> Maybe (List Float)
 zScores list =
-    Maybe.map2 (\avg stdDev -> List.map (\x -> (x - avg) / stdDev) list) 
-        (mean list) 
+    Maybe.map2 (\avg stdDev -> List.map (\x -> (x - avg) / stdDev) list)
+        (mean list)
         (standardDeviation list)
 
-        
+
 covariance : List ( Float, Float ) -> Maybe Float
 covariance tupleList =
     let
@@ -262,3 +264,12 @@ covariance tupleList =
     in
     Maybe.map2 (\mxs mys -> List.map2 (\x y -> (x - mxs) * (y - mys)) xs ys) (mean xs) (mean ys)
         |> Maybe.andThen mean
+
+
+correlation : List ( Float, Float ) -> Maybe Float
+correlation tupleList =
+    let
+        ( xs, ys ) =
+            List.unzip tupleList
+    in
+    Maybe.map3 (\cov stdDevXs stdDevYs -> cov / (stdDevXs * stdDevYs)) (covariance tupleList) (standardDeviation xs) (standardDeviation ys)
