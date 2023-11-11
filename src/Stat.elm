@@ -231,23 +231,65 @@ modeHelp2 rest best bestFreq new newFreq =
 -}
 median : List Float -> Maybe Float
 median list =
-    let
-        l =
-            List.length list
-    in
-    if l == 0 then
-        Nothing
+    case list of
+        [] ->
+            Nothing
 
-    else if modBy 2 l == 0 then
-        List.sort list
-            |> List.drop ((l // 2) - 1)
-            |> List.take 2
-            |> mean
+        _ :: xs ->
+            let
+                length : number
+                length =
+                    lengthHelp xs 1
+            in
+            if modBy 2 length == 0 then
+                case
+                    List.sort list
+                        |> List.drop ((length // 2) - 1)
+                of
+                    x :: y :: _ ->
+                        Just <| (x + y) / 2
 
-    else
-        List.sort list
-            |> List.drop (l // 2)
-            |> List.head
+                    _ ->
+                        Nothing
+
+            else
+                case
+                    List.sort list
+                        |> List.drop (length // 2)
+                of
+                    x :: _ ->
+                        Just x
+
+                    _ ->
+                        Nothing
+
+
+lengthHelp : List a -> number -> number
+lengthHelp remaining total =
+    case remaining of
+        [] ->
+            total
+
+        _ :: xs ->
+            lengthHelp xs (total + 1)
+
+
+
+-- let
+--     l =
+--         List.length list
+-- in
+-- if l == 0 then
+--     Nothing
+-- else if modBy 2 l == 0 then
+--     List.sort list
+--         |> List.drop ((l // 2) - 1)
+--         |> List.take 2
+--         |> mean
+-- else
+--     List.sort list
+--         |> List.drop (l // 2)
+--         |> List.head
 
 
 {-| Root mean square (RMS) is the square root of the sum of the squares of values in a list divided by the length of the list. Also known as quadratic mean.
