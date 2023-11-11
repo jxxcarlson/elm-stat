@@ -282,12 +282,22 @@ skewness list =
 -}
 variance : List Float -> Maybe Float
 variance list =
-    mean list
-        |> Maybe.andThen
-            (\n ->
-                List.map (\x -> (x - n) ^ 2) list
-                    |> mean
-            )
+    case list of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            Just (varianceHelp xs (x ^ 2) x 1)
+
+
+varianceHelp : List Float -> Float -> Float -> Float -> Float
+varianceHelp remaining squaredSum sum length =
+    case remaining of
+        [] ->
+            squaredSum / length - (sum / length) ^ 2
+
+        x :: xs ->
+            varianceHelp xs (squaredSum + x ^ 2) (sum + x) (length + 1)
 
 
 {-| The standard deviation is the square root of variance. A low standard deviation indicates that the values tend to be close to the mean.

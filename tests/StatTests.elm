@@ -197,13 +197,31 @@ varianceTest =
             (\_ -> Expect.within (Absolute 0.01) 2 (Stat.variance ys |> Maybe.withDefault 0))
         , test "test for empty list"
             (\_ -> Expect.equal Nothing (Stat.variance emp))
+        , fuzz (list (floatRange -100 100)) "generating a list of floats" <|
+            \floatList ->
+                case Stat.variance floatList of
+                    Nothing ->
+                        Expect.equal floatList []
+
+                    Just n ->
+                        let
+                            mean list =
+                                List.sum list / toFloat (List.length list)
+
+                            squared =
+                                List.map (\x -> x ^ 2) floatList
+
+                            variance =
+                                mean squared - mean floatList ^ 2
+                        in
+                        Expect.within (Absolute 0.000000001) n variance
         ]
 
 
 standardDeviationFuzzTest : Test
 standardDeviationFuzzTest =
     describe "standard deviation fuzz test"
-        [ fuzz (list niceFloat) "generating a list of floats" <|
+        [ fuzz (list (floatRange -100 100)) "generating a list of floats" <|
             \floatList ->
                 let
                     var =

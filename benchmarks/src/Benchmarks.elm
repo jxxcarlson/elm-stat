@@ -43,6 +43,11 @@ suite =
             (\() -> Stat.geometricMean numbers)
             "Old"
             (\() -> geometricMean numbers)
+        , Benchmark.compare "Variance: single VS multiple traversals"
+            "New"
+            (\() -> Stat.variance numbers)
+            "Old"
+            (\() -> variance numbers)
         ]
         
 
@@ -109,3 +114,14 @@ geometricMean list =
 
     else
         List.product list ^ (1 / toFloat l) |> Just
+
+
+        
+variance : List Float -> Maybe Float
+variance list =
+    mean list
+        |> Maybe.andThen
+            (\n ->
+                List.map (\x -> (x - n) ^ 2) list
+                    |> mean
+            )
