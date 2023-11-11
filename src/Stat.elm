@@ -188,7 +188,7 @@ mode list =
             Just (modeHelp1 xs x 1)
 
 
-modeHelp1 : List b -> b -> number -> ( b, number )
+modeHelp1 : List a -> a -> number -> ( a, number )
 modeHelp1 rest element frequency =
     case rest of
         [] ->
@@ -202,7 +202,7 @@ modeHelp1 rest element frequency =
                 modeHelp2 xs element frequency x 1
 
 
-modeHelp2 : List b -> b -> number -> b -> number -> ( b, number )
+modeHelp2 : List a -> a -> number -> a -> number -> ( a, number )
 modeHelp2 rest best bestFreq new newFreq =
     case rest of
         [] ->
