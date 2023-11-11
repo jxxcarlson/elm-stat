@@ -15,7 +15,7 @@ suite =
     let
         numbers : List Float
         numbers =
-            List.range 0 1000 |> List.map toFloat 
+            List.range 1 1000 |> List.map toFloat 
 
         weightedNumbers : List (Float, Float)
         weightedNumbers =
@@ -23,26 +23,23 @@ suite =
                 |> Tuple.second
     in
     describe "elm-stat"
-        [ describe "Mean"
-            [ Benchmark.compare "Stat.mean VS naive mean"
-                "Stat.mean"
-                (\() -> Stat.mean numbers)
-                "List.sum / List.length"
-                (\() -> List.sum numbers / toFloat (List.length numbers))
-            , Benchmark.compare "Tail call recursion VS foldl + tuple"
-                "Tail call"
-                (\() -> Stat.mean numbers)
-                "Foldl + tuple"
-                (\() -> mean numbers)
-            ]
-        , describe "Weighted mean"
-            [ Benchmark.compare "Single VS multiple traversals"
-                "New"
-                (\() -> Stat.weightedMean weightedNumbers)
-                "Old"
-                (\() -> weightedMean weightedNumbers)
-            ]
+        [ Benchmark.compare "Mean: tail call recursion VS foldl + tuple"
+            "New"
+            (\() -> Stat.mean numbers)
+            "Old"
+            (\() -> mean numbers)
+        , Benchmark.compare "Weighted mean: single VS multiple traversals"
+            "New"
+            (\() -> Stat.weightedMean weightedNumbers)
+            "Old"
+            (\() -> weightedMean weightedNumbers)
+        , Benchmark.compare "Harmonic mean: single VS multiple traversals"
+            "New"
+            (\() -> Stat.harmonicMean numbers)
+            "Old"
+            (\() -> harmonicMean numbers)
         ]
+        
 
 
 
@@ -82,3 +79,15 @@ weightedMean tupleList =
         (List.map (\t -> Tuple.first t * Tuple.second t) tupleList |> List.sum) 
             / wSum 
             |> Just
+
+
+harmonicMean : List Float -> Maybe Float
+harmonicMean list = 
+    let
+        sum =
+            List.sum (List.map (\x -> x ^ -1) list)
+    in
+    if sum == 0 then
+        Nothing
+    else
+        toFloat (List.length list) / sum |> Just

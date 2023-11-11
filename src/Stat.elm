@@ -123,15 +123,26 @@ weightedMeanHelp remaining totalWeight weightedSum =
 -}
 harmonicMean : List Float -> Maybe Float
 harmonicMean list =
-    let
-        sum =
-            List.sum (List.map (\x -> x ^ -1) list)
-    in
-    if sum == 0 then
-        Nothing
+    case list of
+        [] ->
+            Nothing
 
-    else
-        toFloat (List.length list) / sum |> Just
+        x :: xs ->
+            harmonicMeanHelp xs (1 / x) 1
+
+
+harmonicMeanHelp : List Float -> Float -> Float -> Maybe Float
+harmonicMeanHelp remaining inverseSum length =
+    case remaining of
+        [] ->
+            if inverseSum == 0 then
+                Nothing
+
+            else
+                Just (length / inverseSum)
+
+        x :: xs ->
+            harmonicMeanHelp xs (inverseSum + 1 / x) (length + 1)
 
 
 {-| Compute the geometric mean of a list of floats.
