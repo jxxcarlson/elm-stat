@@ -475,12 +475,46 @@ zScoresHelp2 avg stdDev remaining acc =
 -}
 covariance : List ( Float, Float ) -> Maybe Float
 covariance tupleList =
-    let
-        ( xs, ys ) =
-            List.unzip tupleList
-    in
-    Maybe.map2 (\mxs mys -> List.map2 (\x y -> (x - mxs) * (y - mys)) xs ys) (mean xs) (mean ys)
-        |> Maybe.andThen mean
+    case tupleList of
+        [] ->
+            Nothing
+
+        ( a, b ) :: xs ->
+            let
+                { meanA, meanB, length } =
+                    covarianceHelp1 xs a b 1
+            in
+            covarianceHelp2 xs meanA meanB ((a - meanA) * (b - meanB))
+                / length
+                |> Just
+
+
+covarianceHelp1 :
+    List ( Float, Float )
+    -> Float
+    -> Float
+    -> Float
+    -> { meanA : Float, meanB : Float, length : Float }
+covarianceHelp1 remaining sumA sumB length =
+    case remaining of
+        [] ->
+            { meanA = sumA / length
+            , meanB = sumB / length
+            , length = length
+            }
+
+        ( a, b ) :: xs ->
+            covarianceHelp1 xs (sumA + a) (sumB + b) (length + 1)
+
+
+covarianceHelp2 : List ( Float, Float ) -> Float -> Float -> Float -> Float
+covarianceHelp2 remaining meanA meanB acc =
+    case remaining of
+        [] ->
+            acc
+
+        ( a, b ) :: xs ->
+            covarianceHelp2 xs meanA meanB (acc + (a - meanA) * (b - meanB))
 
 
 {-| A correlation is a “normalized” covariance, its values are between -1.0 and 1.0

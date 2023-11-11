@@ -82,6 +82,11 @@ suite =
             (\() -> Stat.zScores numbers)
             "Old"
             (\() -> zScores numbers)
+        , Benchmark.compare "Covariance"
+            "New"
+            (\() -> Stat.covariance <| List.map2 Tuple.pair numbers numbers)
+            "Old"
+            (\() -> covariance <| List.map2 Tuple.pair numbers numbers)
         ]
         
 
@@ -241,8 +246,19 @@ median list =
             |> List.drop (l // 2)
             |> List.head
 
+
 zScores : List Float -> Maybe (List Float)
 zScores list =
     Maybe.map2 (\avg stdDev -> List.map (\x -> (x - avg) / stdDev) list) 
         (mean list) 
         (standardDeviation list)
+
+        
+covariance : List ( Float, Float ) -> Maybe Float
+covariance tupleList =
+    let
+        ( xs, ys ) =
+            List.unzip tupleList
+    in
+    Maybe.map2 (\mxs mys -> List.map2 (\x y -> (x - mxs) * (y - mys)) xs ys) (mean xs) (mean ys)
+        |> Maybe.andThen mean
