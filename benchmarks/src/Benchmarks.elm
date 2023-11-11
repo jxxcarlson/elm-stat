@@ -38,6 +38,11 @@ suite =
             (\() -> Stat.harmonicMean numbers)
             "Old"
             (\() -> harmonicMean numbers)
+        , Benchmark.compare "Geometric mean: single VS multiple traversals"
+            "New"
+            (\() -> Stat.geometricMean numbers)
+            "Old"
+            (\() -> geometricMean numbers)
         ]
         
 
@@ -91,3 +96,16 @@ harmonicMean list =
         Nothing
     else
         toFloat (List.length list) / sum |> Just
+
+        
+geometricMean : List Float -> Maybe Float
+geometricMean list =
+    let
+        l =
+            List.length list
+    in
+    if l == 0 then
+        Nothing
+
+    else
+        List.product list ^ (1 / toFloat l) |> Just

@@ -152,15 +152,22 @@ harmonicMeanHelp remaining inverseSum length =
 -}
 geometricMean : List Float -> Maybe Float
 geometricMean list =
-    let
-        l =
-            List.length list
-    in
-    if l == 0 then
-        Nothing
+    case list of
+        [] ->
+            Nothing
 
-    else
-        List.product list ^ (1 / toFloat l) |> Just
+        x :: xs ->
+            Just (geometricMeanHelp xs x 1)
+
+
+geometricMeanHelp : List Float -> Float -> Float -> Float
+geometricMeanHelp remaining product length =
+    case remaining of
+        [] ->
+            product ^ (1 / length)
+
+        x :: xs ->
+            geometricMeanHelp xs (product * x) (length + 1)
 
 
 {-| Compute the mode of the data:
