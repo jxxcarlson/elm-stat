@@ -75,12 +75,12 @@ average =
 -}
 meanWithDefault : List Float -> Float -> Float
 meanWithDefault list defaultValue =
-    case mean list of
-        Nothing ->
+    case list of
+        [] ->
             defaultValue
 
-        Just val ->
-            val
+        x :: xs ->
+            meanHelp xs x 1
 
 
 {-| Compute the weighted mean of a list of tuples, where the first elemnt in the tuple is the weight and the second is the value
