@@ -77,6 +77,11 @@ suite =
             (\() -> Stat.medianAbsoluteDeviation numbers)
             "Old"
             (\() -> medianAbsoluteDeviation numbers)
+        , Benchmark.compare "zScores"
+            "New"
+            (\() -> Stat.zScores numbers)
+            "Old"
+            (\() -> zScores numbers)
         ]
         
 
@@ -156,6 +161,11 @@ variance list =
             )
 
 
+standardDeviation : List Float -> Maybe Float
+standardDeviation =
+    variance >> Maybe.map sqrt
+
+    
 
 mode : List comparable -> Maybe ( comparable, Int )
 mode list =
@@ -230,3 +240,9 @@ median list =
         List.sort list
             |> List.drop (l // 2)
             |> List.head
+
+zScores : List Float -> Maybe (List Float)
+zScores list =
+    Maybe.map2 (\avg stdDev -> List.map (\x -> (x - avg) / stdDev) list) 
+        (mean list) 
+        (standardDeviation list)

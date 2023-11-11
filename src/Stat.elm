@@ -430,7 +430,38 @@ zScore x avg stdDev =
 -}
 zScores : List Float -> Maybe (List Float)
 zScores list =
-    Maybe.map2 (\avg stdDev -> List.map (\x -> (x - avg) / stdDev) list) (mean list) (standardDeviation list)
+    case list of
+        [] ->
+            Nothing
+
+        head :: rest ->
+            zScoresHelp1 rest (head ^ 2) head 1 [ head ]
+                |> Just
+
+
+zScoresHelp1 : List Float -> Float -> Float -> Float -> List Float -> List Float
+zScoresHelp1 remaining squaredSum sum length reversed =
+    case remaining of
+        [] ->
+            let
+                avg : Float
+                avg =
+                    sum / length
+            in
+            zScoresHelp2 avg (sqrt (squaredSum / length - avg ^ 2)) reversed []
+
+        x :: xs ->
+            zScoresHelp1 xs (squaredSum + x ^ 2) (sum + x) (length + 1) (x :: reversed)
+
+
+zScoresHelp2 : Float -> Float -> List Float -> List Float -> List Float
+zScoresHelp2 avg stdDev remaining acc =
+    case remaining of
+        [] ->
+            acc
+
+        x :: xs ->
+            zScoresHelp2 avg stdDev xs (((x - avg) / stdDev) :: acc)
 
 
 {-| Covariance is a measure of how two random variables vary together. When the greater values of one variable correspond to the greater values of the other variable, this is a positive covariance. Whereas when the greater values of one variable correspond to the lesser values of the other variable, this is negative covariance.
