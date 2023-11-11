@@ -78,11 +78,7 @@ average =
 -}
 meanWithDefault : List Float -> Float -> Float
 meanWithDefault list defaultValue =
-    let
-        avg =
-            mean list
-    in
-    case avg of
+    case mean list of
         Nothing ->
             defaultValue
 
