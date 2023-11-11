@@ -17,8 +17,17 @@ meanFuzzTest =
 
                     Just avg ->
                         Expect.all
-                            [ Expect.atLeast (List.minimum floatList |> Maybe.withDefault 0)
-                            , Expect.atMost (List.maximum floatList |> Maybe.withDefault 0)
+                            [ Expect.atLeast
+                                (List.minimum floatList |> Maybe.withDefault 0)
+                            , Expect.atMost
+                                (List.maximum floatList |> Maybe.withDefault 0)
+                            , let
+                                naiveMean : Float
+                                naiveMean =
+                                    List.sum floatList
+                                        / toFloat (List.length floatList)
+                              in
+                              Expect.within (Absolute 0.000000001) naiveMean
                             ]
                             avg
         ]
