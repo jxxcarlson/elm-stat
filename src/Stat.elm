@@ -539,6 +539,14 @@ correlation tupleList =
                 |> Just
 
 
+correlationHelp1 :
+    List ( Float, Float )
+    -> Float
+    -> Float
+    -> Float
+    -> Float
+    -> Float
+    -> { meanA : Float, meanB : Float, varA : Float, varB : Float, length : Float }
 correlationHelp1 remaining squaredA sumA squaredB sumB length =
     case remaining of
         [] ->
