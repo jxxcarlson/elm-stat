@@ -94,15 +94,26 @@ meanWithDefault list defaultValue =
 -}
 weightedMean : List ( Float, Float ) -> Maybe Float
 weightedMean tupleList =
-    let
-        wSum =
-            List.map (\t -> Tuple.first t) tupleList |> List.sum
-    in
-    if wSum == 0 then
-        Nothing
+    case tupleList of
+        [] ->
+            Nothing
 
-    else
-        (List.map (\t -> Tuple.first t * Tuple.second t) tupleList |> List.sum) / wSum |> Just
+        ( w, x ) :: xs ->
+            weightedMeanHelp xs w (w * x)
+
+
+weightedMeanHelp : List ( Float, Float ) -> Float -> Float -> Maybe Float
+weightedMeanHelp remaining totalWeight weightedSum =
+    case remaining of
+        [] ->
+            if totalWeight == 0 then
+                Nothing
+
+            else
+                Just (weightedSum / totalWeight)
+
+        ( w, x ) :: xs ->
+            weightedMeanHelp xs (totalWeight + w) (weightedSum + w * x)
 
 
 {-| Compute the harmonic mean of a list of floats.
