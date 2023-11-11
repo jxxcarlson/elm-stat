@@ -439,6 +439,10 @@ zScores list =
                 |> Just
 
 
+
+-- The reversed argument is to take advantage of the reverse & map pattern in zScoresHelp2
+
+
 zScoresHelp1 : List Float -> Float -> Float -> Float -> List Float -> List Float
 zScoresHelp1 remaining squaredSum sum length reversed =
     case remaining of
