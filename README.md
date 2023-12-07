@@ -121,8 +121,11 @@ elm make src/Main.elm
 
 then opening `index.html` in a browser.
 
-## Note  
+## Notes  
 
 This is a major update to version 4.0.3.  The API for the statistical functions in module `Stat`
 has been completely rewritten, and a new module, `StatRandom`, featuring generators for many common statistical
 packages has been added.  Both are contributions of Raul Fleischman (FleischmanRaul on Github)
+
+Thanks to Mattia Verticchio for numerous performance updates.
+
