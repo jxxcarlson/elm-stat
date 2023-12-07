@@ -29,9 +29,6 @@ module Stat exposing
 
 -}
 
-import Dict as Dict
-import Utility exposing (buildTable, combineTuple)
-
 
 {-| Compute the mean of a list of floats.
 
@@ -41,20 +38,22 @@ import Utility exposing (buildTable, combineTuple)
 -}
 mean : List Float -> Maybe Float
 mean list =
-    let
-        ( sum, len ) =
-            sumLen list
-    in
-    if len == 0 then
-        Nothing
+    case list of
+        [] ->
+            Nothing
 
-    else
-        sum / toFloat len |> Just
+        x :: xs ->
+            Just (meanHelp xs x 1)
 
 
-sumLen : List Float -> ( Float, Int )
-sumLen =
-    List.foldl (\x y -> Tuple.pair (Tuple.first y + x) (Tuple.second y + 1)) ( 0, 0 )
+meanHelp : List Float -> Float -> Float -> Float
+meanHelp remaining total length =
+    case remaining of
+        [] ->
+            total / length
+
+        x :: rest ->
+            meanHelp rest (total + x) (length + 1)
 
 
 {-| Same as mean
@@ -76,16 +75,12 @@ average =
 -}
 meanWithDefault : List Float -> Float -> Float
 meanWithDefault list defaultValue =
-    let
-        avg =
-            mean list
-    in
-    case avg of
-        Nothing ->
+    case list of
+        [] ->
             defaultValue
 
-        Just val ->
-            val
+        x :: xs ->
+            meanHelp xs x 1
 
 
 {-| Compute the weighted mean of a list of tuples, where the first elemnt in the tuple is the weight and the second is the value
@@ -96,15 +91,26 @@ meanWithDefault list defaultValue =
 -}
 weightedMean : List ( Float, Float ) -> Maybe Float
 weightedMean tupleList =
-    let
-        wSum =
-            List.map (\t -> Tuple.first t) tupleList |> List.sum
-    in
-    if wSum == 0 then
-        Nothing
+    case tupleList of
+        [] ->
+            Nothing
 
-    else
-        (List.map (\t -> Tuple.first t * Tuple.second t) tupleList |> List.sum) / wSum |> Just
+        ( w, x ) :: xs ->
+            weightedMeanHelp xs w (w * x)
+
+
+weightedMeanHelp : List ( Float, Float ) -> Float -> Float -> Maybe Float
+weightedMeanHelp remaining totalWeight weightedSum =
+    case remaining of
+        [] ->
+            if totalWeight == 0 then
+                Nothing
+
+            else
+                Just (weightedSum / totalWeight)
+
+        ( w, x ) :: xs ->
+            weightedMeanHelp xs (totalWeight + w) (weightedSum + w * x)
 
 
 {-| Compute the harmonic mean of a list of floats.
@@ -114,15 +120,26 @@ weightedMean tupleList =
 -}
 harmonicMean : List Float -> Maybe Float
 harmonicMean list =
-    let
-        sum =
-            List.sum (List.map (\x -> x ^ -1) list)
-    in
-    if sum == 0 then
-        Nothing
+    case list of
+        [] ->
+            Nothing
 
-    else
-        toFloat (List.length list) / sum |> Just
+        x :: xs ->
+            harmonicMeanHelp xs (1 / x) 1
+
+
+harmonicMeanHelp : List Float -> Float -> Float -> Maybe Float
+harmonicMeanHelp remaining inverseSum length =
+    case remaining of
+        [] ->
+            if inverseSum == 0 then
+                Nothing
+
+            else
+                Just (length / inverseSum)
+
+        x :: xs ->
+            harmonicMeanHelp xs (inverseSum + 1 / x) (length + 1)
 
 
 {-| Compute the geometric mean of a list of floats.
@@ -132,15 +149,22 @@ harmonicMean list =
 -}
 geometricMean : List Float -> Maybe Float
 geometricMean list =
-    let
-        l =
-            List.length list
-    in
-    if l == 0 then
-        Nothing
+    case list of
+        [] ->
+            Nothing
 
-    else
-        List.product list ^ (1 / toFloat l) |> Just
+        x :: xs ->
+            Just (geometricMeanHelp xs x 1)
+
+
+geometricMeanHelp : List Float -> Float -> Float -> Float
+geometricMeanHelp remaining product length =
+    case remaining of
+        [] ->
+            product ^ (1 / length)
+
+        x :: xs ->
+            geometricMeanHelp xs (product * x) (length + 1)
 
 
 {-| Compute the mode of the data:
@@ -156,21 +180,47 @@ geometricMean list =
 -}
 mode : List comparable -> Maybe ( comparable, Int )
 mode list =
-    let
-        frequencyTable =
-            buildTable list
+    case List.sort list of
+        [] ->
+            Nothing
 
-        maxValue =
-            List.maximum (Dict.values frequencyTable)
+        x :: xs ->
+            Just (modeHelp1 xs x 1)
 
-        kvList =
-            Dict.toList frequencyTable
-    in
-    List.filter (\( _, v ) -> Just v == maxValue) kvList
-        |> List.head
-        |> Maybe.map Tuple.first
-        |> (\x -> ( x, maxValue ))
-        |> combineTuple
+
+modeHelp1 : List a -> a -> number -> ( a, number )
+modeHelp1 rest element frequency =
+    case rest of
+        [] ->
+            ( element, frequency )
+
+        x :: xs ->
+            if x == element then
+                modeHelp1 xs element (frequency + 1)
+
+            else
+                modeHelp2 xs element frequency x 1
+
+
+modeHelp2 : List a -> a -> number -> a -> number -> ( a, number )
+modeHelp2 rest best bestFreq new newFreq =
+    case rest of
+        [] ->
+            if newFreq > bestFreq then
+                ( new, newFreq )
+
+            else
+                ( best, bestFreq )
+
+        x :: xs ->
+            if x == new then
+                modeHelp2 xs best bestFreq new (newFreq + 1)
+
+            else if newFreq > bestFreq then
+                modeHelp2 rest new newFreq x 1
+
+            else
+                modeHelp2 xs best bestFreq x 1
 
 
 {-| Compute the median of the list. The median is the value separating the higher half from the lower half of a data sample. If the sample has an odd number of values, the median is the value in the middle. If the sample has an even number of values, the median is the mean of the two middle values.
@@ -181,23 +231,47 @@ mode list =
 -}
 median : List Float -> Maybe Float
 median list =
-    let
-        l =
-            List.length list
-    in
-    if l == 0 then
-        Nothing
+    case list of
+        [] ->
+            Nothing
 
-    else if modBy 2 l == 0 then
-        List.sort list
-            |> List.drop ((l // 2) - 1)
-            |> List.take 2
-            |> mean
+        _ :: xs ->
+            let
+                length : number
+                length =
+                    lengthHelp xs 1
+            in
+            if modBy 2 length == 0 then
+                case
+                    List.sort list
+                        |> List.drop ((length // 2) - 1)
+                of
+                    x :: y :: _ ->
+                        Just <| (x + y) / 2
 
-    else
-        List.sort list
-            |> List.drop (l // 2)
-            |> List.head
+                    _ ->
+                        Nothing
+
+            else
+                case
+                    List.sort list
+                        |> List.drop (length // 2)
+                of
+                    x :: _ ->
+                        Just x
+
+                    _ ->
+                        Nothing
+
+
+lengthHelp : List a -> number -> number
+lengthHelp remaining total =
+    case remaining of
+        [] ->
+            total
+
+        _ :: xs ->
+            lengthHelp xs (total + 1)
 
 
 {-| Root mean square (RMS) is the square root of the sum of the squares of values in a list divided by the length of the list. Also known as quadratic mean.
@@ -207,19 +281,22 @@ median list =
 -}
 rootMeanSquare : List Float -> Maybe Float
 rootMeanSquare list =
-    let
-        l =
-            List.length list
-    in
-    if l == 0 then
-        Nothing
+    case list of
+        [] ->
+            Nothing
 
-    else
-        List.map (\x -> x ^ 2) list
-            |> List.sum
-            |> (\x -> x / toFloat l)
-            |> sqrt
-            |> Just
+        x :: xs ->
+            Just (rootMeanSquareHelp xs (x ^ 2) 1)
+
+
+rootMeanSquareHelp : List Float -> Float -> Float -> Float
+rootMeanSquareHelp remaining total length =
+    case remaining of
+        [] ->
+            sqrt (total / length)
+
+        x :: xs ->
+            rootMeanSquareHelp xs (total + x ^ 2) (length + 1)
 
 
 {-| Skew or Skewness is a measure of the asymmetry of the probability distribution of a variable around its mean. There are several equations to calculate skewness. The one used in this function is [Pearson’s moment coefficient](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient) of skewness.
@@ -231,21 +308,46 @@ rootMeanSquare list =
 -}
 skewness : List Float -> Maybe Float
 skewness list =
-    let
-        stdDev =
-            standardDeviation list
-    in
-    case stdDev of
-        Nothing ->
+    case list of
+        [] ->
             Nothing
 
-        Just s ->
-            mean list
-                |> Maybe.andThen
-                    (\n ->
-                        List.map (\x -> ((x - n) / s) ^ 3) list
-                            |> mean
-                    )
+        x :: xs ->
+            let
+                data =
+                    skewnessHelp1 xs (x ^ 2) x 1
+            in
+            skewnessHelp2 xs data.mean data.stdDev (((x - data.mean) / data.stdDev) ^ 3)
+                / data.length
+                |> Just
+
+
+skewnessHelp1 :
+    List Float
+    -> Float
+    -> Float
+    -> Float
+    -> { mean : Float, stdDev : Float, length : Float }
+skewnessHelp1 remaining squaredSum sum length =
+    case remaining of
+        [] ->
+            { mean = sum / length
+            , stdDev = squaredSum / length - (sum / length) ^ 2 |> sqrt
+            , length = length
+            }
+
+        x :: xs ->
+            skewnessHelp1 xs (squaredSum + x ^ 2) (sum + x) (length + 1)
+
+
+skewnessHelp2 : List Float -> Float -> Float -> Float -> Float
+skewnessHelp2 remaining m s acc =
+    case remaining of
+        [] ->
+            acc
+
+        x :: xs ->
+            skewnessHelp2 xs m s (acc + ((x - m) / s) ^ 3)
 
 
 {-| In statistics, variance is the expectation of the squared deviation of a random variable from its mean.
@@ -255,12 +357,22 @@ skewness list =
 -}
 variance : List Float -> Maybe Float
 variance list =
-    mean list
-        |> Maybe.andThen
-            (\n ->
-                List.map (\x -> (x - n) ^ 2) list
-                    |> mean
-            )
+    case list of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            Just (varianceHelp xs (x ^ 2) x 1)
+
+
+varianceHelp : List Float -> Float -> Float -> Float -> Float
+varianceHelp remaining squaredSum sum length =
+    case remaining of
+        [] ->
+            squaredSum / length - (sum / length) ^ 2
+
+        x :: xs ->
+            varianceHelp xs (squaredSum + x ^ 2) (sum + x) (length + 1)
 
 
 {-| The standard deviation is the square root of variance. A low standard deviation indicates that the values tend to be close to the mean.
@@ -270,8 +382,13 @@ variance list =
 
 -}
 standardDeviation : List Float -> Maybe Float
-standardDeviation =
-    variance >> Maybe.map sqrt
+standardDeviation list =
+    case list of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            Just (varianceHelp xs (x ^ 2) x 1 |> sqrt)
 
 
 {-| The average absolute deviation, or mean absolute deviation, of a data set is the average of the absolute deviations from the mean.
@@ -282,11 +399,28 @@ standardDeviation =
 -}
 meanAbsoluteDeviation : List Float -> Maybe Float
 meanAbsoluteDeviation list =
-    mean list
-        |> Maybe.andThen
-            (\n ->
-                List.map (\x -> abs (x - n)) list |> mean
-            )
+    case list of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            Just <|
+                let
+                    avg : Float
+                    avg =
+                        meanHelp xs x 1
+                in
+                meanAbsoluteDeviationHelp xs avg (abs (avg - x)) 1
+
+
+meanAbsoluteDeviationHelp : List Float -> Float -> Float -> Float -> Float
+meanAbsoluteDeviationHelp remaining avg total length =
+    case remaining of
+        [] ->
+            total / length
+
+        x :: xs ->
+            meanAbsoluteDeviationHelp xs avg (total + abs (avg - x)) (length + 1)
 
 
 {-| The median absolute deviation, of a data set is the average of the absolute deviations from the median.
@@ -296,11 +430,17 @@ meanAbsoluteDeviation list =
 -}
 medianAbsoluteDeviation : List Float -> Maybe Float
 medianAbsoluteDeviation list =
-    median list
-        |> Maybe.andThen
-            (\n ->
-                List.map (\x -> abs (x - n)) list |> mean
-            )
+    case list of
+        [] ->
+            Nothing
+
+        x :: xs ->
+            case median list of
+                Just mdn ->
+                    Just (meanAbsoluteDeviationHelp xs mdn (abs (mdn - x)) 1)
+
+                _ ->
+                    Nothing
 
 
 {-| Calculate the Z-score or standard score of a given elements provided the mean and the standard deviation.
@@ -320,7 +460,42 @@ zScore x avg stdDev =
 -}
 zScores : List Float -> Maybe (List Float)
 zScores list =
-    Maybe.map2 (\avg stdDev -> List.map (\x -> (x - avg) / stdDev) list) (mean list) (standardDeviation list)
+    case list of
+        [] ->
+            Nothing
+
+        head :: rest ->
+            zScoresHelp1 rest (head ^ 2) head 1 [ head ]
+                |> Just
+
+
+
+-- The reversed argument is to take advantage of the reverse & map pattern in zScoresHelp2
+
+
+zScoresHelp1 : List Float -> Float -> Float -> Float -> List Float -> List Float
+zScoresHelp1 remaining squaredSum sum length reversed =
+    case remaining of
+        [] ->
+            let
+                avg : Float
+                avg =
+                    sum / length
+            in
+            zScoresHelp2 avg (sqrt (squaredSum / length - avg ^ 2)) reversed []
+
+        x :: xs ->
+            zScoresHelp1 xs (squaredSum + x ^ 2) (sum + x) (length + 1) (x :: reversed)
+
+
+zScoresHelp2 : Float -> Float -> List Float -> List Float -> List Float
+zScoresHelp2 avg stdDev remaining acc =
+    case remaining of
+        [] ->
+            acc
+
+        x :: xs ->
+            zScoresHelp2 avg stdDev xs (((x - avg) / stdDev) :: acc)
 
 
 {-| Covariance is a measure of how two random variables vary together. When the greater values of one variable correspond to the greater values of the other variable, this is a positive covariance. Whereas when the greater values of one variable correspond to the lesser values of the other variable, this is negative covariance.
@@ -330,12 +505,46 @@ zScores list =
 -}
 covariance : List ( Float, Float ) -> Maybe Float
 covariance tupleList =
-    let
-        ( xs, ys ) =
-            List.unzip tupleList
-    in
-    Maybe.map2 (\mxs mys -> List.map2 (\x y -> (x - mxs) * (y - mys)) xs ys) (mean xs) (mean ys)
-        |> Maybe.andThen mean
+    case tupleList of
+        [] ->
+            Nothing
+
+        ( a, b ) :: xs ->
+            let
+                { meanA, meanB, length } =
+                    covarianceHelp1 xs a b 1
+            in
+            covarianceHelp2 xs meanA meanB ((a - meanA) * (b - meanB))
+                / length
+                |> Just
+
+
+covarianceHelp1 :
+    List ( Float, Float )
+    -> Float
+    -> Float
+    -> Float
+    -> { meanA : Float, meanB : Float, length : Float }
+covarianceHelp1 remaining sumA sumB length =
+    case remaining of
+        [] ->
+            { meanA = sumA / length
+            , meanB = sumB / length
+            , length = length
+            }
+
+        ( a, b ) :: xs ->
+            covarianceHelp1 xs (sumA + a) (sumB + b) (length + 1)
+
+
+covarianceHelp2 : List ( Float, Float ) -> Float -> Float -> Float -> Float
+covarianceHelp2 remaining meanA meanB acc =
+    case remaining of
+        [] ->
+            acc
+
+        ( a, b ) :: xs ->
+            covarianceHelp2 xs meanA meanB (acc + (a - meanA) * (b - meanB))
 
 
 {-| A correlation is a “normalized” covariance, its values are between -1.0 and 1.0
@@ -346,11 +555,45 @@ covariance tupleList =
 -}
 correlation : List ( Float, Float ) -> Maybe Float
 correlation tupleList =
-    let
-        ( xs, ys ) =
-            List.unzip tupleList
-    in
-    Maybe.map3 (\cov stdDevXs stdDevYs -> cov / (stdDevXs * stdDevYs)) (covariance tupleList) (standardDeviation xs) (standardDeviation ys)
+    case tupleList of
+        [] ->
+            Nothing
+
+        ( a, b ) :: xs ->
+            let
+                { meanA, meanB, varA, varB, length } =
+                    correlationHelp1 xs (a ^ 2) a (b ^ 2) b 1
+            in
+            covarianceHelp2 xs meanA meanB ((a - meanA) * (b - meanB))
+                / (length * sqrt varA * sqrt varB)
+                |> Just
+
+
+correlationHelp1 :
+    List ( Float, Float )
+    -> Float
+    -> Float
+    -> Float
+    -> Float
+    -> Float
+    -> { meanA : Float, meanB : Float, varA : Float, varB : Float, length : Float }
+correlationHelp1 remaining squaredA sumA squaredB sumB length =
+    case remaining of
+        [] ->
+            { meanA = sumA / length
+            , meanB = sumB / length
+            , varA = squaredA / length - (sumA / length) ^ 2
+            , varB = squaredB / length - (sumB / length) ^ 2
+            , length = length
+            }
+
+        ( a, b ) :: xs ->
+            correlationHelp1 xs
+                (squaredA + a ^ 2)
+                (sumA + a)
+                (squaredB + b ^ 2)
+                (sumB + b)
+                (length + 1)
 
 
 {-| R2 is the square of the correlation coefficient
@@ -361,11 +604,12 @@ correlation tupleList =
 -}
 r2 : List ( Float, Float ) -> Maybe Float
 r2 tupleList =
-    let
-        cc =
-            correlation tupleList
-    in
-    Maybe.map2 (*) cc cc
+    case correlation tupleList of
+        Just c ->
+            Just (c * c)
+
+        _ ->
+            Nothing
 
 
 {-| Linear regression finds the line that best fits the given points. The method used here is the [simple linear regression](https://en.wikipedia.org/wiki/Linear_regression).
@@ -376,25 +620,49 @@ The tuple returned is `(alpha, beta)` where `y = alpha + beta * x`
 -}
 linearRegression : List ( Float, Float ) -> Maybe ( Float, Float )
 linearRegression tupleList =
-    if List.length tupleList > 1 then
-        let
-            ( xs, ys ) =
-                List.unzip tupleList
+    case tupleList of
+        ( a, b ) :: ((_ :: _) as xs) ->
+            let
+                { meanX, meanY, varX, length } =
+                    linearRegressionHelp xs (a ^ 2) a b 1
 
-            cov =
-                covariance tupleList |> Maybe.withDefault 0
+                cov : Float
+                cov =
+                    covarianceHelp2 xs meanX meanY ((a - meanX) * (b - meanY))
+                        / length
+            in
+            if varX /= 0 then
+                Just ( meanY - (cov / varX) * meanX, cov / varX )
 
-            varxs =
-                variance xs |> Maybe.withDefault 0
-        in
-        if varxs /= 0 then
-            Maybe.map2 (\mxs mys -> Tuple.pair (mys - (cov / varxs) * mxs) (cov / varxs)) (mean xs) (mean ys)
+            else
+                Nothing
 
-        else
+        _ ->
             Nothing
 
-    else
-        Nothing
+
+linearRegressionHelp :
+    List ( Float, Float )
+    -> Float
+    -> Float
+    -> Float
+    -> Float
+    -> { meanX : Float, meanY : Float, varX : Float, length : Float }
+linearRegressionHelp remaining squaredX sumX sumY length =
+    case remaining of
+        [] ->
+            { meanX = sumX / length
+            , meanY = sumY / length
+            , varX = squaredX / length - (sumX / length) ^ 2
+            , length = length
+            }
+
+        ( a, b ) :: xs ->
+            linearRegressionHelp xs
+                (squaredX + a ^ 2)
+                (sumX + a)
+                (sumY + b)
+                (length + 1)
 
 
 {-| Returns a function that looks like this: `y = alpha + beta * x`.
@@ -406,10 +674,5 @@ This may come in handy when generating points on the regreesion line.
 
 -}
 linearRegressionLine : ( Float, Float ) -> Float -> Float
-linearRegressionLine t =
-    lineFunc (Tuple.first t) (Tuple.second t)
-
-
-lineFunc : Float -> Float -> Float -> Float
-lineFunc alpha beta x =
+linearRegressionLine ( alpha, beta ) x =
     alpha + beta * x

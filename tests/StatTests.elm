@@ -1,23 +1,35 @@
-module FuzzTests exposing (correlationTest, covarianceTest, geometricMeanTest, harmonicMeanTest, linearRegressionTest, meanAbsoluteDeviationTest, meanFuzzTest, medianAbsoluteDeviationTest, medianFuzzTest, modeTest, rootMeanSquareFuzzTest, skewnessTest, standardDeviationFuzzTest, varianceTest, weightedMeanTest, zScoreTest, zScoresTest)
+module StatTests exposing (correlationTest, covarianceTest, geometricMeanTest, harmonicMeanTest, linearRegressionTest, meanAbsoluteDeviationTest, meanFuzzTest, medianAbsoluteDeviationTest, medianFuzzTest, modeTest, rootMeanSquareFuzzTest, skewnessTest, standardDeviationFuzzTest, varianceTest, weightedMeanTest, zScoreTest, zScoresTest)
 
 import Expect exposing (Expectation, FloatingPointTolerance(..))
 import Fuzz exposing (..)
-import Stat as Stat
+import Stat
 import Test exposing (..)
 
 
 meanFuzzTest : Test
 meanFuzzTest =
     describe "mean fuzz test"
-        [ fuzz (list float) "generating a list of floats" <|
+        [ fuzz (list niceFloat) "generating a list of floats" <|
             \floatList ->
-                floatList
-                    |> Stat.mean
-                    |> Maybe.withDefault 0
-                    |> Expect.all
-                        [ Expect.atLeast (List.minimum floatList |> Maybe.withDefault 0)
-                        , Expect.atMost (List.maximum floatList |> Maybe.withDefault 0)
-                        ]
+                case Stat.mean floatList of
+                    Nothing ->
+                        Expect.equal floatList []
+
+                    Just avg ->
+                        Expect.all
+                            [ Expect.atLeast
+                                (List.minimum floatList |> Maybe.withDefault 0)
+                            , Expect.atMost
+                                (List.maximum floatList |> Maybe.withDefault 0)
+                            , let
+                                naiveMean : Float
+                                naiveMean =
+                                    List.sum floatList
+                                        / toFloat (List.length floatList)
+                              in
+                              Expect.within (Absolute 0.000000001) naiveMean
+                            ]
+                            avg
         ]
 
 
@@ -112,7 +124,7 @@ modeTest =
 medianFuzzTest : Test
 medianFuzzTest =
     describe "median fuzz test"
-        [ fuzz (list float) "generating a list of floats" <|
+        [ fuzz (list niceFloat) "generating a list of floats" <|
             \floatList ->
                 floatList
                     |> Stat.median
@@ -185,13 +197,31 @@ varianceTest =
             (\_ -> Expect.within (Absolute 0.01) 2 (Stat.variance ys |> Maybe.withDefault 0))
         , test "test for empty list"
             (\_ -> Expect.equal Nothing (Stat.variance emp))
+        , fuzz (list (floatRange -100 100)) "generating a list of floats" <|
+            \floatList ->
+                case Stat.variance floatList of
+                    Nothing ->
+                        Expect.equal floatList []
+
+                    Just n ->
+                        let
+                            mean list =
+                                List.sum list / toFloat (List.length list)
+
+                            squared =
+                                List.map (\x -> x ^ 2) floatList
+
+                            variance =
+                                mean squared - mean floatList ^ 2
+                        in
+                        Expect.within (Absolute 0.000000001) n variance
         ]
 
 
 standardDeviationFuzzTest : Test
 standardDeviationFuzzTest =
     describe "standard deviation fuzz test"
-        [ fuzz (list float) "generating a list of floats" <|
+        [ fuzz (list (floatRange -100 100)) "generating a list of floats" <|
             \floatList ->
                 let
                     var =
