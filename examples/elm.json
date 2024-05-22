@@ -4,7 +4,7 @@
         "src",
         "./../src"
     ],
-    "elm-version": "0.19.0",
+    "elm-version": "0.19.1",
     "dependencies": {
         "direct": {
             "avh4/elm-color": "1.0.0",
@@ -13,12 +13,12 @@
             "elm/html": "1.0.0",
             "elm/parser": "1.1.0",
             "elm/random": "1.0.0",
-            "elm-community/list-extra": "8.2.4",
-            "elm-community/typed-svg": "6.0.0",
-            "folkertdev/one-true-path-experiment": "4.0.3",
-            "gampleman/elm-visualization": "2.1.1",
-            "mdgriffith/elm-ui": "1.1.5",
-            "pablohirafuji/elm-syntax-highlight": "3.3.0",
+            "elm-community/list-extra": "8.7.0",
+            "elm-community/typed-svg": "7.0.0",
+            "folkertdev/one-true-path-experiment": "6.0.0",
+            "gampleman/elm-visualization": "2.4.1",
+            "mdgriffith/elm-ui": "1.1.8",
+            "pablohirafuji/elm-syntax-highlight": "3.5.0",
             "zgohr/elm-csv": "1.0.1"
         },
         "indirect": {
@@ -27,16 +27,23 @@
             "elm/svg": "1.0.1",
             "elm/time": "1.0.0",
             "elm/url": "1.0.0",
-            "elm/virtual-dom": "1.0.2",
+            "elm/virtual-dom": "1.0.3",
+            "elmcraft/core-extra": "2.0.0",
             "folkertdev/elm-deque": "3.0.1",
-            "folkertdev/svg-path-lowlevel": "3.0.0",
+            "folkertdev/svg-path-lowlevel": "4.0.1",
+            "gampleman/elm-rosetree": "1.1.0",
+            "ianmackenzie/elm-1d-parameter": "1.0.1",
             "ianmackenzie/elm-float-extra": "1.1.0",
-            "ianmackenzie/elm-geometry": "1.2.1",
-            "ianmackenzie/elm-interval": "1.0.1",
-            "ianmackenzie/elm-triangular-mesh": "1.0.4",
-            "justinmimbs/date": "3.2.0",
-            "justinmimbs/time-extra": "1.1.0",
-            "ryannhg/date-format": "2.3.0"
+            "ianmackenzie/elm-geometry": "3.11.0",
+            "ianmackenzie/elm-interval": "3.1.0",
+            "ianmackenzie/elm-triangular-mesh": "1.1.0",
+            "ianmackenzie/elm-units": "2.10.0",
+            "ianmackenzie/elm-units-interval": "3.2.0",
+            "ianmackenzie/elm-units-prefixed": "2.8.0",
+            "justinmimbs/date": "4.1.0",
+            "justinmimbs/time-extra": "1.2.0",
+            "rtfeldman/elm-hex": "1.0.0",
+            "ryan-haskell/date-format": "1.0.0"
         }
     },
     "test-dependencies": {

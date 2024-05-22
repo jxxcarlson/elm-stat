@@ -7,7 +7,7 @@ module Temperature exposing (main)
 -}
 
 import Browser
-import Chart exposing (GraphType(..))
+import StatChart exposing (GraphType(..))
 import Data exposing (Data, Point, xCoord, yCoord)
 import Element exposing (..)
 import Element.Background as Background
@@ -31,7 +31,7 @@ main =
 
 
 type alias Model =
-    { chart : Chart.Chart
+    { chart : StatChart.StatChart
     , b : Float
     , m : Float
     , r2 : Float
@@ -72,18 +72,18 @@ init flags =
             b + m * x2
 
         regressionLine =
-            Chart.graph Line 0 0 1 [ ( x1, y1 ), ( x2, y2 ) ]
+            StatChart.graph Line 0 0 1 [ ( x1, y1 ), ( x2, y2 ) ]
 
         r2 =
             Stat.r2 data |> Maybe.withDefault 0
 
         -- StatChart
-        chart : Chart.Chart
+        chart : StatChart.StatChart
         chart =
             data
-                |> Chart.graph Line 1.0 0 0
-                |> Chart.chart
-                |> Chart.addGraph regressionLine
+                |> StatChart.graph Line 1.0 0 0
+                |> StatChart.chart
+                |> StatChart.addGraph regressionLine
     in
     ( { chart = chart, b = b, m = m, r2 = r2 }, Cmd.none )
 
@@ -100,7 +100,7 @@ update msg model =
 
 
 viewData model =
-    TypedSvg.svg [ TA.width (TT.px 900), TA.height (TT.px 600) ] [ Chart.view format Nothing model.chart ]
+    TypedSvg.svg [ TA.width (TT.px 900), TA.height (TT.px 600) ] [ StatChart.view format Nothing model.chart ]
         |> Element.html
 
 
